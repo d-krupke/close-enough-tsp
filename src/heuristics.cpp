@@ -5,6 +5,8 @@
 #include "cetsp/common.h"
 #include "cetsp/soc.h"
 #include <iostream>
+#include <algorithm>
+#include <random>
 namespace cetsp {
 
 bool swap_improves(std::vector<Circle> &circles, int i, int j) {
@@ -20,7 +22,8 @@ bool swap_improves(std::vector<Circle> &circles, int i, int j) {
 }
 
 Trajectory compute_tour_by_2opt(std::vector<Circle> circles, bool path) {
-
+  auto rng = std::default_random_engine{};
+  std::shuffle(std::begin(circles), std::end(circles), rng);
   bool changed = true;
   const auto n = circles.size();
   while (changed) {
