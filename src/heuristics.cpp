@@ -22,7 +22,8 @@ bool swap_improves(std::vector<Circle> &circles, int i, int j) {
 }
 
 Trajectory compute_tour_by_2opt(std::vector<Circle> circles, bool path) {
-  auto rng = std::default_random_engine{};
+  auto rd = std::random_device {};
+  auto rng = std::default_random_engine { rd() };
   std::shuffle(std::begin(circles), std::end(circles), rng);
   bool changed = true;
   const auto n = circles.size();
