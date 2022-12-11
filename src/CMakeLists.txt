@@ -1,4 +1,4 @@
-add_library(cetsp)
+add_library(cetsp ../include/cetsp/heuristics.h heuristics.cpp)
 target_sources(cetsp
         PUBLIC
         ../include/cetsp/common.h
