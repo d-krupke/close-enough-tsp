@@ -2,3 +2,4 @@
 #include "doctest/doctest.h"
 #include "cetsp/common.h"
 #include "cetsp/soc.h"
+#include "cetsp/heuristics.h"

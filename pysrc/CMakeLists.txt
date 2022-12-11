@@ -1,0 +1,30 @@
+
+# This file defines the structure of the python-binding.
+
+# ~~~~~~~~~~~~~ Dependencies via CPM ~~~~~~~~~~~~~~~~~
+CPMAddPackage("gh:pybind/pybind11@2.10.0")  # pybind11, essential
+
+
+# Repeat the following part for every binding-module you want to build.
+# If the different bindings need to interact with each other/share data, it
+# may be easier (and cheaper) to have just a single binding. A single binding define
+# as many classes and functions as you want.
+# ~~~~~~~~~~ Create a new Python-module ~~~~~~~~~~~~~~~~~~~~~
+pybind11_add_module(_cetsp_cpp  # target name with leading `_` as this will be a protected module.
+        cetsp/cpp/_cetsp_cpp.cpp)  # the file with the API.
+# link your C++-library to the API.
+target_link_libraries(_cetsp_cpp PRIVATE cetsp)
+# link other dependencies
+target_link_libraries(_cetsp_cpp PRIVATE fmt::fmt CGAL::CGAL doctest::doctest)
+# enable compilation warnings
+target_compile_options(_cetsp_cpp PRIVATE
+        "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>")
+target_compile_definitions(_cetsp_cpp PRIVATE DOCTEST_CONFIG_DISABLE)
+
+# This definition is important for skbuild to copy the binary to the right
+# position in the package.
+# !!! This part is critical and a wrong configuration leads to bad packages
+# !!! without an error. Use a path relative to the project root (or
+# !!! `cmake_install_dir`[setup.py], if used).
+install(TARGETS _cetsp_cpp DESTINATION ./pysrc/cetsp/cpp)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

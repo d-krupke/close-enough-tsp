@@ -11,3 +11,6 @@ target_compile_options(cetsp PRIVATE
         "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>")
 set_target_properties(cetsp PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(cetsp PRIVATE gurobi::gurobi)
+target_link_libraries(cetsp PUBLIC CGAL::CGAL)
+target_link_libraries(cetsp PUBLIC doctest::doctest)
+target_compile_definitions(cetsp PRIVATE DOCTEST_CONFIG_DISABLE)

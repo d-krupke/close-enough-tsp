@@ -65,7 +65,7 @@ endif ()
 #~~~~~~~~~~~~~~~~~~ Python Interface ~~~~~~~~~~~~~~~~~~~~
 # The Python-bindings are compiled as separate target to allow the independent
 # usage of the C++-library.
-#add_subdirectory(python)  # defined in a separate CMakeLists.txt
+add_subdirectory(pysrc)  # defined in a separate CMakeLists.txt
 
 #~~~~~~~~~~~~~~~~ Apps ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if (NOT SKBUILD)  # only make available if not using SKBUILD.

@@ -67,6 +67,7 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
       model.addConstr(u[i] == y[prev_c] - y[i]);
     }
   }
+  model.set(GRB_IntParam_OutputFlag, 0);
   model.optimize();
   std::vector<Point> points;
   points.reserve(n+1);
