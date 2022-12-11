@@ -1,5 +1,6 @@
 [requires]
 nlohmann_json/[>=3.11]
-
+cgal/[==5.5]
+gurobi/[>=10.0.0]@ibralg/develop
 [generators]
 cmake_find_package

@@ -7,7 +7,7 @@ option(CXX "enable C++ compilation" ON)
 if(CXX)
   enable_language(CXX)
 endif()
-project(samplns CXX)  # Feel free to add more project information
+project(cetsp CXX)  # Feel free to add more project information
 set(CMAKE_CXX_STANDARD 17)  # Using C++-17 (most features with good support at 2022)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)  # The code needs to be compiled as PIC to build the shared lib for python.
 include(./cmake/CCache.cmake)  # Magic to speed up compiling by caching.
@@ -40,11 +40,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/conan)
 
 # Also need to be defined in `./conanfile.txt`.
 find_package(nlohmann_json REQUIRED)
+find_package(CGAL REQUIRED)
+find_package(gurobi REQUIRED)
 
 #~~~~~~~~~~~~~~~~ System dependencies ~~~~~~~~~~~~~~~~~~~~~~
 # These files have to be installed on the system
-set(GUROBI_HOME "/Library/gurobi1000/macos_universal2/")
-find_package(GUROBI REQUIRED)
+#set(GUROBI_HOME "/Library/gurobi1000/macos_universal2/")
+#find_package(GUROBI REQUIRED)
 
 
 #~~~~~~~~~~~~~~~~~~~ C++-Library ~~~~~~~~~~~~~~~~~~~~~~~~~
