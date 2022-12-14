@@ -67,13 +67,15 @@ TEST_CASE("Circle") {
   CHECK(!c2.contains(p));
 }
 
+using Instance = std::vector<Circle>;
+
 class Trajectory {
   /**
    * For representing the trajectory in a solution.
    */
 public:
   Trajectory(){};
-  Trajectory(std::vector<Point> points) : points{std::move(points)} {}
+  explicit Trajectory(std::vector<Point> points) : points{std::move(points)} {}
 
   bool is_tour() const { return points[0] == points[points.size() - 1]; }
 
@@ -105,7 +107,15 @@ public:
     return l;
   }
 
-  bool covers(const Circle &circle) const { return distance(circle) <= 0.0; }
+  [[nodiscard]] bool covers(const Circle &circle) const {
+    return distance(circle) <= 0.0;
+  }
+
+  template <typename It>
+  [[nodiscard]] auto covers(It begin, It end) const -> bool {
+    return std::all_of(begin, end,
+                       [&](const Circle &c) { return this->covers(c); });
+  }
 
   std::vector<Point> points;
 };

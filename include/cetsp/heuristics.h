@@ -6,17 +6,25 @@
 #define CETSP_HEURISTICS_H
 #include "cetsp/common.h"
 #include "doctest/doctest.h"
-namespace cetsp{
-Trajectory compute_tour_by_2opt(std::vector<Circle> circles, bool path=false);
+namespace cetsp {
+/**
+ * Compute a heuristic solution using a procedure based on 2-Opt.
+ * For this, only the circle's centers are considered, which
+ * can lead to quite suboptimal solutions in some cases.
+ */
+auto compute_tour_by_2opt(std::vector<Circle> circles, bool path = false)
+    -> Trajectory;
 
 TEST_CASE("2Opt") {
-  std::vector<Circle> seq  = {{{0,0}, 0}, {{1,1}, 0}, {{1,0}, 0}, {{0,1}, 0}};
+  const std::vector<Circle> seq = {
+      {{0, 0}, 0}, {{1, 1}, 0}, {{1, 0}, 0}, {{0, 1}, 0}};
   auto traj = compute_tour_by_2opt(seq);
   CHECK(traj.length() == doctest::Approx(4));
 
-  std::vector<Circle> seq2 = {{{0,0}, 1}, {{3,0}, 1}, {{5, 2}, 1}, {{3,3}, 1}, {{0, 4}, 1}};
+  const std::vector<Circle> seq2 = {
+      {{0, 0}, 1}, {{3, 0}, 1}, {{5, 2}, 1}, {{3, 3}, 1}, {{0, 4}, 1}};
   traj = compute_tour_by_2opt(seq2);
   CHECK(traj.length() >= 1);
 }
-}
+} // namespace cetsp
 #endif // CETSP_HEURISTICS_H

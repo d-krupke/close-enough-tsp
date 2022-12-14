@@ -6,7 +6,7 @@ namespace cetsp {
 
 Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
                         const bool path) {
-  GRBEnv env;
+  static GRBEnv env;
   GRBModel model(&env);
 
   const int n = circle_sequence.size();

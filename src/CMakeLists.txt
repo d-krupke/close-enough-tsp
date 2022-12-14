@@ -1,4 +1,4 @@
-add_library(cetsp ../include/cetsp/heuristics.h heuristics.cpp)
+add_library(cetsp ../include/cetsp/heuristics.h heuristics.cpp node.cpp ../include/cetsp/node.h ../include/cetsp/bnb.h ../include/cetsp/root_node_strategy.h ../include/cetsp/solution_pool.h ../include/cetsp/branching_strategy.h)
 target_sources(cetsp
         PUBLIC
         ../include/cetsp/common.h
