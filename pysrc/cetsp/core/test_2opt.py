@@ -9,7 +9,7 @@ def test_bnb():
     circles = [Circle(Point(x, y), 1) for x in range(5) for y in range(5)]
     instance = Instance(circles)
     instance.circles()
-    def bla(node):
-        print("py", node.get_lower_bound())
+    def bla(node, solution_pool):
+        print("py", node.get_lower_bound(), solution_pool.get_upper_bound())
     traj = branch_and_bound(instance, bla )
 

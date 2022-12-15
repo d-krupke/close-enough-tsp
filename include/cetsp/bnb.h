@@ -13,7 +13,7 @@ namespace cetsp {
 
 class NodeProcessingStrategy {
 public:
-  void process(Node &node) {}
+  void process(Node &node, SolutionPool& solution_pool) {}
 };
 
 template <typename TNodeProcessingStrategy = NodeProcessingStrategy>
@@ -76,7 +76,7 @@ private:
       node->prune();
       return true;
     }
-    node_processing_strategy.process(*node);
+    node_processing_strategy.process(*node, solution_pool);
     if (node->is_pruned()) {
       return true;
     }

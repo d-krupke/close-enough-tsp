@@ -15,16 +15,16 @@ using namespace cetsp;
 
 class PyNodeProcessor {
 public:
-  PyNodeProcessor(std::function<void(Node &)> &f) : f{&f} {}
-  void process(Node &node) {
+  PyNodeProcessor(std::function<void(Node &, SolutionPool&)> &f) : f{&f} {}
+  void process(Node &node, SolutionPool& solution_pool) {
     if (f != nullptr) {
-      (*f)(node);
+      (*f)(node, solution_pool);
     }
   }
-  std::function<void(Node &)> *f;
+  std::function<void(Node &, SolutionPool&)> *f;
 };
 
-Trajectory branch_and_bound(Instance &instance, std::function<void(Node &)> &f) {
+Trajectory branch_and_bound(Instance &instance, std::function<void(Node &, SolutionPool&)> &f) {
   PyNodeProcessor pnp(f);
   Instance instance_ = instance;
   BranchAndBoundAlgorithm baba(&instance_, pnp); //, pnp);
@@ -74,6 +74,12 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("is_pruned", &Node::is_pruned)
       .def("is_feasible", &Node::is_feasible)
       .def("get_fixed_sequence", &Node::get_fixed_sequence);
+
+  py::class_<SolutionPool>(m, "SolutionPool")
+      .def("add_solution", &SolutionPool::add_solution)
+      .def("get_upper_bound", &SolutionPool::get_upper_bound)
+      .def("empty", &SolutionPool::empty)
+      .def("get_best_solution", &SolutionPool::get_best_solution);
 
   py::class_<Instance>(m, "Instance", "CE-TSP Instance")
       .def(py::init<std::vector<Circle>>())
