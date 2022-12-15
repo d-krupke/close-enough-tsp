@@ -16,11 +16,11 @@ public:
   void process(Node &node) {}
 };
 
+template <typename TNodeProcessingStrategy = NodeProcessingStrategy>
 class BranchAndBoundAlgorithm {
 public:
-  BranchAndBoundAlgorithm(const std::vector<Circle> *instance)
-      : root_node_strategy{}, root{root_node_strategy.get_root_node(*instance,
-                                                                    false)},
+  BranchAndBoundAlgorithm(const Instance *instance)
+      : root_node_strategy{}, root{root_node_strategy.get_root_node(*instance)},
         search_strategy(root), branching_strategy(instance) {}
 
   void add_upper_bound(const Trajectory &trajectory) {
@@ -37,24 +37,35 @@ public:
     return solution_pool.get_best_solution();
   }
 
-  void optimize(int timelimit_s, double gap = 0.01, bool verbose = true) {
+  void optimize(int timelimit_s, double gap = 0.01, double eps = 0.01,
+                bool verbose = true) {
     if (verbose) {
-      std::cout << "LB\t|\tUB" << std::endl;
+      std::cout << "i\tLB\t|\tUB" << std::endl;
     }
-    while (step()) {
+    int i = 0;
+    while (step(eps)) {
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
       if (verbose) {
-        std::cout << lb << "\t|\t" << ub << std::endl;
+        if (i <= 10 || (i < 100 && i % 10 == 0) || (i % 100 == 0)) {
+          std::cout << i << "\t" << lb << "\t|\t" << ub << std::endl;
+        }
       }
       if (ub <= (1 + gap) * lb) {
-        return;
+        break;
       }
+      ++i;
+    }
+    if (verbose) {
+      auto lb = get_lower_bound();
+      auto ub = get_upper_bound();
+      std::cout << "---------------" << std::endl
+                << i << "\t" << lb << "\t|\t" << ub << std::endl;
     }
   }
 
 private:
-  bool step() {
+  bool step(double eps) {
     Node *node = search_strategy.next();
 
     if (node == nullptr) {
@@ -69,7 +80,7 @@ private:
     if (node->is_pruned()) {
       return true;
     }
-    if (node->is_feasible(0.01)) {
+    if (node->is_feasible(eps)) {
       solution_pool.add_solution(node->get_relaxed_solution());
       return true;
     } else {
@@ -83,28 +94,52 @@ private:
     assert(false); // unreachable
   }
 
-  std::vector<Circle> instance;
   RootNodeStrategy root_node_strategy;
   Node root;
   SearchStrategy search_strategy;
-  NodeProcessingStrategy node_processing_strategy;
+  TNodeProcessingStrategy node_processing_strategy;
   BranchingStrategy branching_strategy;
   SolutionPool solution_pool;
 };
 
 TEST_CASE("Branch and Bound  1") {
-  std::vector<Circle> instance = {
-      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
+  Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
+  CHECK(instance.size() == 4);
   BranchAndBoundAlgorithm bnb(&instance);
   bnb.optimize(30);
 }
 
 TEST_CASE("Branch and Bound  2") {
-  std::vector<Circle> instance = {
-      {{0, 0}, 0.0}, {{5, 0}, 0.0}, {{5, 5}, 0.0}, {{0, 5}, 0.0}};
+  Instance instance(
+      {{{0, 0}, 0.0}, {{5, 0}, 0.0}, {{5, 5}, 0.0}, {{0, 5}, 0.0}});
   BranchAndBoundAlgorithm bnb(&instance);
   bnb.optimize(30);
   CHECK(bnb.get_upper_bound() == doctest::Approx(20));
+}
+
+TEST_CASE("Branch and Bound  3") {
+  Instance instance;
+  for (double x = 0; x <= 10; x += 2.0) {
+    for (double y = 0; y <= 10; y += 2.0) {
+      instance.push_back({{x, y}, 1});
+    }
+  }
+  BranchAndBoundAlgorithm bnb(&instance);
+  bnb.optimize(30);
+  CHECK(bnb.get_upper_bound() <= 41);
+}
+
+TEST_CASE("Branch and Bound Path") {
+  Instance instance;
+  for (double x = 0; x <= 10; x += 2.0) {
+    for (double y = 0; y <= 10; y += 2.0) {
+      instance.push_back({{x, y}, 1});
+    }
+  }
+  instance.path = {{0,0}, {0,0}};
+  BranchAndBoundAlgorithm bnb(&instance);
+  bnb.optimize(30);
+  CHECK(bnb.get_upper_bound() == doctest::Approx(42.0747));
 }
 } // namespace cetsp
 #endif // CETSP_BNB_H

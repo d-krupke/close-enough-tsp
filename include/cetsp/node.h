@@ -13,10 +13,14 @@ namespace cetsp {
 class Node;
 class Node {
 public:
-  explicit Node(std::vector<Circle> branch_sequence, const Instance *instance,
+  explicit Node(std::vector<int> branch_sequence, const Instance *instance,
                 Node *parent = nullptr)
       : branch_sequence{std::move(branch_sequence)}, parent{parent},
-        instance{instance} {}
+        instance{instance} {
+    for(const auto& i: branch_sequence) {
+      assert(i<instance->size());
+    }
+  }
 
   void add_lower_bound(double lb) {
     if (!lower_bound || *lower_bound < lb) {
@@ -61,7 +65,26 @@ public:
 
   auto get_relaxed_solution() -> const Trajectory & {
     if (!relaxed_solution) {
-      relaxed_solution = compute_tour(branch_sequence);
+      if(instance->is_tour()) {
+        std::vector<Circle> circles;
+        circles.reserve(branch_sequence.size());
+        for(auto i: branch_sequence){
+          assert(i<instance->size());
+          circles.push_back((*instance).at(i));
+        }
+        assert(circles.size() == branch_sequence.size());
+        relaxed_solution = compute_tour(circles, false);
+      } else {
+        std::vector<Circle> circles;
+        circles.reserve(branch_sequence.size()+2);
+        circles.push_back(Circle(instance->path->first, 0));
+        for(auto i: branch_sequence){
+          circles.push_back((*instance).at(i));
+        }
+        circles.push_back(Circle(instance->path->second, 0));
+        assert(circles.size() == branch_sequence.size()+2);
+        relaxed_solution = compute_tour(circles, true);
+      }
     }
     return *relaxed_solution;
   }
@@ -76,7 +99,7 @@ public:
     }
   }
 
-  const std::vector<Circle> &get_fixed_sequence() { return branch_sequence; }
+  const std::vector<int> &get_fixed_sequence() { return branch_sequence; }
 
   [[nodiscard]] auto is_pruned() const -> bool { return pruned; }
 
@@ -94,7 +117,7 @@ private:
     }
   }
 
-  std::vector<Circle> branch_sequence;        // fixed part of the solution
+  std::vector<int> branch_sequence;        // fixed part of the solution
   std::optional<Trajectory> relaxed_solution; // relaxed solution
   std::optional<double> lower_bound;
   std::vector<Node> children;
@@ -104,10 +127,11 @@ private:
 };
 
 TEST_CASE("Node") {
-  std::vector<Circle> seq;
+  Instance seq;
   seq.push_back({{0, 0}, 1});
   seq.push_back({{3, 0}, 1});
-  Node node(seq, &seq);
+  CHECK(seq.is_tour());
+  Node node({0,1}, &seq);
   const auto tour = node.get_relaxed_solution();
   CHECK(tour.length() == doctest::Approx(2.0));
   CHECK(node.get_lower_bound() == doctest::Approx(2.0));

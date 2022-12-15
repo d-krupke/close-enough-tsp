@@ -67,7 +67,32 @@ TEST_CASE("Circle") {
   CHECK(!c2.contains(p));
 }
 
-using Instance = std::vector<Circle>;
+class Instance : public std::vector<Circle> {
+public:
+  Instance() {}
+  Instance(const std::vector<Circle>& circles)  {
+    reserve(circles.size());
+    for(const auto& c: circles){
+      push_back(c);
+    }
+  }
+  bool is_path() const {
+    if (path) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool is_tour() const {
+    if (path) {
+      return false;
+    }
+    { return true; }
+  }
+
+  std::optional<std::pair<Point, Point>> path;
+};
 
 class Trajectory {
   /**
@@ -98,26 +123,31 @@ public:
   }
 
   double length() const {
-    double l = 0;
-    for (int i = 0; i < points.size() - 1; i++) {
-      details::Segment segment({points[i].x, points[i].y},
-                               {points[i + 1].x, points[i + 1].y});
-      l += std::sqrt(segment.squared_length());
+    if (!_length) {
+      double l = 0;
+      for (int i = 0; i < points.size() - 1; i++) {
+        details::Segment segment({points[i].x, points[i].y},
+                                 {points[i + 1].x, points[i + 1].y});
+        l += std::sqrt(segment.squared_length());
+      }
+      _length = l;
     }
-    return l;
+    return *_length;
   }
 
-  [[nodiscard]] bool covers(const Circle &circle, double eps=0.0) const {
+  [[nodiscard]] bool covers(const Circle &circle, double eps = 0.0) const {
     return distance(circle) <= eps;
   }
 
   template <typename It>
-  [[nodiscard]] auto covers(It begin, It end, double eps=0.0) const -> bool {
+  [[nodiscard]] auto covers(It begin, It end, double eps = 0.0) const -> bool {
     return std::all_of(begin, end,
                        [&](const Circle &c) { return this->covers(c, eps); });
   }
 
   std::vector<Point> points;
+private:
+  mutable std::optional<double> _length;
 };
 
 TEST_CASE("Trajectory") {
