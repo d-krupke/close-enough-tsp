@@ -15,16 +15,16 @@ using namespace cetsp;
 
 class PyNodeProcessor {
 public:
-  PyNodeProcessor(std::function<void(Node &, SolutionPool&)> &f) : f{&f} {}
+  PyNodeProcessor(std::function<void(Node *, SolutionPool*)> &f) : f{&f} {}
   void process(Node &node, SolutionPool& solution_pool) {
     if (f != nullptr) {
-      (*f)(node, solution_pool);
+      (*f)(&node, &solution_pool);
     }
   }
-  std::function<void(Node &, SolutionPool&)> *f;
+  std::function<void(Node *, SolutionPool*)> *f;
 };
 
-Trajectory branch_and_bound(Instance &instance, std::function<void(Node &, SolutionPool&)> &f) {
+Trajectory branch_and_bound(Instance &instance, std::function<void(Node *, SolutionPool*)> &f) {
   PyNodeProcessor pnp(f);
   Instance instance_ = instance;
   BranchAndBoundAlgorithm baba(&instance_, pnp); //, pnp);
@@ -62,8 +62,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("__len__", [](const Trajectory &self) { return self.points.size(); })
       .def("__getitem__",
            [](const Trajectory &self, int i) { return self.points.at(i); });
-  m.def("compute_tour_by_2opt",
-        py::overload_cast<std::vector<Circle>, bool>(&compute_tour_by_2opt));
+  m.def("compute_tour_by_2opt",&compute_tour_by_2opt);
   m.def("compute_tour_from_sequence", py::overload_cast<const std::vector<Circle>&, bool>(&compute_tour));
 
   py::class_<Node>(m, "Node", "Node in the BnB-tree.")

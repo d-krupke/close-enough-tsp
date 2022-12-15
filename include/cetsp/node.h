@@ -13,6 +13,8 @@ namespace cetsp {
 class Node;
 class Node {
 public:
+  Node(Node& node) = delete;
+  Node(Node&& node) = default;
   explicit Node(std::vector<int> branch_sequence, const Instance *instance,
                 Node *parent = nullptr)
       : branch_sequence{std::move(branch_sequence)}, parent{parent},
@@ -94,7 +96,7 @@ public:
     }
     pruned = true;
     add_lower_bound(std::numeric_limits<double>::infinity());
-    for (auto child : children) {
+    for (auto& child : children) {
       child.prune();
     }
   }

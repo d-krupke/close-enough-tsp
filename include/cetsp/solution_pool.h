@@ -15,8 +15,6 @@ public:
 
       solutions.push_back(solution);
       ub = solution.length();
-    } else {
-      std::cout << "discard solution worse  than  ub" << std::endl;
     }
   }
   double get_upper_bound() { return ub; }

@@ -21,9 +21,13 @@ bool swap_improves(std::vector<Circle> &circles, int i, int j) {
   return new_dist < 0.999*prev_dist;
 }
 
-Trajectory compute_tour_by_2opt(std::vector<Circle> circles, bool path) {
+Trajectory compute_tour_by_2opt(Instance& instance) {
   auto rd = std::random_device {};
   auto rng = std::default_random_engine { rd() };
+  std::vector<Circle> circles;
+  for(const auto& c: instance) {
+    circles.push_back(c);
+  }
   std::shuffle(std::begin(circles), std::end(circles), rng);
   bool changed = true;
   const auto n = circles.size();
@@ -39,6 +43,6 @@ Trajectory compute_tour_by_2opt(std::vector<Circle> circles, bool path) {
       }
     }
   }
-  return compute_tour(circles, path);
+  return compute_tour(circles, instance.is_path());
 }
 } // namespace cetsp
