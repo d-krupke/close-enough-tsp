@@ -9,6 +9,8 @@
 #include "root_node_strategy.h"
 #include "search_strategy.h"
 #include "solution_pool.h"
+#include <chrono>
+
 namespace cetsp {
 
 class NodeProcessingStrategy {
@@ -43,6 +45,8 @@ public:
       std::cout << "i\tLB\t|\tUB" << std::endl;
     }
     int i = 0;
+    using namespace std::chrono;
+    auto start = high_resolution_clock::now();
     while (step(eps)) {
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
@@ -55,6 +59,13 @@ public:
         break;
       }
       ++i;
+      auto now = high_resolution_clock::now();
+      if(duration_cast<seconds>(now - start).count()>timelimit_s){
+        if(verbose) {
+          std::cout << "Timeout." << std::endl;
+        }
+        break;
+      }
     }
     if (verbose) {
       auto lb = get_lower_bound();

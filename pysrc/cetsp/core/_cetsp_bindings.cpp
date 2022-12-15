@@ -24,11 +24,12 @@ public:
   std::function<void(Node *, SolutionPool*)> *f;
 };
 
-Trajectory branch_and_bound(Instance &instance, std::function<void(Node *, SolutionPool*)> &f) {
+Trajectory branch_and_bound(Instance &instance, std::function<void(Node *, SolutionPool*)> &f, Trajectory& initial_solution, int timelimit) {
   PyNodeProcessor pnp(f);
   Instance instance_ = instance;
   BranchAndBoundAlgorithm baba(&instance_, pnp); //, pnp);
-  baba.optimize(30);
+  baba.add_upper_bound(initial_solution);
+  baba.optimize(timelimit);
   if(!baba.get_solution()) {
     throw std::exception();
   }
@@ -82,12 +83,12 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
 
   py::class_<Instance>(m, "Instance", "CE-TSP Instance")
       .def(py::init<std::vector<Circle>>())
-      .def("__init__",
+      .def(py::init(
            [](std::vector<Circle> &circles, Point &a, Point &b) -> Instance {
              Instance instance{circles};
              instance.path = {a, b};
              return instance;
-           })
+           }))
       .def("__len__", &Instance::size)
       .def("__getitem__",
            [](const Instance &self, int i) { return self.at(i); })
