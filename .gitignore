@@ -197,3 +197,5 @@ _skbuild/
 
 cmake/conan/*
 **/cmake-build*
+
+.vscode
