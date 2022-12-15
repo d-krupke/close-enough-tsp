@@ -34,7 +34,7 @@ def readme():
         return file.read()
 
 
-#run_conan()  # automatically running conan. Ugly workaround, but does its job.
+run_conan()  # automatically running conan. Ugly workaround, but does its job.
 setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # ~~~~~~~~~ BASIC INFORMATION ~~~~~~~~~~~
     name="cetsp",
