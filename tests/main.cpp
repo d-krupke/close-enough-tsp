@@ -6,3 +6,5 @@
 #include "cetsp/node.h"
 #include "cetsp/root_node_strategy.h"
 #include "cetsp/branching_strategy.h"
+#include "cetsp/search_strategy.h"
+#include "cetsp/bnb.h"

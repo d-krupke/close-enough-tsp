@@ -60,7 +60,7 @@ TEST_CASE("Root Node Selection") {
       {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
   RootNodeStrategy rns;
   Node root = rns.get_root_node(instance, false);
-  CHECK(root.is_feasible());
+  CHECK(root.is_feasible(0.01));
 }
 } // namespace cetsp
 #endif // CETSP_ROOT_NODE_STRATEGY_H

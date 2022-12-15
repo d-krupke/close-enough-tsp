@@ -12,7 +12,11 @@ class SolutionPool {
 public:
   void add_solution(const Trajectory &solution) {
     if (solution.length() < ub) {
-      solutions.push_back(std::move(solution));
+
+      solutions.push_back(solution);
+      ub = solution.length();
+    } else {
+      std::cout << "discard solution worse  than  ub" << std::endl;
     }
   }
   double get_upper_bound() { return ub; }
@@ -30,5 +34,5 @@ private:
   double ub = std::numeric_limits<double>::infinity();
   std::vector<Trajectory> solutions;
 };
-}
+} // namespace cetsp
 #endif // CETSP_SOLUTION_POOL_H

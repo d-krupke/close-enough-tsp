@@ -107,14 +107,14 @@ public:
     return l;
   }
 
-  [[nodiscard]] bool covers(const Circle &circle) const {
-    return distance(circle) <= 0.0;
+  [[nodiscard]] bool covers(const Circle &circle, double eps=0.0) const {
+    return distance(circle) <= eps;
   }
 
   template <typename It>
-  [[nodiscard]] auto covers(It begin, It end) const -> bool {
+  [[nodiscard]] auto covers(It begin, It end, double eps=0.0) const -> bool {
     return std::all_of(begin, end,
-                       [&](const Circle &c) { return this->covers(c); });
+                       [&](const Circle &c) { return this->covers(c, eps); });
   }
 
   std::vector<Point> points;
