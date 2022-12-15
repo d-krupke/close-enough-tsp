@@ -19,8 +19,8 @@ public:
 template <typename TNodeProcessingStrategy = NodeProcessingStrategy>
 class BranchAndBoundAlgorithm {
 public:
-  BranchAndBoundAlgorithm(const Instance *instance)
-      : root_node_strategy{}, root{root_node_strategy.get_root_node(*instance)},
+  BranchAndBoundAlgorithm(const Instance *instance, TNodeProcessingStrategy node_processing_strategy=NodeProcessingStrategy())
+      : root_node_strategy{}, root{root_node_strategy.get_root_node(*instance)}, node_processing_strategy{node_processing_strategy},
         search_strategy(root), branching_strategy(instance) {}
 
   void add_upper_bound(const Trajectory &trajectory) {

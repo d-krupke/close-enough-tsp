@@ -28,3 +28,23 @@ target_compile_definitions(_cetsp_cpp PRIVATE DOCTEST_CONFIG_DISABLE)
 # !!! `cmake_install_dir`[setup.py], if used).
 install(TARGETS _cetsp_cpp DESTINATION ./pysrc/cetsp/cpp)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ~~~~~~~~~~ Create a new Python-module ~~~~~~~~~~~~~~~~~~~~~
+pybind11_add_module(_cetsp_bindings  # target name with leading `_` as this will be a protected module.
+        cetsp/core/_cetsp_bindings.cpp)  # the file with the API.
+# link your C++-library to the API.
+target_link_libraries(_cetsp_bindings PRIVATE cetsp)
+# link other dependencies
+target_link_libraries(_cetsp_bindings PRIVATE fmt::fmt CGAL::CGAL doctest::doctest)
+# enable compilation warnings
+target_compile_options(_cetsp_bindings PRIVATE
+        "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>")
+target_compile_definitions(_cetsp_bindings PRIVATE DOCTEST_CONFIG_DISABLE)
+
+# This definition is important for skbuild to copy the binary to the right
+# position in the package.
+# !!! This part is critical and a wrong configuration leads to bad packages
+# !!! without an error. Use a path relative to the project root (or
+# !!! `cmake_install_dir`[setup.py], if used).
+install(TARGETS _cetsp_bindings DESTINATION ./pysrc/cetsp/core)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
