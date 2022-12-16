@@ -13,27 +13,29 @@
 namespace py = pybind11;
 using namespace cetsp;
 
-class PyNodeProcessor {
+class PythonUserCallbacks : public DefaultUserCallbacks {
 public:
-  PyNodeProcessor(std::function<void(Node *, SolutionPool*)> &f) : f{&f} {}
-  void process(Node &node, SolutionPool& solution_pool) {
+  PythonUserCallbacks(std::function<void(EventContext)> *f) : f{f} {}
+
+  void on_entering_node(EventContext& e) {
+    EventContext e_ = e;
     if (f != nullptr) {
-      (*f)(&node, &solution_pool);
+      (*f)(e_);
     }
   }
-  std::function<void(Node *, SolutionPool*)> *f;
+
+private:
+  std::function<void(EventContext)> *f;
 };
 
-Trajectory branch_and_bound(Instance &instance, std::function<void(Node *, SolutionPool*)> &f, Trajectory& initial_solution, int timelimit) {
-  PyNodeProcessor pnp(f);
-  Instance instance_ = instance;
-  BranchAndBoundAlgorithm baba(&instance_, pnp); //, pnp);
+std::unique_ptr<Trajectory> branch_and_bound(Instance instance,
+                            std::function<void(EventContext)> *f,
+                            Trajectory &initial_solution, int timelimit) {
+  PythonUserCallbacks pnp(f);
+  BranchAndBoundAlgorithm baba(&instance, pnp);
   baba.add_upper_bound(initial_solution);
   baba.optimize(timelimit);
-  if(!baba.get_solution()) {
-    throw std::exception();
-  }
-  return *baba.get_solution();
+  return baba.get_solution();
 }
 
 PYBIND11_MODULE(_cetsp_bindings, m) {
@@ -62,9 +64,11 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("is_tour", &Trajectory::is_tour)
       .def("__len__", [](const Trajectory &self) { return self.points.size(); })
       .def("__getitem__",
-           [](const Trajectory &self, int i) { return self.points.at(i); });
-  m.def("compute_tour_by_2opt",&compute_tour_by_2opt);
-  m.def("compute_tour_from_sequence", py::overload_cast<const std::vector<Circle>&, bool>(&compute_tour));
+           [](const Trajectory &self, int i) { return self.points.at(i); })
+      .def("distance", &Trajectory::distance);
+  m.def("compute_tour_by_2opt", &compute_tour_by_2opt);
+  m.def("compute_tour_from_sequence",
+        py::overload_cast<const std::vector<Circle> &, bool>(&compute_tour));
 
   py::class_<Node>(m, "Node", "Node in the BnB-tree.")
       .def("get_lower_bound", &Node::get_lower_bound)
@@ -84,11 +88,11 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   py::class_<Instance>(m, "Instance", "CE-TSP Instance")
       .def(py::init<std::vector<Circle>>())
       .def(py::init(
-           [](std::vector<Circle> &circles, Point &a, Point &b) -> Instance {
-             Instance instance{circles};
-             instance.path = {a, b};
-             return instance;
-           }))
+          [](std::vector<Circle> &circles, Point &a, Point &b) -> Instance {
+            Instance instance{circles};
+            instance.path = {a, b};
+            return instance;
+          }))
       .def("__len__", &Instance::size)
       .def("__getitem__",
            [](const Instance &self, int i) { return self.at(i); })
@@ -99,5 +103,20 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         }
         return circles;
       });
+  py::class_<EventContext>(m, "EventContext")
+      .def_readonly("current_node", &EventContext::current_node,
+                    py::return_value_policy::reference)
+      .def_readonly("root_node", &EventContext::root_node,
+                    py::return_value_policy::reference)
+      .def_readonly("instance", &EventContext::instance,
+                    py::return_value_policy::reference)
+      .def_readonly("num_iterations", &EventContext::num_iterations)
+      .def("add_lazy_circle", &EventContext::add_lazy_circle)
+      .def("add_solution", &EventContext::add_solution)
+      .def("get_lower_bound", &EventContext::get_lower_bound)
+      .def("get_upper_bound", &EventContext::get_upper_bound)
+      .def("is_feasible", &EventContext::is_feasible)
+      .def("get_relaxed_solution", &EventContext::get_relaxed_solution)
+      .def("get_best_solution", &EventContext::get_best_solution);
   m.def("branch_and_bound", &branch_and_bound);
 }

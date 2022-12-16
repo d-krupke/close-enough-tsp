@@ -15,7 +15,7 @@ class Node {
 public:
   Node(Node& node) = delete;
   Node(Node&& node) = default;
-  explicit Node(std::vector<int> branch_sequence, const Instance *instance,
+  explicit Node(std::vector<int> branch_sequence, Instance *instance,
                 Node *parent = nullptr)
       : branch_sequence{std::move(branch_sequence)}, parent{parent},
         instance{instance} {
@@ -40,15 +40,27 @@ public:
     return *lower_bound;
   }
 
-  bool is_feasible(double eps) {
-    return get_relaxed_solution().covers(instance->begin(), instance->end(), eps);
+  bool is_feasible() {
+    if(instance->revision == feasible_revision) {
+      return true;
+    }
+    if(feasible_revision == -2) {
+      return false;
+    }
+    if(get_relaxed_solution().covers(instance->begin(), instance->end(), instance->eps)){
+      feasible_revision = instance->revision;
+      return true;
+    } else {
+      feasible_revision = -2;
+      return false;
+    }
   }
 
   void branch(std::vector<Node> &&children_) {
     if (is_pruned()) {
       throw std::invalid_argument("Cannot branch on pruned node.");
     }
-    assert(!is_feasible(0.0));
+    assert(!is_feasible());
     if (children_.empty()) {
       prune();
       children = std::vector<Node>{};
@@ -101,9 +113,13 @@ public:
     }
   }
 
-  const std::vector<int> &get_fixed_sequence() { return branch_sequence; }
+  [[nodiscard]] const std::vector<int> &get_fixed_sequence() { return branch_sequence; }
 
   [[nodiscard]] auto is_pruned() const -> bool { return pruned; }
+
+  [[nodiscard]] Instance* get_instance() {
+    return instance;
+  }
 
 private:
   void reevaluate_children() {
@@ -125,7 +141,8 @@ private:
   std::vector<Node> children;
   Node *parent;
   bool pruned = false;
-  const Instance *instance;
+  Instance *instance;
+  int feasible_revision = -1;
 };
 
 TEST_CASE("Node") {
@@ -137,7 +154,7 @@ TEST_CASE("Node") {
   const auto tour = node.get_relaxed_solution();
   CHECK(tour.length() == doctest::Approx(2.0));
   CHECK(node.get_lower_bound() == doctest::Approx(2.0));
-  CHECK(node.is_feasible(0.01));
+  CHECK(node.is_feasible());
 }
 
 } // namespace cetsp

@@ -91,7 +91,14 @@ public:
     { return true; }
   }
 
+  void add_circle(Circle& circle){
+      push_back(circle);
+      revision += 1;
+  }
+
   std::optional<std::pair<Point, Point>> path;
+  int revision = 0;
+  double eps = 0.01;
 };
 
 class Trajectory {

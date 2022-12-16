@@ -19,11 +19,11 @@ public:
   }
   double get_upper_bound() { return ub; }
 
-  const Trajectory &get_best_solution() {
+  std::unique_ptr<Trajectory> get_best_solution() {
     if (solutions.empty()) {
-      throw std::exception();
+      return nullptr;
     }
-    return solutions.back();
+    return std::make_unique<Trajectory>(solutions.back());  // best solution is always at the end
   }
 
   bool empty() { return solutions.empty(); }

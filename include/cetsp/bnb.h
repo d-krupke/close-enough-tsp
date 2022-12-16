@@ -13,17 +13,57 @@
 
 namespace cetsp {
 
-class NodeProcessingStrategy {
-public:
-  void process(Node &node, SolutionPool& solution_pool) {}
+struct EventContext {
+  Node *current_node;
+  Node *root_node;
+  Instance *instance;
+  SolutionPool *solution_pool;
+  int num_iterations;
+
+  void add_lazy_circle(Circle& circle) {
+    instance->add_circle(circle);
+  }
+
+  void add_solution(Trajectory& trajectory) {
+    solution_pool->add_solution(trajectory);
+  }
+
+  double get_lower_bound()  {
+    return root_node->get_lower_bound();
+  }
+
+  double get_upper_bound() {
+    return solution_pool->get_upper_bound();
+  }
+
+  bool is_feasible () {
+    return current_node->is_feasible();
+  }
+
+  Trajectory get_relaxed_solution() {
+    return current_node->get_relaxed_solution();
+  }
+
+  std::unique_ptr<Trajectory> get_best_solution() {
+    return  solution_pool->get_best_solution();
+  }
 };
 
-template <typename TNodeProcessingStrategy = NodeProcessingStrategy>
+class DefaultUserCallbacks {
+public:
+   void on_entering_node(EventContext &e) {}
+   void add_lazy_constraints(EventContext &e) {}
+   void on_leaving_node(EventContext &e) {}
+};
+
+template <typename UserCallbacks = DefaultUserCallbacks>
 class BranchAndBoundAlgorithm {
 public:
-  BranchAndBoundAlgorithm(const Instance *instance, TNodeProcessingStrategy node_processing_strategy=NodeProcessingStrategy())
-      : root_node_strategy{}, root{root_node_strategy.get_root_node(*instance)}, node_processing_strategy{node_processing_strategy},
-        search_strategy(root), branching_strategy(instance) {}
+  BranchAndBoundAlgorithm(Instance *instance,
+                          UserCallbacks user_callbacks = DefaultUserCallbacks())
+      : instance{instance}, root{root_node_strategy.get_root_node(*instance)},
+        user_callbacks{user_callbacks}, search_strategy(root),
+        branching_strategy(instance) {}
 
   void add_upper_bound(const Trajectory &trajectory) {
     solution_pool.add_solution(trajectory);
@@ -32,36 +72,34 @@ public:
 
   double get_upper_bound() { return solution_pool.get_upper_bound(); }
   double get_lower_bound() { return root.get_lower_bound(); }
-  std::optional<Trajectory> get_solution() {
-    if (solution_pool.empty()) {
-      return {};
-    }
+  std::unique_ptr<Trajectory> get_solution() {
     return solution_pool.get_best_solution();
   }
 
-  void optimize(int timelimit_s, double gap = 0.01, double eps = 0.01,
-                bool verbose = true) {
+  void optimize(int timelimit_s, double gap = 0.01, bool verbose = true) {
     if (verbose) {
       std::cout << "i\tLB\t|\tUB" << std::endl;
     }
-    int i = 0;
     using namespace std::chrono;
     auto start = high_resolution_clock::now();
-    while (step(eps)) {
+    while (step()) {
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
       if (verbose) {
-        if (i <= 10 || (i < 100 && i % 10 == 0) || (i % 100 == 0)) {
-          std::cout << i << "\t" << lb << "\t|\t" << ub << std::endl;
+        if (num_iterations <= 10 ||
+            (num_iterations < 100 && num_iterations % 10 == 0) ||
+            (num_iterations % 100 == 0)) {
+          std::cout << num_iterations << "\t" << lb << "\t|\t" << ub
+                    << std::endl;
         }
       }
       if (ub <= (1 + gap) * lb) {
         break;
       }
-      ++i;
+      ++num_iterations;
       auto now = high_resolution_clock::now();
-      if(duration_cast<seconds>(now - start).count()>timelimit_s){
-        if(verbose) {
+      if (duration_cast<seconds>(now - start).count() > timelimit_s) {
+        if (verbose) {
           std::cout << "Timeout." << std::endl;
         }
         break;
@@ -71,12 +109,12 @@ public:
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
       std::cout << "---------------" << std::endl
-                << i << "\t" << lb << "\t|\t" << ub << std::endl;
+                << num_iterations << "\t" << lb << "\t|\t" << ub << std::endl;
     }
   }
 
 private:
-  bool step(double eps) {
+  bool step() {
     Node *node = search_strategy.next();
 
     if (node == nullptr) {
@@ -87,30 +125,35 @@ private:
       node->prune();
       return true;
     }
-    node_processing_strategy.process(*node, solution_pool);
+    EventContext context{node, &root, instance, &solution_pool, num_iterations};
+    user_callbacks.on_entering_node(context);
     if (node->is_pruned()) {
+      user_callbacks.on_leaving_node(context);
       return true;
     }
-    if (node->is_feasible(eps)) {
+    if (node->is_feasible()) {
+      user_callbacks.add_lazy_constraints(context);
+    }
+    if (node->is_feasible()) { // this can have changed after lazy callbacks.
       solution_pool.add_solution(node->get_relaxed_solution());
-      return true;
     } else {
       // branch
       if (branching_strategy.branch(*node)) {
         search_strategy.notify_of_branch(*node);
       }
-
-      return true;
     }
-    assert(false); // unreachable
+    user_callbacks.on_leaving_node(context);
+    return true;
   }
 
-  RootNodeStrategy root_node_strategy;
+  Instance *instance;
+  RootNodeStrategy root_node_strategy{};
   Node root;
   SearchStrategy search_strategy;
-  TNodeProcessingStrategy node_processing_strategy;
+  UserCallbacks user_callbacks;
   BranchingStrategy branching_strategy;
   SolutionPool solution_pool;
+  int num_iterations = 0;
 };
 
 TEST_CASE("Branch and Bound  1") {
@@ -125,8 +168,11 @@ TEST_CASE("Branch and Bound  2") {
       {{{0, 0}, 0.0}, {{5, 0}, 0.0}, {{5, 5}, 0.0}, {{0, 5}, 0.0}});
   BranchAndBoundAlgorithm bnb(&instance);
   bnb.optimize(30);
+  CHECK(bnb.get_solution());
+  CHECK(bnb.get_solution()->length() == doctest::Approx(20));
   CHECK(bnb.get_upper_bound() == doctest::Approx(20));
 }
+
 
 TEST_CASE("Branch and Bound  3") {
   Instance instance;
@@ -137,6 +183,7 @@ TEST_CASE("Branch and Bound  3") {
   }
   BranchAndBoundAlgorithm bnb(&instance);
   bnb.optimize(30);
+  CHECK(bnb.get_solution());
   CHECK(bnb.get_upper_bound() <= 41);
 }
 
@@ -147,9 +194,10 @@ TEST_CASE("Branch and Bound Path") {
       instance.push_back({{x, y}, 1});
     }
   }
-  instance.path = {{0,0}, {0,0}};
+  instance.path = {{0, 0}, {0, 0}};
   BranchAndBoundAlgorithm bnb(&instance);
   bnb.optimize(30);
+  CHECK(bnb.get_solution());
   CHECK(bnb.get_upper_bound() == doctest::Approx(42.0747));
 }
 } // namespace cetsp

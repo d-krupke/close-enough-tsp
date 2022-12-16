@@ -1,3 +1,22 @@
+"""
+This package especially provides the BnB-algorithm including callbacks.
+```
+circles = [Circle(Point(x, y), 1) for x in range(7) for y in range(7)]
+instance = Instance(circles)
+instance.circles()
+initial_solution = compute_tour_by_2opt(instance)
+
+def cb(context):
+    context.add_solution(initial_solution)
+    lb = context.get_lower_bound()
+    ub = context.get_upper_bound()
+    if(lb > 0.95*ub):
+        context.current_node.prune()  # don't evaluate further
+    print("LB/UB:", contex.get_lower_bound(), context.get_upper_bound())
+opt_solution = branch_and_bound(instance, cb , initial_solution, 60)
+```
+"""
+
 from ._cetsp_bindings import *
 
 import matplotlib.pyplot as plt

@@ -10,7 +10,7 @@
 namespace cetsp {
 class BranchingStrategy {
 public:
-  BranchingStrategy(const Instance *instance) : instance{instance} {}
+  BranchingStrategy(Instance *instance) : instance{instance} {}
   bool branch(Node &node) {
     std::vector<double> distances(instance->size());
     for (int i = 0; i < instance->size(); ++i) {
@@ -39,7 +39,7 @@ public:
   }
 
 private:
-  const Instance *instance;
+  Instance *instance;
 };
 TEST_CASE("Branching Strategy") {
   // The strategy should choose the triangle and implicitly cover the

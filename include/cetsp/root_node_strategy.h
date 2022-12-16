@@ -40,7 +40,7 @@ private:
   }
 
 public:
-  Node get_root_node(const Instance &instance) {
+  Node get_root_node(Instance &instance) {
     if(instance.is_path()) {
       std::vector<int> seq;
       seq.push_back(most_distanced_circle(instance));
@@ -85,7 +85,7 @@ TEST_CASE("Root Node Selection") {
   instance.push_back({{3, 6}, 1});
   RootNodeStrategy rns;
   Node root = rns.get_root_node(instance);
-  CHECK(root.is_feasible(0.01));
+  CHECK(root.is_feasible());
 }
 } // namespace cetsp
 #endif // CETSP_ROOT_NODE_STRATEGY_H
