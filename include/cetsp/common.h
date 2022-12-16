@@ -4,7 +4,7 @@
 
 #ifndef CLOSE_ENOUGH_TSP_COMMON_H
 #define CLOSE_ENOUGH_TSP_COMMON_H
-#include "cetsp/cgal_kernel.h"
+#include "cetsp/details/cgal_kernel.h"
 #include "doctest/doctest.h"
 #include <CGAL/squared_distance_2.h> //for 2D functions
 #include <cmath>

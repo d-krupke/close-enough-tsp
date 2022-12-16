@@ -6,7 +6,7 @@
 
 #ifndef CETSP_SOLUTION_POOL_H
 #define CETSP_SOLUTION_POOL_H
-#include "common.h"
+#include "cetsp/common.h"
 namespace cetsp {
 class SolutionPool {
 public:

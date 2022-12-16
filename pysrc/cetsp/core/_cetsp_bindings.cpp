@@ -1,6 +1,6 @@
-//
-// Created by Dominik Krupke on 15.12.22.
-//
+/**
+ * This file defines the python bindings.
+ */
 #include "cetsp/bnb.h"
 #include "cetsp/common.h"
 #include "cetsp/heuristics.h"
@@ -14,12 +14,17 @@ namespace py = pybind11;
 using namespace cetsp;
 
 class PythonUserCallbacks : public DefaultUserCallbacks {
+  /*
+   * Allowing Python-callbacks to influence/improve the branch
+   * and bound algorithm.
+   */
 public:
   PythonUserCallbacks(std::function<void(EventContext)> *f) : f{f} {}
 
-  void on_entering_node(EventContext& e) {
-    EventContext e_ = e;
-    if (f != nullptr) {
+  void on_entering_node(EventContext &e) {
+    EventContext e_ = e; // making sure, the callback will get a copy and there
+                         // won't be any accidental ownership problems.
+    if (f != nullptr) {  // Allowing None for no callback.
       (*f)(e_);
     }
   }
@@ -28,17 +33,29 @@ private:
   std::function<void(EventContext)> *f;
 };
 
-std::unique_ptr<Trajectory> branch_and_bound(Instance instance,
-                            std::function<void(EventContext)> *f,
-                            Trajectory &initial_solution, int timelimit) {
-  PythonUserCallbacks pnp(f);
+/**
+ * Explicit function for the binding  of calling the BnB algorithm.
+ * @param instance Instance to be solved.
+ * @param py_callback Callback function in Python.
+ * @param initial_solution Initial solution to get started.
+ * @param timelimit Timelimit in seconds for the BnB algorithm.
+ * @return Best solution found within timelimit or nullptr.
+ */
+std::unique_ptr<Trajectory>
+branch_and_bound(Instance instance,
+                 std::function<void(EventContext)> *py_callback,
+                 Trajectory *initial_solution, int timelimit) {
+  PythonUserCallbacks pnp(py_callback);
   BranchAndBoundAlgorithm baba(&instance, pnp);
-  baba.add_upper_bound(initial_solution);
+  if (initial_solution != nullptr) {
+    baba.add_upper_bound(*initial_solution);
+  }
   baba.optimize(timelimit);
   return baba.get_solution();
 }
 
 PYBIND11_MODULE(_cetsp_bindings, m) {
+  // Classes
   py::class_<Point>(m, "Point", "Simple position")
       .def(py::init<double, double>())
       .def_readwrite("x", &Point::x)
@@ -66,9 +83,6 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("__getitem__",
            [](const Trajectory &self, int i) { return self.points.at(i); })
       .def("distance", &Trajectory::distance);
-  m.def("compute_tour_by_2opt", &compute_tour_by_2opt);
-  m.def("compute_tour_from_sequence",
-        py::overload_cast<const std::vector<Circle> &, bool>(&compute_tour));
 
   py::class_<Node>(m, "Node", "Node in the BnB-tree.")
       .def("get_lower_bound", &Node::get_lower_bound)
@@ -103,20 +117,46 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         }
         return circles;
       });
-  py::class_<EventContext>(m, "EventContext")
+  /**
+   * This is the probably most interesting class for the bindings.
+   * It allows you to manipulate the BnB-process via a callback.
+   */
+  py::class_<EventContext>(
+      m, "EventContext",
+      "Allows you to extract information of the BnB process and influence it.")
       .def_readonly("current_node", &EventContext::current_node,
-                    py::return_value_policy::reference)
+                    py::return_value_policy::reference,
+                    "The node currently investigated.")
       .def_readonly("root_node", &EventContext::root_node,
-                    py::return_value_policy::reference)
+                    py::return_value_policy::reference,
+                    "The root node of the BnB tree.")
       .def_readonly("instance", &EventContext::instance,
-                    py::return_value_policy::reference)
-      .def_readonly("num_iterations", &EventContext::num_iterations)
-      .def("add_lazy_circle", &EventContext::add_lazy_circle)
-      .def("add_solution", &EventContext::add_solution)
-      .def("get_lower_bound", &EventContext::get_lower_bound)
-      .def("get_upper_bound", &EventContext::get_upper_bound)
-      .def("is_feasible", &EventContext::is_feasible)
-      .def("get_relaxed_solution", &EventContext::get_relaxed_solution)
-      .def("get_best_solution", &EventContext::get_best_solution);
-  m.def("branch_and_bound", &branch_and_bound);
+                    py::return_value_policy::reference,
+                    "The instance solved by the BnB tree.")
+      .def_readonly("num_iterations", &EventContext::num_iterations,
+                    "Number of iterations/nodes visited in the BnB tree.")
+      .def("add_lazy_circle", &EventContext::add_lazy_circle,
+           "Add a circle to the instance as kind of a lazy constraint. Must be "
+           "deterministic.")
+      .def("add_solution", &EventContext::add_solution,
+           "Add a new solution, that may helps terminating earlier.")
+      .def("get_lower_bound", &EventContext::get_lower_bound,
+           "Return the currently proven lower bound.")
+      .def("get_upper_bound", &EventContext::get_upper_bound,
+           "Return  the value of the currently best known solution (or "
+           "infinity).")
+      .def("is_feasible", &EventContext::is_feasible,
+           "Return true if the current node is feasible.")
+      .def("get_relaxed_solution", &EventContext::get_relaxed_solution,
+           "Return the relaxed solution of the current node.")
+      .def("get_best_solution", &EventContext::get_best_solution,
+           "Return the best known feasible solution.");
+  // functions
+  m.def("compute_tour_by_2opt", &compute_tour_by_2opt,
+        "Compute a feasible tour by a two-opt technique.");
+  m.def("compute_tour_from_sequence",
+        py::overload_cast<const std::vector<Circle> &, bool>(&compute_tour),
+        "Computes a close-enough tour based on a given circle sequence.");
+  m.def("branch_and_bound", &branch_and_bound,
+        "Computes an optimal solution based on BnB.");
 }

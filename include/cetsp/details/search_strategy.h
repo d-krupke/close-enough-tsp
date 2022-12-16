@@ -4,8 +4,8 @@
 
 #ifndef CETSP_SEARCH_STRATEGY_H
 #define CETSP_SEARCH_STRATEGY_H
-#include "node.h"
-#include "branching_strategy.h"
+#include "cetsp/details/branching_strategy.h"
+#include "cetsp/node.h"
 
 namespace cetsp {
 class SearchStrategy {

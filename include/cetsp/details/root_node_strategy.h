@@ -7,8 +7,8 @@
 
 #ifndef CETSP_ROOT_NODE_STRATEGY_H
 #define CETSP_ROOT_NODE_STRATEGY_H
-#include "./common.h"
-#include "./node.h"
+#include "cetsp/common.h"
+#include "cetsp/node.h"
 #include "doctest/doctest.h"
 #include <vector>
 namespace cetsp {

@@ -1,63 +1,25 @@
-//
-// Created by Dominik Krupke on 12.12.22.
-//
+/**
+ * This file implements the Branch and Bound algorithm. The sub-strategies
+ * are separated in other classes to make it easily adaptable.
+ */
 
 #ifndef CETSP_BNB_H
 #define CETSP_BNB_H
-#include "branching_strategy.h"
+#include "cetsp/callbacks.h"
+#include "cetsp/details/branching_strategy.h"
+#include "cetsp/details/root_node_strategy.h"
+#include "cetsp/details/search_strategy.h"
+#include "cetsp/details/solution_pool.h"
 #include "node.h"
-#include "root_node_strategy.h"
-#include "search_strategy.h"
-#include "solution_pool.h"
 #include <chrono>
-
 namespace cetsp {
-
-struct EventContext {
-  Node *current_node;
-  Node *root_node;
-  Instance *instance;
-  SolutionPool *solution_pool;
-  int num_iterations;
-
-  void add_lazy_circle(Circle& circle) {
-    instance->add_circle(circle);
-  }
-
-  void add_solution(Trajectory& trajectory) {
-    solution_pool->add_solution(trajectory);
-  }
-
-  double get_lower_bound()  {
-    return root_node->get_lower_bound();
-  }
-
-  double get_upper_bound() {
-    return solution_pool->get_upper_bound();
-  }
-
-  bool is_feasible () {
-    return current_node->is_feasible();
-  }
-
-  Trajectory get_relaxed_solution() {
-    return current_node->get_relaxed_solution();
-  }
-
-  std::unique_ptr<Trajectory> get_best_solution() {
-    return  solution_pool->get_best_solution();
-  }
-};
-
-class DefaultUserCallbacks {
-public:
-   void on_entering_node(EventContext &e) {}
-   void add_lazy_constraints(EventContext &e) {}
-   void on_leaving_node(EventContext &e) {}
-};
 
 template <typename UserCallbacks = DefaultUserCallbacks>
 class BranchAndBoundAlgorithm {
+  /**
+   * Implements the branch and bound algorithm.
+   * TODO: Make the strategies replaceable by templates.
+   */
 public:
   BranchAndBoundAlgorithm(Instance *instance,
                           UserCallbacks user_callbacks = DefaultUserCallbacks())
@@ -65,9 +27,24 @@ public:
         user_callbacks{user_callbacks}, search_strategy(root),
         branching_strategy(instance) {}
 
+  /**
+   * Add a feasible solution as upper bound. Note that it must also obey
+   * all lazy constraints. This can speed up the algorithm as it can allow BnB
+   * to prune a lot of suboptimal branches. You can add as many solutions as
+   * you want as only the best is used.
+   * @param trajectory The feasible solution.
+   */
   void add_upper_bound(const Trajectory &trajectory) {
     solution_pool.add_solution(trajectory);
   }
+
+  /**
+   * Add a lower bound to the BnB-tree. This usually does not help much, it
+   * may only be a benefit, it is higher than any LB found by BnB, but it does
+   * probably not influence the algorithm itself as long as it is not very close
+   * to the optimum.
+   * @param lb The lower bound.
+   */
   void add_lower_bound(double lb) { root.add_lower_bound(lb); }
 
   double get_upper_bound() { return solution_pool.get_upper_bound(); }
@@ -76,6 +53,12 @@ public:
     return solution_pool.get_best_solution();
   }
 
+  /**
+   * Run the Branch and Bound algorithm.
+   * @param timelimit_s The timelimit in seconds, after which it aborts.
+   * @param gap Allowed optimality gap.
+   * @param verbose Defines if you want to see a progress log.
+   */
   void optimize(int timelimit_s, double gap = 0.01, bool verbose = true) {
     if (verbose) {
       std::cout << "i\tLB\t|\tUB" << std::endl;
@@ -114,17 +97,24 @@ public:
   }
 
 private:
+  /**
+   * Executes a step/node exploration in the BnB-algorithm.
+   * @return
+   */
   bool step() {
     Node *node = search_strategy.next();
 
+    // No further node to explore.
     if (node == nullptr) {
       return false;
     }
+    // Automatically prune if worse than upper bound.
     if (node->is_pruned() ||
         node->get_lower_bound() >= solution_pool.get_upper_bound()) {
       node->prune();
       return true;
     }
+    // Explore  node.
     EventContext context{node, &root, instance, &solution_pool, num_iterations};
     user_callbacks.on_entering_node(context);
     if (node->is_pruned()) {
@@ -132,12 +122,13 @@ private:
       return true;
     }
     if (node->is_feasible()) {
+      // If node is  feasible, check lazy constraints.
       user_callbacks.add_lazy_constraints(context);
     }
     if (node->is_feasible()) { // this can have changed after lazy callbacks.
       solution_pool.add_solution(node->get_relaxed_solution());
     } else {
-      // branch
+      // branch if not yet feasible.
       if (branching_strategy.branch(*node)) {
         search_strategy.notify_of_branch(*node);
       }
@@ -172,7 +163,6 @@ TEST_CASE("Branch and Bound  2") {
   CHECK(bnb.get_solution()->length() == doctest::Approx(20));
   CHECK(bnb.get_upper_bound() == doctest::Approx(20));
 }
-
 
 TEST_CASE("Branch and Bound  3") {
   Instance instance;

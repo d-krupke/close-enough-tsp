@@ -4,8 +4,8 @@
 
 #ifndef CETSP_BRANCHING_STRATEGY_H
 #define CETSP_BRANCHING_STRATEGY_H
-#include "common.h"
-#include "node.h"
+#include "cetsp/common.h"
+#include "cetsp/node.h"
 #include <vector>
 namespace cetsp {
 class BranchingStrategy {

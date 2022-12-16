@@ -1,8 +1,8 @@
-add_library(cetsp ../include/cetsp/heuristics.h heuristics.cpp node.cpp ../include/cetsp/node.h ../include/cetsp/bnb.h ../include/cetsp/root_node_strategy.h ../include/cetsp/solution_pool.h ../include/cetsp/branching_strategy.h ../include/cetsp/search_strategy.h)
+add_library(cetsp ../include/cetsp/heuristics.h heuristics.cpp node.cpp ../include/cetsp/node.h ../include/cetsp/bnb.h ../include/cetsp/details/root_node_strategy.h ../include/cetsp/details/solution_pool.h ../include/cetsp/details/branching_strategy.h ../include/cetsp/details/search_strategy.h ../include/cetsp/callbacks.h)
 target_sources(cetsp
         PUBLIC
         ../include/cetsp/common.h
-        ../include/cetsp/cgal_kernel.h
+        ../include/cetsp/details/cgal_kernel.h
         ../include/cetsp/soc.h
         PRIVATE
         ./soc.cpp)
