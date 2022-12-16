@@ -1,6 +1,7 @@
 /**
  * This file implements the Branch and Bound algorithm. The sub-strategies
  * are separated in other classes to make it easily adaptable.
+ * With the user callbacks, you can influence it strongly.
  */
 
 #ifndef CETSP_BNB_H

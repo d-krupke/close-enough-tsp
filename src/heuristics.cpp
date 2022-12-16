@@ -43,6 +43,11 @@ Trajectory compute_tour_by_2opt(Instance& instance) {
       }
     }
   }
+  //TODO: This is ugly as it does not care for begin and end.
+  if(instance.is_path()) {
+    circles.insert(circles.begin(), Circle(instance.path->first, 0));
+    circles.push_back(Circle(instance.path->second, 0));
+  }
   return compute_tour(circles, instance.is_path());
 }
 } // namespace cetsp
