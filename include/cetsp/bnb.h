@@ -139,7 +139,7 @@ private:
   }
 
   Instance *instance;
-  RootNodeStrategy root_node_strategy{};
+  LongestEdgePlusFurthestCircle root_node_strategy{};
   Node root;
   SearchStrategy search_strategy;
   UserCallbacks user_callbacks;
