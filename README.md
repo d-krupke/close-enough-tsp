@@ -29,6 +29,13 @@ def cb(context):
             
 timelimit = 60
 opt_solution = branch_and_bound(instance, cb, initial_solution, timelimit)
+
+# plot
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 10))
+plot_solution(plt.gca(), instance, opt_solution)
+plt.show()
 ```
 
 ## Project Structure
