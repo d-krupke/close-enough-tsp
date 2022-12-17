@@ -3,6 +3,33 @@
 This implementation shall allow to easily experiment with new lower and upper
 bound ideas. If you have no idea of how a branch and bound algorithm works, 
 check out [this video](https://youtu.be/KMlyhggSqYw).
+## Python Interface
+
+You can try out new ideas on the lower bound (biggest issue) using this simple
+python interface.
+
+```python
+# import the stuff
+from cetsp.core import Circle, Instance, compute_tour_by_2opt, branch_and_bound, Point, plot_solution
+
+import random
+circles = [Circle(Point(x*(1+random.random()), y*(1+random.random())), 1) for x in range(7) for y in range(7)]
+instance = Instance(circles, Point(0,0), Point(10,10))
+
+# compute an initial solution via 2opt
+initial_solution = compute_tour_by_2opt(instance)
+
+def cb(context):
+    relaxed_sol = context.get_relaxed_solution()
+    for c in circles:
+        dist = relaxed_sol.distance(c)
+        if dist > 0:
+            # this may not really be a lower bound.
+            context.current_node.add_lower_bound(relaxed_sol.length()+dist)
+            
+timelimit = 60
+opt_solution = branch_and_bound(instance, cb, initial_solution, timelimit)
+```
 
 ## Project Structure
 
