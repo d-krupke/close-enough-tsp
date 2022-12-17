@@ -25,7 +25,7 @@ public:
   BranchAndBoundAlgorithm(Instance *instance,
                           UserCallbacks user_callbacks = DefaultUserCallbacks())
       : instance{instance}, root{root_node_strategy.get_root_node(*instance)},
-        user_callbacks{user_callbacks}, search_strategy(root),
+         search_strategy(root),user_callbacks{user_callbacks},
         branching_strategy(instance) {}
 
   /**

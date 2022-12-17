@@ -18,7 +18,7 @@ public:
       : branch_sequence{std::move(branch_sequence)}, parent{parent},
         instance{instance} {
     for (const auto &i : branch_sequence) {
-      assert(i < instance->size());
+      assert(i < static_cast<int>(instance->size()));
     }
   }
 

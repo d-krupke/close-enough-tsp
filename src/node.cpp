@@ -57,7 +57,7 @@ auto Node::get_relaxed_solution() -> const Trajectory & {
       std::vector<Circle> circles;
       circles.reserve(branch_sequence.size());
       for (auto i : branch_sequence) {
-        assert(i < instance->size());
+        assert(i < static_cast<int>(instance->size()));
         circles.push_back((*instance).at(i));
       }
       assert(circles.size() == branch_sequence.size());

@@ -13,7 +13,7 @@ public:
   BranchingStrategy(Instance *instance) : instance{instance} {}
   bool branch(Node &node) {
     std::vector<double> distances(instance->size());
-    for (int i = 0; i < instance->size(); ++i) {
+    for (unsigned i = 0; i < instance->size(); ++i) {
       distances[i] = node.get_relaxed_solution().distance((*instance)[i]);
     }
     auto max_dist = std::max_element(distances.begin(), distances.end());

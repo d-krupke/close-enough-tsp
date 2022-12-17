@@ -1,5 +1,6 @@
 //
-// Created by Dominik Krupke on 11.12.22.
+// Provides some common classes on instances and solutions that are
+// independent of the concrete algorithms.
 //
 
 #ifndef CLOSE_ENOUGH_TSP_COMMON_H
@@ -106,7 +107,7 @@ class Trajectory {
    * For representing the trajectory in a solution.
    */
 public:
-  Trajectory(){};
+  Trajectory() = default;
   explicit Trajectory(std::vector<Point> points) : points{std::move(points)} {}
 
   bool is_tour() const { return points[0] == points[points.size() - 1]; }
@@ -118,7 +119,7 @@ public:
       details::Point tp(points[0].x, points[0].y);
       min_dist = CGAL::squared_distance(tp, p);
     }
-    for (int i = 0; i < points.size() - 1; i++) {
+    for (unsigned i = 0; i < points.size() - 1; i++) {
       details::Segment segment({points[i].x, points[i].y},
                                {points[i + 1].x, points[i + 1].y});
       double dist = CGAL::squared_distance(segment, p);
@@ -132,7 +133,7 @@ public:
   double length() const {
     if (!_length) {
       double l = 0;
-      for (int i = 0; i < points.size() - 1; i++) {
+      for (unsigned i = 0; i < points.size() - 1; i++) {
         details::Segment segment({points[i].x, points[i].y},
                                  {points[i + 1].x, points[i + 1].y});
         l += std::sqrt(segment.squared_length());

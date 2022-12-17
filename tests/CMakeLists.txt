@@ -8,4 +8,10 @@ target_include_directories(doctests PRIVATE ../include)
 target_link_libraries(doctests PRIVATE doctest::doctest)
 target_link_libraries(doctests PRIVATE CGAL::CGAL)
 target_link_libraries(doctests PRIVATE gurobi::gurobi)
-#target_link_libraries(doctests PRIVATE  Gurobi::GurobiCXX)
+target_compile_options(doctests PRIVATE
+        "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>")
+target_compile_options(doctests PRIVATE
+        "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>")
+target_compile_options(doctests PRIVATE
+        "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>")
+

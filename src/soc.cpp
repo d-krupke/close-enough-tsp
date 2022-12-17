@@ -9,7 +9,7 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
   static GRBEnv env;
   GRBModel model(&env);
 
-  const int n = circle_sequence.size();
+  const auto n = circle_sequence.size();
   std::vector<GRBVar> x;
   x.resize(n);
   std::vector<GRBVar> y;
@@ -26,7 +26,7 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
   t.resize(n);
   GRBLinExpr obj = 0;
 
-  for (int i = 0; i < n; ++i) {
+  for (unsigned i = 0; i < n; ++i) {
     x[i] = model.addVar(/*lb=*/-GRB_INFINITY, /*ub=*/GRB_INFINITY,
                         /*obj=*/0.0, /*type=*/GRB_CONTINUOUS);
     y[i] = model.addVar(/*lb=*/-GRB_INFINITY, /*ub=*/GRB_INFINITY,
@@ -52,7 +52,7 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
 
   model.setObjective(obj, GRB_MINIMIZE);
 
-  for (int i = 0; i < n; ++i) {
+  for (unsigned i = 0; i < n; ++i) {
     model.addQConstr(f[i] * f[i] >= w[i] * w[i] + u[i] * u[i]);
     const auto r = circle_sequence[i].radius;
     model.addQConstr(s[i] * s[i] + t[i] * t[i] <= r * r);
@@ -63,7 +63,7 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
     model.addConstr(t[i] == cy - y[i]);
   }
 
-  for (int i = 0; i < n; ++i) {
+  for (unsigned i = 0; i < n; ++i) {
     if (path && i == 0) {
       model.addConstr(w[i] == 0);
       model.addConstr(u[i] == 0);
@@ -78,13 +78,12 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
   model.optimize();
   std::vector<Point> points;
   points.reserve(n + 1);
-  for (int i = 0; i < n; i++) {
-    points.push_back(
-        Point(x[i].get(GRB_DoubleAttr_X), y[i].get(GRB_DoubleAttr_X)));
+  for (unsigned i = 0; i < n; i++) {
+    points.emplace_back(x[i].get(GRB_DoubleAttr_X), y[i].get(GRB_DoubleAttr_X));
   }
   if (!path) {
     points.push_back(points[0]);
   }
   return Trajectory(points);
 }
-}; // namespace cetsp
+} // namespace cetsp

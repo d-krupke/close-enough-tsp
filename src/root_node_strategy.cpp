@@ -6,8 +6,8 @@ namespace cetsp {
 std::pair<int, int> find_max_pair(const std::vector<Circle> &instance) {
   double max_dist = 0;
   std::pair<int, int> best_pair;
-  for (int i = 0; i < instance.size(); i++) {
-    for (int j = 0; j < i; j++) {
+  for (unsigned i = 0; i < instance.size(); i++) {
+    for (unsigned j = 0; j < i; j++) {
       auto dist = instance[i].center.squared_dist(instance[j].center);
       if (dist >= max_dist) {
         best_pair = {i, j};
@@ -33,12 +33,12 @@ Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
   if (instance.is_path()) {
     std::vector<int> seq;
     seq.push_back(most_distanced_circle(instance));
-    assert(seq[0] < instance.size());
+    assert(seq[0] < static_cast<int>(instance.size()));
     return Node(seq, &instance);
   } else {
     if (instance.size() <= 3) { // trivial case
       std::vector<int> seq;
-      for (int i = 0; i < instance.size(); ++i) {
+      for (int i = 0; i < static_cast<int>(instance.size()); ++i) {
         seq.push_back(i);
       }
       return Node(seq, &instance);
@@ -48,7 +48,7 @@ Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
     const auto c2 = instance[max_pair.second];
     int c3 = max_pair.first;
     double max_dist = 0;
-    for (int i = 0; i < instance.size(); ++i) {
+    for (unsigned i = 0; i < instance.size(); ++i) {
       const auto &c = instance[i];
       auto dist = c1.center.dist(c.center) + c2.center.dist(c.center);
       if (dist > max_dist) {
@@ -56,9 +56,9 @@ Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
         c3 = i;
       }
     }
-    assert(max_pair.first < instance.size());
-    assert(max_pair.second < instance.size());
-    assert(c3 < instance.size());
+    assert(max_pair.first < static_cast<int>(instance.size()));
+    assert(max_pair.second < static_cast<int>(instance.size()));
+    assert(c3 < static_cast<int>(instance.size()));
     return Node({max_pair.first, c3, max_pair.second}, &instance);
   }
 }

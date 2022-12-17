@@ -35,8 +35,8 @@ Trajectory compute_tour_by_2opt(Instance &instance) {
   const auto n = circles.size();
   while (changed) {
     changed = false;
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < i; j++) {
+    for (unsigned i = 0; i < n; i++) {
+      for (unsigned j = 0; j < i; j++) {
         assert(j < i);
         if (swap_improves(circles, j, i)) {
           std::reverse(circles.begin() + j, circles.begin() + i + 1);
