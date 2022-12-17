@@ -23,7 +23,8 @@ public:
     if (solutions.empty()) {
       return nullptr;
     }
-    return std::make_unique<Trajectory>(solutions.back());  // best solution is always at the end
+    return std::make_unique<Trajectory>(
+        solutions.back()); // best solution is always at the end
   }
 
   bool empty() { return solutions.empty(); }

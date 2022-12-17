@@ -37,5 +37,6 @@ PYBIND11_MODULE(_cetsp_cpp, m) {
       .def("__len__", [](const Trajectory &self) { return self.points.size(); })
       .def("__getitem__",
            [](const Trajectory &self, int i) { return self.points.at(i); });
-  m.def("compute_tour_by_2opt", py::overload_cast<std::vector<Circle>, bool>(&compute_tour_by_2opt));
+  m.def("compute_tour_by_2opt",
+        py::overload_cast<std::vector<Circle>, bool>(&compute_tour_by_2opt));
 }

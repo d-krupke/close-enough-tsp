@@ -70,9 +70,9 @@ TEST_CASE("Circle") {
 class Instance : public std::vector<Circle> {
 public:
   Instance() {}
-  Instance(const std::vector<Circle>& circles)  {
+  Instance(const std::vector<Circle> &circles) {
     reserve(circles.size());
-    for(const auto& c: circles){
+    for (const auto &c : circles) {
       push_back(c);
     }
   }
@@ -91,9 +91,9 @@ public:
     { return true; }
   }
 
-  void add_circle(Circle& circle){
-      push_back(circle);
-      revision += 1;
+  void add_circle(Circle &circle) {
+    push_back(circle);
+    revision += 1;
   }
 
   std::optional<std::pair<Point, Point>> path;
@@ -153,6 +153,7 @@ public:
   }
 
   std::vector<Point> points;
+
 private:
   mutable std::optional<double> _length;
 };

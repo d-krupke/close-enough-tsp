@@ -13,8 +13,6 @@
 #include <vector>
 namespace cetsp {
 
-
-
 class LongestEdgePlusFurthestCircle {
 
 public:

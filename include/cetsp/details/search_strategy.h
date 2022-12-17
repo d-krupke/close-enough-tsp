@@ -12,14 +12,14 @@ class SearchStrategy {
 public:
   SearchStrategy(Node &root) { queue.push_back(&root); }
   void notify_of_branch(Node &node) {
-    std::vector<Node*> children;
+    std::vector<Node *> children;
     for (auto &child : node.get_children()) {
       children.push_back(&child);
     }
-    std::sort(children.begin(), children.end(), [](Node* a, Node*  b) {
+    std::sort(children.begin(), children.end(), [](Node *a, Node *b) {
       return a->get_lower_bound() > b->get_lower_bound();
     });
-    for(auto child: children){
+    for (auto child : children) {
       queue.push_back(child);
     }
   }
@@ -47,20 +47,18 @@ private:
 TEST_CASE("Search Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
-  Instance instance ({
-      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
+  Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
   BranchingStrategy bs(&instance);
-  Node root({0,1,2,3}, &instance);
+  Node root({0, 1, 2, 3}, &instance);
   SearchStrategy ss(root);
-  auto* node = ss.next();
-  CHECK(node!= nullptr);
+  auto *node = ss.next();
+  CHECK(node != nullptr);
   CHECK(bs.branch(*node) == false);
   ss.notify_of_branch(*node);
   CHECK(ss.next() == nullptr);
 
-  std::vector<Circle> seq = {
-      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
-  Node root2({0,1,2}, &instance);
+  std::vector<Circle> seq = {{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
+  Node root2({0, 1, 2}, &instance);
   SearchStrategy ss2(root2);
   node = ss2.next();
   CHECK(bs.branch(*node) == true);

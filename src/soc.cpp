@@ -10,13 +10,20 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
   GRBModel model(&env);
 
   const int n = circle_sequence.size();
-  std::vector<GRBVar> x; x.resize(n);
-  std::vector<GRBVar> y; y.resize(n);
-  std::vector<GRBVar> f; f.resize(n);
-  std::vector<GRBVar> w; w.resize(n);
-  std::vector<GRBVar> u; u.resize(n);
-  std::vector<GRBVar> s; s.resize(n);
-  std::vector<GRBVar> t; t.resize(n);
+  std::vector<GRBVar> x;
+  x.resize(n);
+  std::vector<GRBVar> y;
+  y.resize(n);
+  std::vector<GRBVar> f;
+  f.resize(n);
+  std::vector<GRBVar> w;
+  w.resize(n);
+  std::vector<GRBVar> u;
+  u.resize(n);
+  std::vector<GRBVar> s;
+  s.resize(n);
+  std::vector<GRBVar> t;
+  t.resize(n);
   GRBLinExpr obj = 0;
 
   for (int i = 0; i < n; ++i) {
@@ -70,11 +77,12 @@ Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
   model.set(GRB_IntParam_OutputFlag, 0);
   model.optimize();
   std::vector<Point> points;
-  points.reserve(n+1);
+  points.reserve(n + 1);
   for (int i = 0; i < n; i++) {
-    points.push_back(Point(x[i].get(GRB_DoubleAttr_X), y[i].get(GRB_DoubleAttr_X)));
+    points.push_back(
+        Point(x[i].get(GRB_DoubleAttr_X), y[i].get(GRB_DoubleAttr_X)));
   }
-  if(!path) {
+  if (!path) {
     points.push_back(points[0]);
   }
   return Trajectory(points);

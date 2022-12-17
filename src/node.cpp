@@ -21,13 +21,14 @@ auto Node::get_lower_bound() -> double {
 }
 
 bool Node::is_feasible() {
-  if(instance->revision == feasible_revision) {
+  if (instance->revision == feasible_revision) {
     return true;
   }
-  if(feasible_revision == -2) {
+  if (feasible_revision == -2) {
     return false;
   }
-  if(get_relaxed_solution().covers(instance->begin(), instance->end(), instance->eps)){
+  if (get_relaxed_solution().covers(instance->begin(), instance->end(),
+                                    instance->eps)) {
     feasible_revision = instance->revision;
     return true;
   } else {
@@ -52,30 +53,29 @@ void Node::branch(std::vector<Node> &&children_) {
 
 auto Node::get_relaxed_solution() -> const Trajectory & {
   if (!relaxed_solution) {
-    if(instance->is_tour()) {
+    if (instance->is_tour()) {
       std::vector<Circle> circles;
       circles.reserve(branch_sequence.size());
-      for(auto i: branch_sequence){
-        assert(i<instance->size());
+      for (auto i : branch_sequence) {
+        assert(i < instance->size());
         circles.push_back((*instance).at(i));
       }
       assert(circles.size() == branch_sequence.size());
       relaxed_solution = compute_tour(circles, false);
     } else {
       std::vector<Circle> circles;
-      circles.reserve(branch_sequence.size()+2);
+      circles.reserve(branch_sequence.size() + 2);
       circles.push_back(Circle(instance->path->first, 0));
-      for(auto i: branch_sequence){
+      for (auto i : branch_sequence) {
         circles.push_back((*instance).at(i));
       }
       circles.push_back(Circle(instance->path->second, 0));
-      assert(circles.size() == branch_sequence.size()+2);
+      assert(circles.size() == branch_sequence.size() + 2);
       relaxed_solution = compute_tour(circles, true);
     }
   }
   return *relaxed_solution;
 }
-
 
 void Node::prune() {
   if (pruned) {
@@ -101,4 +101,4 @@ void Node::reevaluate_children() {
     add_lower_bound(lb);
   }
 }
-}
+} // namespace cetsp
