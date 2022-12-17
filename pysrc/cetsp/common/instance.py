@@ -14,5 +14,4 @@ class TourInstance:
         return len(self._circles)
 
     def __iter__(self):
-        for circ in self._circles:
-            yield circ
+        yield from self._circles

@@ -10,4 +10,3 @@ set_target_properties(test_gurobi_package PROPERTIES CXX_VISIBILITY_PRESET hidde
 add_test(NAME run_test_gurobi_package
          WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
          COMMAND test_gurobi_package)
-

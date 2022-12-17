@@ -79,18 +79,21 @@ class TwoOptOptimizer:
             while improved:
                 tour, improved = self.optimization_step(tour)
                 timelimit_watcher()
-        except TimelimitWatcher.Timeout as timeout:
+        except TimelimitWatcher.Timeout:
             print("Terminated by timeout.")
         return tour
 
-def find_cetsp_solution(circles: typing.List[Circle], repeat:int = 5, verbose=True) -> Tour:
+
+def find_cetsp_solution(
+    circles: typing.List[Circle], repeat: int = 5, verbose=True
+) -> Tour:
     two_opt = TwoOptOptimizer(circles)
     best_obj = None
     best_tour = None
     for _ in range(repeat):
         tsp = two_opt.optimize()
         obj, tour = compute_tour([circles[i] for i in tsp], verbose=verbose)
-        if best_obj is None or obj<best_obj:
+        if best_obj is None or obj < best_obj:
             best_tour = tour
             best_obj = obj
     return Tour(best_tour)

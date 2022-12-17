@@ -1,5 +1,6 @@
 import typing
 from shapely.geometry.polygon import LinearRing, Point as SPoint
+import matplotlib.pyplot as plt
 
 from .instance import TourInstance
 from .circle import Circle, plot_circle
@@ -26,20 +27,17 @@ class Tour:
         return self.distance(circle) <= self.__EPSILON
 
     def strongly_contains(self, circle: Circle, val: float = 0.025):
-        return self.distance(circle) < - circle.radius * val
+        return self.distance(circle) < -circle.radius * val
 
     def distance(self, circle: Circle) -> float:
         return self._shapely.distance(SPoint(circle.x, circle.y)) - circle.radius
 
 
-import matplotlib.pyplot as plt
-
-
-def plot_solution(ax: plt.Axes, instance: TourInstance,
-                  solution: Tour):
+def plot_solution(ax: plt.Axes, instance: TourInstance, solution: Tour):
     for c in instance:
         plot_circle(ax, c, facecolor="white", zorder=1, ec="black")
     tour = solution.points
-    plt.plot([p[0] for p in tour] + [tour[0][0]], [p[1] for p in tour] + [tour[0][1]],
-             'o-')
-    ax.set_aspect('equal', 'box')
+    plt.plot(
+        [p[0] for p in tour] + [tour[0][0]], [p[1] for p in tour] + [tour[0][1]], "o-"
+    )
+    ax.set_aspect("equal", "box")

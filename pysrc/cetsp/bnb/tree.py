@@ -42,9 +42,12 @@ class RootNodeStrategy:
 
     def __call__(self, instance: TourInstance) -> Node:
         best_tripple = max(
-            (PartialSolution(instance, list(seq)) for seq in
-             itertools.combinations(instance, 3)),
-            key=lambda ps: ps.value())
+            (
+                PartialSolution(instance, list(seq))
+                for seq in itertools.combinations(instance, 3)
+            ),
+            key=lambda ps: ps.value(),
+        )
         return Node(best_tripple)
 
 
@@ -70,7 +73,7 @@ class BnBTree:
 
     def get_upper_bound(self):
         if self.best_solution is None:
-            return float('inf')
+            return float("inf")
         else:
             return self.best_solution.value()
 

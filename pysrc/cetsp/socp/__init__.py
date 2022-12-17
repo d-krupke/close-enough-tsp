@@ -7,5 +7,5 @@ Potential Optimizations:
  - Adapting the model, so we can add further circles, instead of having
     to recreate it every time.
 """
-
+# flake8: noqa F401
 from .socp import compute_tour

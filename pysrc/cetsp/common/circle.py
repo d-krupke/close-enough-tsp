@@ -1,4 +1,4 @@
-import typing
+import matplotlib.pyplot as plt
 
 
 class Circle:
@@ -12,10 +12,10 @@ class Circle:
         self.radius = radius
 
     def contains(self, x: float, y: float):
-        return (x - self.x) ** 2 + (y - self.y ** 2) <= self.radius * self.radius
+        return (x - self.x) ** 2 + (y - self.y**2) <= self.radius * self.radius
 
     def squared_dist(self, x: float, y: float):
-        return (x - self.x) ** 2 + (y - self.y ** 2)
+        return (x - self.x) ** 2 + (y - self.y**2)
 
     def __repr__(self):
         return f"Circle({self.x}, {self.y}, r={self.radius})"
@@ -28,7 +28,6 @@ class Circle:
 
 
 # simple plotting  helper
-import matplotlib.pyplot as plt
 
 
 def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):

@@ -8,9 +8,7 @@ from ..socp import compute_tour
 
 
 class PartialSolution:
-
-    def __init__(self, instance: TourInstance,
-                 circle_sequence: typing.List[Circle]):
+    def __init__(self, instance: TourInstance, circle_sequence: typing.List[Circle]):
         self.circle_sequence = circle_sequence
         value, points = compute_tour(circle_sequence, verbose=False)
         self.tour = Tour(points)
@@ -21,8 +19,10 @@ class PartialSolution:
         return len(self.circle_sequence)
 
     def insert(self, index: int, circle: Circle):
-        return PartialSolution(self.instance, self.circle_sequence[:index] + [
-            circle] + self.circle_sequence[index:])
+        return PartialSolution(
+            self.instance,
+            self.circle_sequence[:index] + [circle] + self.circle_sequence[index:],
+        )
 
     def __contains__(self, circle: Circle) -> bool:
         return circle in self.tour
@@ -39,9 +39,12 @@ class PartialSolution:
         return self.__is_feasible
 
     def simplify(self):
-        simplified = [circ for circ in self.circle_sequence if
-                                not self.tour.strongly_contains(circ)]
-        if len(simplified)<len(self.circle_sequence):
+        simplified = [
+            circ
+            for circ in self.circle_sequence
+            if not self.tour.strongly_contains(circ)
+        ]
+        if len(simplified) < len(self.circle_sequence):
             print(f"Simplified to {len(simplified)} from {len(self.circle_sequence)} ")
         self.circle_sequence = simplified
 

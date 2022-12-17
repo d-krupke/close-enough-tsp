@@ -20,4 +20,3 @@ class GurobiTestPackageConan(ConanFile):
         if not tools.cross_building(self):
             cmake = self._configure_cmake()
             cmake.test()
-

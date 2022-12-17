@@ -13,7 +13,7 @@ def tsp_lower_bound(instance: typing.List[Circle]):
     G = create_graph(instance)
     T = nx.minimum_spanning_tree(G)
     weight = T.size(weight="weight")
-    weight -= sum((c.radius for c in instance))
+    weight -= sum(c.radius for c in instance)
     return max(weight, 0)
 
 
@@ -142,7 +142,7 @@ def tsp_with_partial_order_lower_bound(
 
     # Calc lower bound
     weight /= 2.5 - 2 / len(partial_order)
-    weight -= sum((c.radius for c in instance))
+    weight -= sum(c.radius for c in instance)
     return max(weight, 0)
 
 

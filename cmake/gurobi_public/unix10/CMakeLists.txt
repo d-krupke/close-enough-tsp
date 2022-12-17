@@ -25,7 +25,7 @@ set(cpp_sources
 	"Constr.cpp"
 	"Env.cpp"
 	"Exception.cpp"
-	"GenConstr.cpp" 
+	"GenConstr.cpp"
 	"LinExpr.cpp"
 	"Model.cpp"
 	"QConstr.cpp"
@@ -38,7 +38,7 @@ add_library(gurobi_c++ STATIC ${cpp_sources})
 set_target_properties(gurobi_c++ PROPERTIES POSITION_INDEPENDENT_CODE On
                                             CXX_VISIBILITY_PRESET hidden
                                             CXX_VISIBILITY_INLINES_HIDDEN On)
-target_include_directories(gurobi_c++ PUBLIC 
+target_include_directories(gurobi_c++ PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/${GUROBI_VERSION}/include> # include the public header directory in the source tree when building the lib
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)                      # include the include directory when using the installed lib
 
@@ -52,4 +52,3 @@ install(IMPORTED_RUNTIME_ARTIFACTS __gurobi_grbgetkey RUNTIME DESTINATION "${CMA
 install(TARGETS gurobi_c++ EXPORT gurobi_c++_targets
         PUBLIC_HEADER DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-

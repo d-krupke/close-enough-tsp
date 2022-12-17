@@ -6,9 +6,9 @@ from gurobipy import GRB
 from ..common import Circle
 
 
-def compute_tour(circle_sequence: typing.List[Circle], path: bool = False,
-                 verbose=True) -> typing.Tuple[float, typing.List[
-    typing.Tuple[float, float]]]:
+def compute_tour(
+    circle_sequence: typing.List[Circle], path: bool = False, verbose=True
+) -> typing.Tuple[float, typing.List[typing.Tuple[float, float]]]:
     """
     This function efficiently computes the optimal CE-Tour for a given sequence(!) of circles.
     If the order of circles is given, the problem becomes an easy to solve SOC-Program.
@@ -25,26 +25,32 @@ def compute_tour(circle_sequence: typing.List[Circle], path: bool = False,
     model = gp.Model()
 
     # tour points
-    x = model.addVars(circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY,
-                      vtype=GRB.CONTINUOUS)
-    y = model.addVars(circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY,
-                      vtype=GRB.CONTINUOUS)
+    x = model.addVars(
+        circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS
+    )
+    y = model.addVars(
+        circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS
+    )
 
     # length of segments
     f = model.addVars(circle_sequence, lb=0.0, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS)
     model.setObjective(gp.quicksum(f.values()), sense=GRB.MINIMIZE)
 
     # x and y-length of segments (difference of segment points)
-    w = model.addVars(circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY,
-                      vtype=GRB.CONTINUOUS)
-    u = model.addVars(circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY,
-                      vtype=GRB.CONTINUOUS)
+    w = model.addVars(
+        circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS
+    )
+    u = model.addVars(
+        circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS
+    )
 
     # difference of tour points to circle center
-    s = model.addVars(circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY,
-                      vtype=GRB.CONTINUOUS)
-    t = model.addVars(circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY,
-                      vtype=GRB.CONTINUOUS)
+    s = model.addVars(
+        circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS
+    )
+    t = model.addVars(
+        circle_sequence, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS
+    )
 
     # SOC
     for c in circle_sequence:
