@@ -20,6 +20,8 @@ def tsp_lower_bound(instance: typing.List[Circle]):
 def tsp_with_partial_order_lower_bound(
     instance: typing.List[Circle], partial_order: typing.List[int]
 ):
+    # Implementation of the paper "improved approximations for TSP with simple precedence constraints"
+
     # If the given order size is <= 3, we can ignore it
     if len(partial_order) <= 3:
         return tsp_lower_bound(instance)
@@ -59,86 +61,90 @@ def tsp_with_partial_order_lower_bound(
     assert nx.is_perfect_matching(A_odd, M)
     M = [(u, v, G[u][v]["weight"]) for (u, v) in M]
 
-    # 6: Let P′ be the path in A ∪ M \ (C′ ∪ P ) connecting the vertices that are incident to e2
     K = nx.MultiGraph(A)
     K.add_weighted_edges_from(M)
     assert all(d % 2 == 0 for _v, d in K.degree())
-    K.remove_edges_from(C2)
-    K.remove_edges_from(P1)
-    P2 = nx.shortest_path(K, source=e2[0], target=e2[1])
-    P2 = [(u, v, G[u][v]["weight"]) for (u, v) in zip(P2, P2[1:])]
+    if True:
+        # We skip the actual tour construction, as we only need the lower bound scalar value
+        weight = K.size(weight="weight")
 
-    # 7: Starting from the circuit C′ ∪ P ∪ P′, compute an Eulerian tour in A ∪ M that respects the order of t
-    K.remove_edges_from(P2)
-    assert all(d % 2 == 0 for _v, d in K.degree())
-    cc = list(nx.connected_components(K))
-    vertex_to_cc = [None] * K.number_of_nodes()
-    for c_idx, c in enumerate(cc):
-        for u in c:
-            assert vertex_to_cc[u] is None
-            vertex_to_cc[u] = c_idx
+    else:
+        # 6: Let P′ be the path in A ∪ M \ (C′ ∪ P ) connecting the vertices that are incident to e2
+        K.remove_edges_from(C2)
+        K.remove_edges_from(P1)
+        P2 = nx.shortest_path(K, source=e2[0], target=e2[1])
+        P2 = [(u, v, G[u][v]["weight"]) for (u, v) in zip(P2, P2[1:])]
 
-    cc_tours = [list(nx.eulerian_circuit(K.subgraph(c))) for c in cc]
-    # Create an initial tour of C′ ∪ P ∪ P′
-    tour = []
-    for e in C1:
-        if e == e1:
-            tour += P1
-        elif e == e2:
-            tour += P2
-        else:
-            tour.append(e)
-    # Construct the full tour by iterating over the initial tour and inserting each individual component's Eulerian tour
-    full_tour = []
-    is_c_added = [False] * len(cc)
-    for e in tour:
-        u, v, _d = e
-        full_tour.append(e)
-        c_idx = vertex_to_cc[v]
-        if c_idx is None or is_c_added[c_idx]:
-            continue
-        # find v in its component Eulerian tour
-        c_tour = cc_tours[c_idx]
-        v_idx = None
-        for w_idx, (w, _) in enumerate(c_tour):
-            if w == v:
-                v_idx = w_idx
-                break
-        full_tour += c_tour[v_idx:] + c_tour[:v_idx]
-        is_c_added[c_idx] = True
+        # 7: Starting from the circuit C′ ∪ P ∪ P′, compute an Eulerian tour in A ∪ M that respects the order of t
+        K.remove_edges_from(P2)
+        assert all(d % 2 == 0 for _v, d in K.degree())
+        cc = list(nx.connected_components(K))
+        vertex_to_cc = [None] * K.number_of_nodes()
+        for c_idx, c in enumerate(cc):
+            for u in c:
+                assert vertex_to_cc[u] is None
+                vertex_to_cc[u] = c_idx
+        cc_tours = [list(nx.eulerian_circuit(K.subgraph(c))) for c in cc]
+        # Create an initial tour of C′ ∪ P ∪ P′
+        tour = []
+        for e in C1:
+            if e == e1:
+                tour += P1
+            elif e == e2:
+                tour += P2
+            else:
+                tour.append(e)
+        # Construct the full tour by iterating over the initial tour and inserting each individual component's Eulerian tour
+        full_tour = []
+        is_c_added = [False] * len(cc)
+        for e in tour:
+            u, v, _d = e
+            full_tour.append(e)
+            c_idx = vertex_to_cc[v]
+            if c_idx is None or is_c_added[c_idx]:
+                continue
+            # find v in its component Eulerian tour
+            c_tour = cc_tours[c_idx]
+            v_idx = None
+            for w_idx, (w, _) in enumerate(c_tour):
+                if w == v:
+                    v_idx = w_idx
+                    break
+            full_tour += c_tour[v_idx:] + c_tour[:v_idx]
+            is_c_added[c_idx] = True
 
-    # 8: Shorten the Eulerian tour to a Hamiltonian tour respecting the order of t.
-    visited = [False] * G.number_of_nodes()
-    source = full_tour[0][0]
-    tour = [source]
-    visited[source] = True
-    assert source == partial_order[0]
-    is_in_partial_order = [False] * G.number_of_nodes()
-    for v in partial_order:
-        is_in_partial_order[v] = True
-    idx_in_partial_order = 1
-    for e in full_tour:
-        v = e[1]
-        if visited[v]:
-            continue  # skip visited vertices
-        next_in_partial_order = (
-            None
-            if idx_in_partial_order >= len(partial_order)
-            else partial_order[idx_in_partial_order]
-        )
-        if is_in_partial_order[v] and v != next_in_partial_order:
-            continue  # maintain the order, will be visited later
-        tour.append(v)
-        visited[v] = True
-        if is_in_partial_order[v]:
-            idx_in_partial_order += 1
-    assert all(visited)
+        # 8: Shorten the Eulerian tour to a Hamiltonian tour respecting the order of t.
+        visited = [False] * G.number_of_nodes()
+        source = full_tour[0][0]
+        tour = [source]
+        visited[source] = True
+        assert source == partial_order[0]
+        is_in_partial_order = [False] * G.number_of_nodes()
+        for v in partial_order:
+            is_in_partial_order[v] = True
+        idx_in_partial_order = 1
+        for e in full_tour:
+            v = e[1]
+            if visited[v]:
+                continue  # skip visited vertices
+            next_in_partial_order = (
+                None
+                if idx_in_partial_order >= len(partial_order)
+                else partial_order[idx_in_partial_order]
+            )
+            if is_in_partial_order[v] and v != next_in_partial_order:
+                continue  # maintain the order, will be visited later
+            tour.append(v)
+            visited[v] = True
+            if is_in_partial_order[v]:
+                idx_in_partial_order += 1
+        assert all(visited)
 
-    # Calculate the tour weight
-    weight = 0
-    for i in range(len(tour)):
-        u, v = tour[i], tour[(i + 1) % len(tour)]
-        weight += G[u][v]["weight"]
+        # Calculate the tour weight
+        weight = 0
+        for i in range(len(tour)):
+            u, v = tour[i], tour[(i + 1) % len(tour)]
+            weight += G[u][v]["weight"]
 
     # Calc lower bound
     weight /= 2.5 - 2 / len(partial_order)
