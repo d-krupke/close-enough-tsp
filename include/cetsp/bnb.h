@@ -147,7 +147,7 @@ private:
   Node root;
   CheapestChildDepthFirst search_strategy;
   UserCallbacks user_callbacks;
-  FarthestCircle branching_strategy;
+  ChFarthestCircle branching_strategy;
   SolutionPool solution_pool;
   int num_iterations = 0;
 };
