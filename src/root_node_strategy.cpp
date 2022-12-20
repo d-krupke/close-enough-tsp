@@ -2,6 +2,12 @@
 // Created by Dominik Krupke on 17.12.22.
 //
 #include "cetsp/details/root_node_strategy.h"
+#include "cetsp/details/cgal_kernel.h"
+
+#include <CGAL/Convex_hull_traits_adapter_2.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/convex_hull_2.h>
+#include <CGAL/property_map.h>
 namespace cetsp {
 std::pair<int, int> find_max_pair(const std::vector<Circle> &instance) {
   double max_dist = 0;
@@ -18,7 +24,7 @@ std::pair<int, int> find_max_pair(const std::vector<Circle> &instance) {
   return best_pair;
 }
 
-int most_distanced_circle(const Instance &instance) {
+auto most_distanced_circle(const Instance &instance) {
   assert(instance.path);
   auto p0 = instance.path->first;
   auto p1 = instance.path->second;
@@ -46,7 +52,7 @@ Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
     auto max_pair = find_max_pair(instance);
     const auto c1 = instance[max_pair.first];
     const auto c2 = instance[max_pair.second];
-    int c3 = max_pair.first;
+    auto c3 = max_pair.first;
     double max_dist = 0;
     for (unsigned i = 0; i < instance.size(); ++i) {
       const auto &c = instance[i];
@@ -61,5 +67,35 @@ Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
     assert(c3 < static_cast<int>(instance.size()));
     return Node({max_pair.first, c3, max_pair.second}, &instance);
   }
+}
+
+Node ConvexHull::get_root_node(Instance &instance) {
+  if (instance.is_path()) {
+    throw std::invalid_argument("ConvexHull Strategy only feasible for tours.");
+  }
+  typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+  typedef K::Point_2 Point_2;
+  typedef CGAL::Convex_hull_traits_adapter_2<
+      K, CGAL::Pointer_property_map<Point_2>::type>
+      Convex_hull_traits_2;
+  std::vector<Point_2> points;
+  points.reserve(instance.size());
+  for (const auto &c : instance) {
+    points.push_back({c.center.x, c.center.y});
+  }
+  std::vector<int> indices(points.size()), out;
+  std::iota(indices.begin(), indices.end(), 0);
+  CGAL::convex_hull_2(indices.begin(), indices.end(), std::back_inserter(out),
+                      Convex_hull_traits_2(CGAL::make_property_map(points)));
+  std::vector<Circle> ch_circles;
+  for (auto i : out) {
+    ch_circles.push_back(instance[i]);
+  }
+  //  Only use circles that are  explicitly contained.
+  auto ch_traj = compute_tour(ch_circles);
+  std::vector<int> sequence;
+  std::copy_if(out.begin(), out.end(), std::back_inserter(sequence),
+               [&](auto i) { return ch_traj.distance(instance[i]) >= -0.01; });
+  return Node{out, &instance};
 }
 } // namespace cetsp

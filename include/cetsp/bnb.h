@@ -23,9 +23,11 @@ class BranchAndBoundAlgorithm {
    */
 public:
   BranchAndBoundAlgorithm(Instance *instance,
-                          UserCallbacks user_callbacks = DefaultUserCallbacks())
+                          RootNodeStrategy& root_node_strategy,
+                          UserCallbacks user_callbacks = DefaultUserCallbacks()
+                          )
       : instance{instance}, root{root_node_strategy.get_root_node(*instance)},
-         search_strategy(root),user_callbacks{user_callbacks},
+        search_strategy(root), user_callbacks{user_callbacks},
         branching_strategy(instance) {}
 
   /**
@@ -62,6 +64,7 @@ public:
    */
   void optimize(int timelimit_s, double gap = 0.01, bool verbose = true) {
     if (verbose) {
+      std::cout << "Starting with root node of size "<<root.get_fixed_sequence().size() <<std::endl;
       std::cout << "i\tLB\t|\tUB" << std::endl;
     }
     using namespace std::chrono;
@@ -72,7 +75,8 @@ public:
       if (verbose) {
         if (num_iterations <= 10 ||
             (num_iterations < 100 && num_iterations % 10 == 0) ||
-            (num_iterations % 100 == 0)) {
+            (num_iterations < 1000 && num_iterations % 100 == 0) ||
+            (num_iterations % 1000 == 0)) {
           std::cout << num_iterations << "\t" << lb << "\t|\t" << ub
                     << std::endl;
         }
@@ -139,11 +143,11 @@ private:
   }
 
   Instance *instance;
-  LongestEdgePlusFurthestCircle root_node_strategy{};
+
   Node root;
-  SearchStrategy search_strategy;
+  CheapestChildDepthFirst search_strategy;
   UserCallbacks user_callbacks;
-  BranchingStrategy branching_strategy;
+  FarthestCircle branching_strategy;
   SolutionPool solution_pool;
   int num_iterations = 0;
 };
@@ -151,14 +155,16 @@ private:
 TEST_CASE("Branch and Bound  1") {
   Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
   CHECK(instance.size() == 4);
-  BranchAndBoundAlgorithm bnb(&instance);
+  LongestEdgePlusFurthestCircle root_node_strategy{};
+  BranchAndBoundAlgorithm bnb(&instance, root_node_strategy);
   bnb.optimize(30);
 }
 
 TEST_CASE("Branch and Bound  2") {
   Instance instance(
       {{{0, 0}, 0.0}, {{5, 0}, 0.0}, {{5, 5}, 0.0}, {{0, 5}, 0.0}});
-  BranchAndBoundAlgorithm bnb(&instance);
+  LongestEdgePlusFurthestCircle root_node_strategy{};
+  BranchAndBoundAlgorithm bnb(&instance, root_node_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
   CHECK(bnb.get_solution()->length() == doctest::Approx(20));
@@ -172,7 +178,8 @@ TEST_CASE("Branch and Bound  3") {
       instance.push_back({{x, y}, 1});
     }
   }
-  BranchAndBoundAlgorithm bnb(&instance);
+  LongestEdgePlusFurthestCircle root_node_strategy{};
+  BranchAndBoundAlgorithm bnb(&instance ,root_node_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
   CHECK(bnb.get_upper_bound() <= 41);
@@ -186,7 +193,8 @@ TEST_CASE("Branch and Bound Path") {
     }
   }
   instance.path = {{0, 0}, {0, 0}};
-  BranchAndBoundAlgorithm bnb(&instance);
+  LongestEdgePlusFurthestCircle root_node_strategy{};
+  BranchAndBoundAlgorithm bnb(&instance, root_node_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
   CHECK(bnb.get_upper_bound() == doctest::Approx(42.0747));

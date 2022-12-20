@@ -14,4 +14,3 @@ target_compile_options(doctests PRIVATE
         "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>")
 target_compile_options(doctests PRIVATE
         "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>")
-

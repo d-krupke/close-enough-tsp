@@ -13,9 +13,18 @@
 #include <vector>
 namespace cetsp {
 
-class LongestEdgePlusFurthestCircle {
+class RootNodeStrategy{
+public:
+  virtual Node get_root_node(Instance &instance)=0;
+};
+
+class LongestEdgePlusFurthestCircle: public RootNodeStrategy {
 
 public:
+  Node get_root_node(Instance &instance);
+};
+
+class ConvexHull: public RootNodeStrategy {
   Node get_root_node(Instance &instance);
 };
 

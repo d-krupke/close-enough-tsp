@@ -46,7 +46,8 @@ branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
                  Trajectory *initial_solution, int timelimit) {
   PythonUserCallbacks pnp(py_callback);
-  BranchAndBoundAlgorithm baba(&instance, pnp);
+  std::unique_ptr<RootNodeStrategy> rns{new ConvexHull()};
+  BranchAndBoundAlgorithm baba(&instance, *rns, pnp);
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
   }

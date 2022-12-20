@@ -8,9 +8,9 @@
 #include "cetsp/node.h"
 #include <vector>
 namespace cetsp {
-class BranchingStrategy {
+class FarthestCircle {
 public:
-  BranchingStrategy(Instance *instance) : instance{instance} {}
+  FarthestCircle(Instance *instance) : instance{instance} {}
   bool branch(Node &node) {
     std::vector<double> distances(instance->size());
     for (unsigned i = 0; i < instance->size(); ++i) {
@@ -47,7 +47,7 @@ TEST_CASE("Branching Strategy") {
   std::vector<Circle> instance_ = {
       {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
   Instance instance(instance_);
-  BranchingStrategy bs(&instance);
+  FarthestCircle bs(&instance);
   Node root({0, 1, 2, 3}, &instance);
   CHECK(bs.branch(root) == false);
 

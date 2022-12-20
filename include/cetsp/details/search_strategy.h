@@ -8,9 +8,9 @@
 #include "cetsp/node.h"
 
 namespace cetsp {
-class SearchStrategy {
+class CheapestChildDepthFirst {
 public:
-  SearchStrategy(Node &root) { queue.push_back(&root); }
+  CheapestChildDepthFirst(Node &root) { queue.push_back(&root); }
   void notify_of_branch(Node &node) {
     std::vector<Node *> children;
     for (auto &child : node.get_children()) {
@@ -48,9 +48,9 @@ TEST_CASE("Search Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
   Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
-  BranchingStrategy bs(&instance);
+  FarthestCircle bs(&instance);
   Node root({0, 1, 2, 3}, &instance);
-  SearchStrategy ss(root);
+  CheapestChildDepthFirst ss(root);
   auto *node = ss.next();
   CHECK(node != nullptr);
   CHECK(bs.branch(*node) == false);
@@ -59,7 +59,7 @@ TEST_CASE("Search Strategy") {
 
   std::vector<Circle> seq = {{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
   Node root2({0, 1, 2}, &instance);
-  SearchStrategy ss2(root2);
+  CheapestChildDepthFirst ss2(root2);
   node = ss2.next();
   CHECK(bs.branch(*node) == true);
   ss2.notify_of_branch(*node);
