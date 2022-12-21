@@ -28,7 +28,7 @@ public:
                           )
       : instance{instance}, root{root_node_strategy.get_root_node(*instance)},
         search_strategy(root), user_callbacks{user_callbacks},
-        branching_strategy(instance) {}
+        branching_strategy(instance, &root) {}
 
   /**
    * Add a feasible solution as upper bound. Note that it must also obey
