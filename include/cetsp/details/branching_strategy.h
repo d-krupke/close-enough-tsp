@@ -102,7 +102,7 @@ public:
                                      (s.target().x() - s.source().x())}};
     Ray_2 r2{s.source(), Direction_2{-(s.target().y() - s.source().y()),
                                      (s.target().x() - s.source().x())}};
-    if (squared_distance(r1, p) <= s.squared_length() and
+    if (squared_distance(r1, p) <= s.squared_length() &&
         squared_distance(r2, p) <= s.squared_length()) {
       // segment between both rays
       return {std::sqrt(squared_distance(r1, p))}; // add distance to first ray
