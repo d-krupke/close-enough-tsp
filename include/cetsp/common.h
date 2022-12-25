@@ -143,6 +143,22 @@ public:
     return *_length;
   }
 
+  bool is_simple() const {
+    std::vector<details::Point> points_;
+    for (const auto &p : points) {
+      points_.emplace_back(p.x, p.y);
+    }
+    if (points.front() == points.back()) {
+      details::Polygon poly{points_.begin(), points_.end() - 1};
+      return poly.is_simple();
+    } else {
+      std::cout << "Warning! `is_simple`  does not work for paths right now!"
+                << std::endl;
+      details::Polygon poly{points_.begin(), points_.end()};
+      return poly.is_simple();
+    }
+  }
+
   [[nodiscard]] bool covers(const Circle &circle, double eps = 0.0) const {
     return distance(circle) <= eps;
   }

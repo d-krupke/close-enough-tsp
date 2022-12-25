@@ -2,7 +2,10 @@
 // Created by Dominik Krupke on 14.12.22.
 // The task of this file is to find the root node to start the BnB-algorithm
 // with. For a tour, this can be three circles, as the order for three does
-// not matter.
+// not matter. For a path it is reasonably to start with the circle that is
+// most distanced to both end points (we generally want the root node to be
+// as expensive as possible and thus close to the cost of the feasible
+// solutions)
 //
 
 #ifndef CETSP_ROOT_NODE_STRATEGY_H
@@ -13,18 +16,19 @@
 #include <vector>
 namespace cetsp {
 
-class RootNodeStrategy{
+class RootNodeStrategy {
 public:
-  virtual Node get_root_node(Instance &instance)=0;
+  virtual Node get_root_node(Instance &instance) = 0;
 };
 
-class LongestEdgePlusFurthestCircle: public RootNodeStrategy {
+class LongestEdgePlusFurthestCircle : public RootNodeStrategy {
 
 public:
   Node get_root_node(Instance &instance);
 };
 
-class ConvexHull: public RootNodeStrategy {
+class ConvexHull : public RootNodeStrategy {
+public:
   Node get_root_node(Instance &instance);
 };
 

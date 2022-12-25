@@ -33,7 +33,7 @@ def test_bnb():
             context.current_node.prune()  # don't evaluate further
         # print("py", node.get_lower_bound(), solution_pool.get_upper_bound())
 
-    opt_solution = branch_and_bound(instance, initial_solution, 60)
+    opt_solution = branch_and_bound(instance, cb, initial_solution, 60)
 
 
 def test_bnb2():
@@ -54,4 +54,4 @@ def test_bnb2():
             )
 
     timelimit = 60
-    opt_solution = branch_and_bound(instance, None, initial_solution, timelimit)
+    opt_solution = branch_and_bound(instance, cb, initial_solution, timelimit)

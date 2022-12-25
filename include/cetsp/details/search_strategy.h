@@ -1,6 +1,12 @@
-//
-// Created by Dominik Krupke on 15.12.22.
-//
+/**
+ * The search strategy defines which node to explore next. Two common
+ * strategies are BFS and DFS. DFS will quickly go down (following the best
+ * child at every node) to obtain a feasible solution. BFS will be quicker
+ * in increasing the lower bound but will take a long time to find a feasible
+ * solution. It is also common to switch between DFS and BFS,  i.e., going
+ * deep first until a feasible solution is found, then select the cheapest
+ * node (usually BFS) to repeat.
+ */
 
 #ifndef CETSP_SEARCH_STRATEGY_H
 #define CETSP_SEARCH_STRATEGY_H
@@ -8,10 +14,34 @@
 #include "cetsp/node.h"
 
 namespace cetsp {
-class CheapestChildDepthFirst {
+
+class SearchStrategy {
 public:
-  CheapestChildDepthFirst(Node &root) { queue.push_back(&root); }
-  void notify_of_branch(Node &node) {
+  virtual void init(Node &root) = 0;
+  /**
+   * Gets called after a node has brachned.
+   * @param node The node that  just branched.
+   */
+  virtual void notify_of_branch(Node &node) = 0;
+  /**
+   * Returns the next node to be explored. This node has to be explored and
+   * should not be returned again.
+   * @return
+   */
+  virtual Node *next() = 0;
+  /**
+   * Checks if there is a node left to explore.
+   * @return True if there is a node that requires  exploration. False  if the
+   * tree has been fully explored.
+   */
+  virtual bool has_next() = 0;
+};
+
+class CheapestChildDepthFirst : public SearchStrategy {
+public:
+  void init(Node &root) override { queue.push_back(&root); }
+
+  void notify_of_branch(Node &node) override {
     std::vector<Node *> children;
     for (auto &child : node.get_children()) {
       children.push_back(&child);
@@ -24,7 +54,7 @@ public:
     }
   }
 
-  Node *next() {
+  Node *next() override {
     if (!has_next()) {
       return nullptr;
     }
@@ -32,7 +62,7 @@ public:
     queue.pop_back();
     return n;
   }
-  bool has_next() {
+  bool has_next() override {
     // remove all pruned entries  from  the back
     while (!queue.empty() && queue.back()->is_pruned()) {
       queue.pop_back();
@@ -48,9 +78,11 @@ TEST_CASE("Search Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
   Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
-  FarthestCircle bs(&instance);
+  FarthestCircle bs;
   Node root({0, 1, 2, 3}, &instance);
-  CheapestChildDepthFirst ss(root);
+  bs.setup(&instance, &root, nullptr);
+  CheapestChildDepthFirst ss;
+  ss.init(root);
   auto *node = ss.next();
   CHECK(node != nullptr);
   CHECK(bs.branch(*node) == false);
@@ -59,7 +91,8 @@ TEST_CASE("Search Strategy") {
 
   std::vector<Circle> seq = {{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
   Node root2({0, 1, 2}, &instance);
-  CheapestChildDepthFirst ss2(root2);
+  CheapestChildDepthFirst ss2;
+  ss2.init(root2);
   node = ss2.next();
   CHECK(bs.branch(*node) == true);
   ss2.notify_of_branch(*node);

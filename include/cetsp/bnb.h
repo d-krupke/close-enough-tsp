@@ -22,13 +22,16 @@ class BranchAndBoundAlgorithm {
    * TODO: Make the strategies replaceable by templates.
    */
 public:
-  BranchAndBoundAlgorithm(Instance *instance,
-                          RootNodeStrategy& root_node_strategy,
-                          UserCallbacks user_callbacks = DefaultUserCallbacks()
-                          )
-      : instance{instance}, root{root_node_strategy.get_root_node(*instance)},
-        search_strategy(root), user_callbacks{user_callbacks},
-        branching_strategy(instance, &root) {}
+  BranchAndBoundAlgorithm(Instance *instance, Node root_,
+                          BranchingStrategy &branching_strategy,
+                          SearchStrategy &search_strategy,
+                          UserCallbacks user_callbacks = DefaultUserCallbacks())
+      : instance{instance}, root{std::move(root_)},
+        search_strategy{search_strategy}, user_callbacks{user_callbacks},
+        branching_strategy(branching_strategy) {
+    branching_strategy.setup(instance, &root, &solution_pool);
+    search_strategy.init(root);
+  }
 
   /**
    * Add a feasible solution as upper bound. Note that it must also obey
@@ -64,7 +67,8 @@ public:
    */
   void optimize(int timelimit_s, double gap = 0.01, bool verbose = true) {
     if (verbose) {
-      std::cout << "Starting with root node of size "<<root.get_fixed_sequence().size() <<std::endl;
+      std::cout << "Starting with root node of size "
+                << root.get_fixed_sequence().size() << std::endl;
       std::cout << "i\tLB\t|\tUB" << std::endl;
     }
     using namespace std::chrono;
@@ -145,9 +149,9 @@ private:
   Instance *instance;
 
   Node root;
-  CheapestChildDepthFirst search_strategy;
+  SearchStrategy &search_strategy;
   UserCallbacks user_callbacks;
-  ChFarthestCircle branching_strategy;
+  BranchingStrategy &branching_strategy;
   SolutionPool solution_pool;
   int num_iterations = 0;
 };
@@ -156,7 +160,11 @@ TEST_CASE("Branch and Bound  1") {
   Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
   CHECK(instance.size() == 4);
   LongestEdgePlusFurthestCircle root_node_strategy{};
-  BranchAndBoundAlgorithm bnb(&instance, root_node_strategy);
+  FarthestCircle branching_strategy;
+  CheapestChildDepthFirst search_strategy;
+  BranchAndBoundAlgorithm bnb(&instance,
+                              root_node_strategy.get_root_node(instance),
+                              branching_strategy, search_strategy);
   bnb.optimize(30);
 }
 
@@ -164,7 +172,11 @@ TEST_CASE("Branch and Bound  2") {
   Instance instance(
       {{{0, 0}, 0.0}, {{5, 0}, 0.0}, {{5, 5}, 0.0}, {{0, 5}, 0.0}});
   LongestEdgePlusFurthestCircle root_node_strategy{};
-  BranchAndBoundAlgorithm bnb(&instance, root_node_strategy);
+  FarthestCircle branching_strategy;
+  CheapestChildDepthFirst search_strategy;
+  BranchAndBoundAlgorithm bnb(&instance,
+                              root_node_strategy.get_root_node(instance),
+                              branching_strategy, search_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
   CHECK(bnb.get_solution()->length() == doctest::Approx(20));
@@ -179,7 +191,11 @@ TEST_CASE("Branch and Bound  3") {
     }
   }
   LongestEdgePlusFurthestCircle root_node_strategy{};
-  BranchAndBoundAlgorithm bnb(&instance ,root_node_strategy);
+  FarthestCircle branching_strategy;
+  CheapestChildDepthFirst search_strategy;
+  BranchAndBoundAlgorithm bnb(&instance,
+                              root_node_strategy.get_root_node(instance),
+                              branching_strategy, search_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
   CHECK(bnb.get_upper_bound() <= 41);
@@ -194,7 +210,11 @@ TEST_CASE("Branch and Bound Path") {
   }
   instance.path = {{0, 0}, {0, 0}};
   LongestEdgePlusFurthestCircle root_node_strategy{};
-  BranchAndBoundAlgorithm bnb(&instance, root_node_strategy);
+  FarthestCircle branching_strategy;
+  CheapestChildDepthFirst search_strategy;
+  BranchAndBoundAlgorithm bnb(&instance,
+                              root_node_strategy.get_root_node(instance),
+                              branching_strategy, search_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
   CHECK(bnb.get_upper_bound() == doctest::Approx(42.0747));

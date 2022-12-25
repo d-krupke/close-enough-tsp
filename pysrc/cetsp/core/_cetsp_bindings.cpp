@@ -3,6 +3,7 @@
  */
 #include "cetsp/bnb.h"
 #include "cetsp/common.h"
+#include "cetsp/details/triple_map.h"
 #include "cetsp/heuristics.h"
 #include "cetsp/node.h"
 #include <fmt/core.h>
@@ -46,8 +47,17 @@ branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
                  Trajectory *initial_solution, int timelimit) {
   PythonUserCallbacks pnp(py_callback);
-  std::unique_ptr<RootNodeStrategy> rns{new ConvexHull()};
-  BranchAndBoundAlgorithm baba(&instance, *rns, pnp);
+  std::unique_ptr<RootNodeStrategy> rns;
+  if (instance.is_tour()) {
+    rns = std::make_unique<ConvexHull>();
+  } else {
+    rns = std::make_unique<LongestEdgePlusFurthestCircle>();
+  }
+  FarthestCircle branching_strategy;
+
+  CheapestChildDepthFirst search_strategy;
+  BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),
+                               branching_strategy, search_strategy, pnp);
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
   }
@@ -83,7 +93,8 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("__len__", [](const Trajectory &self) { return self.points.size(); })
       .def("__getitem__",
            [](const Trajectory &self, int i) { return self.points.at(i); })
-      .def("distance", &Trajectory::distance);
+      .def("distance", &Trajectory::distance)
+      .def("is_simple", &Trajectory::is_simple);
 
   py::class_<Node>(m, "Node", "Node in the BnB-tree.")
       .def("get_lower_bound", &Node::get_lower_bound)
@@ -152,6 +163,10 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
            "Return the relaxed solution of the current node.")
       .def("get_best_solution", &EventContext::get_best_solution,
            "Return the best known feasible solution.");
+  py::class_<TripleMap>(m, "TripleMap", "bla")
+      .def(py::init<Instance *>())
+      .def("get_cost", &TripleMap::get_cost);
+
   // functions
   m.def("compute_tour_by_2opt", &compute_tour_by_2opt,
         "Compute a feasible tour by a two-opt technique.");

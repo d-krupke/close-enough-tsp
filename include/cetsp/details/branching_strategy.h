@@ -1,10 +1,17 @@
-//
-// Created by Dominik Krupke on 14.12.22.
-//
-
+/**
+ * This file implements branching stratgies for the branch and bound algorithm,
+ * i.e., deciding how to split  the solution space. The primary decision here
+ * is to decide for the circle to integrate next. However, we can also do
+ * some filtering here and only create branches  that are promising.
+ *
+ * The simplest branching strategy is to use always the furthest circle to
+ * the current relaxed solution.
+ */
 #ifndef CETSP_BRANCHING_STRATEGY_H
 #define CETSP_BRANCHING_STRATEGY_H
 #include "cetsp/common.h"
+#include "cetsp/details/solution_pool.h"
+#include "cetsp/details/triple_map.h"
 #include "cetsp/node.h"
 #include <vector>
 
@@ -14,17 +21,26 @@
 #include <CGAL/property_map.h>
 namespace cetsp {
 class BranchingStrategy {
+public:
+  virtual void setup(Instance *instance, Node *root,
+                     SolutionPool *solution_pool) {}
   virtual bool branch(Node &node) = 0;
 };
 
-class FarthestCircle : BranchingStrategy {
+class FarthestCircle : public BranchingStrategy {
   /**
    * This strategy tries to branch on the circle that is most distanced
    * to the relaxed solution.
    */
 public:
-  FarthestCircle(Instance *instance) : instance{instance} {}
-  bool branch(Node &node);
+  FarthestCircle() {}
+
+  virtual void setup(Instance *instance_, Node *root,
+                     SolutionPool *solution_pool) override {
+    instance = instance_;
+  }
+
+  bool branch(Node &node) override;
 
   virtual bool allows_lazy_constraints() { return true; }
 
@@ -39,9 +55,7 @@ protected:
     // to change this behavior.
     return true;
   }
-
-private:
-  Instance *instance;
+  Instance *instance = nullptr;
 };
 
 class ChFarthestCircle : public FarthestCircle {
@@ -55,7 +69,21 @@ class ChFarthestCircle : public FarthestCircle {
    * the convex hull).
    */
 public:
-  virtual bool allows_lazy_constraints() { return false; }
+  virtual bool allows_lazy_constraints() override { return false; }
+
+  virtual void setup(Instance *instance_, Node *root,
+                     SolutionPool *solution_pool_) override {
+    FarthestCircle::setup(instance_, root, solution_pool_);
+    solution_pool = solution_pool_;
+    if (instance->is_path()) {
+      // Should be possible to extend the idea to paths.
+      throw std::invalid_argument(
+          "ConvexHull Strategy only feasible for tours.");
+    }
+    order_values.resize(instance->size());
+    is_ordered.resize(instance->size(), false);
+    compute_weights(instance, root);
+  }
 
   typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
   typedef K::Point_2 Point_2;
@@ -95,7 +123,7 @@ public:
   }
 
   std::optional<double> get_distance_on_segment(const Segment_2 &s,
-                                                const Point_2 &p)  const {
+                                                const Point_2 &p) const {
 
     // segment in range
     Ray_2 r1{s.source(), Direction_2{-(s.target().y() - s.source().y()),
@@ -133,16 +161,7 @@ public:
     }
   }
 
-  ChFarthestCircle(Instance *instance, Node *root) : FarthestCircle(instance) {
-    if (instance->is_path()) {
-      // Should be possible to extend the idea to paths.
-      throw std::invalid_argument(
-          "ConvexHull Strategy only feasible for tours.");
-    }
-    order_values.resize(instance->size());
-    is_ordered.resize(instance->size(), false);
-    compute_weights(instance, root);
-  }
+  ChFarthestCircle() : FarthestCircle(), tm{instance} {}
 
 protected:
   bool sequence_is_ch_ordered(const std::vector<int> &seqeuence) {
@@ -158,13 +177,20 @@ protected:
     }
     return true;
   }
-  virtual bool is_sequence_ok(const std::vector<int> &sequence) {
+  virtual bool is_sequence_ok(const std::vector<int> &sequence) override {
+    if (tm.estimate_cost_for_sequence(sequence) >=
+        solution_pool->get_upper_bound()) {
+      std::cout << "early  pruning" << std::endl;
+      return false;
+    }
     return sequence_is_ch_ordered(sequence);
   }
 
 private:
+  TripleMap tm;
   std::vector<double> order_values;
   std::vector<bool> is_ordered;
+  SolutionPool *solution_pool;
 };
 
 TEST_CASE("Branching Strategy") {
@@ -173,8 +199,9 @@ TEST_CASE("Branching Strategy") {
   std::vector<Circle> instance_ = {
       {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
   Instance instance(instance_);
-  FarthestCircle bs(&instance);
+  FarthestCircle bs;
   Node root({0, 1, 2, 3}, &instance);
+  bs.setup(&instance, &root, nullptr);
   CHECK(bs.branch(root) == false);
 
   std::vector<Circle> seq = {{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
