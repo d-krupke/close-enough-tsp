@@ -72,13 +72,6 @@ See https://github.com/cpm-cmake/CPM.cmake for more information."
   endif()
 endif()
 
-if(CURRENT_CPM_VERSION MATCHES "development-version")
-  message(
-          WARNING "${CPM_INDENT} Your project is using an unstable development version of CPM.cmake. \
-Please update to a recent release if possible. \
-See https://github.com/cpm-cmake/CPM.cmake for details."
-  )
-endif()
 
 set_property(GLOBAL PROPERTY CPM_INITIALIZED true)
 

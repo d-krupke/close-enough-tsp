@@ -53,7 +53,7 @@ branch_and_bound(Instance instance,
   } else {
     rns = std::make_unique<LongestEdgePlusFurthestCircle>();
   }
-  FarthestCircle branching_strategy;
+  ChFarthestCircle branching_strategy;
 
   CheapestChildDepthFirst search_strategy;
   BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),

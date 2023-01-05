@@ -35,6 +35,8 @@ public:
    * tree has been fully explored.
    */
   virtual bool has_next() = 0;
+
+  virtual void notify_of_feasible(Node &node) = 0;
 };
 
 class CheapestChildDepthFirst : public SearchStrategy {
@@ -52,6 +54,12 @@ public:
     for (auto child : children) {
       queue.push_back(child);
     }
+  }
+
+  void notify_of_feasible(Node &node) override {
+    std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
+      return a->get_lower_bound() > b->get_lower_bound();
+    });
   }
 
   Node *next() override {

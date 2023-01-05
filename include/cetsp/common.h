@@ -146,6 +146,9 @@ public:
   bool is_simple() const {
     std::vector<details::Point> points_;
     for (const auto &p : points) {
+      if(!points_.empty() && p.dist(Point(points_.back().x(), points_.back().y())) < 0.01) {
+        continue;
+      }
       points_.emplace_back(p.x, p.y);
     }
     if (points.front() == points.back()) {

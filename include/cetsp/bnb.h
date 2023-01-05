@@ -127,12 +127,11 @@ private:
     EventContext context{node, &root, instance, &solution_pool, num_iterations};
     user_callbacks.on_entering_node(context);
     if (node->is_pruned()) {
-      user_callbacks.on_leaving_node(context);
+      on_leaving_node(context);
       return true;
     }
     if (node->is_feasible()) {
-      // If node is  feasible, check lazy constraints.
-      user_callbacks.add_lazy_constraints(context);
+      on_feasible(context);
     }
     if (node->is_feasible()) { // this can have changed after lazy callbacks.
       solution_pool.add_solution(node->get_relaxed_solution());
@@ -142,8 +141,18 @@ private:
         search_strategy.notify_of_branch(*node);
       }
     }
-    user_callbacks.on_leaving_node(context);
+    on_leaving_node(context);
     return true;
+  }
+
+  void on_feasible(EventContext &context) {
+    // If node is  feasible, check lazy constraints.
+    user_callbacks.add_lazy_constraints(context);
+    search_strategy.notify_of_feasible(*(context.current_node));
+  }
+
+  void on_leaving_node(EventContext &context) {
+    user_callbacks.on_leaving_node(context);
   }
 
   Instance *instance;

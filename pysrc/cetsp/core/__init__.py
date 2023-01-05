@@ -29,9 +29,14 @@ def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):
     ax.add_patch(patch)
 
 
-def plot_solution(ax: plt.Axes, instance, trajectory):
-    for c in instance.circles():
-        plot_circle(ax, c, facecolor="white", zorder=1, ec="black", fill=False)
+def plot_solution(ax: plt.Axes, instance, trajectory, highlight=None):
+    for i, c in enumerate(instance.circles()):
+        if highlight and i in highlight:
+            plot_circle(ax, c, facecolor="white", zorder=1, ec="green", fill=False)
+        elif trajectory and  trajectory.distance(c) <= 0.01*c.radius:
+            plot_circle(ax, c, facecolor="white", zorder=1, ec="black", fill=False)
+        else:
+            plot_circle(ax, c, facecolor="white", zorder=1, ec="red", fill=False)
 
     tour = [trajectory[i] for i in range(len(trajectory))]
     plt.plot([p.x for p in tour], [p.y for p in tour], "o-")

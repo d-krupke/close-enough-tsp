@@ -9,6 +9,7 @@
 #include <CGAL/Point_2.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/Segment_2.h>
+#include <CGAL/squared_distance_2.h>
 namespace cetsp {
 namespace details {
 using Kernel = CGAL::Cartesian<double>;
