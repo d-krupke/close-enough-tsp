@@ -2,15 +2,18 @@ import typing
 import math
 from cetsp.common import Circle
 import networkx as nx
+from scipy.spatial import ConvexHull
+import itertools
+import random
 
 
-def dist(p0: Circle, p1: Circle) -> float:
+def _dist(p0: Circle, p1: Circle) -> float:
     return math.sqrt((p0.x - p1.x) ** 2 + (p0.y - p1.y) ** 2)
 
 
-def tsp_lower_bound(instance: typing.List[Circle]):
+def _tsp_lower_bound(instance: typing.List[Circle]) -> float:
     # TODO use real TSP solver
-    G = create_graph(instance)
+    G = _create_graph(instance)
     T = nx.minimum_spanning_tree(G)
     weight = T.size(weight="weight")
     weight -= sum(c.radius for c in instance)
@@ -19,15 +22,15 @@ def tsp_lower_bound(instance: typing.List[Circle]):
 
 def tsp_with_partial_order_lower_bound(
     instance: typing.List[Circle], partial_order: typing.List[int]
-):
+) -> float:
     # Implementation of the paper "improved approximations for TSP with simple precedence constraints"
 
     # If the given order size is <= 3, we can ignore it
     if len(partial_order) <= 3:
-        return tsp_lower_bound(instance)
+        return _tsp_lower_bound(instance)
 
     # 1: Compute a minimum spanning tree T in G
-    G = create_graph(instance)
+    G = _create_graph(instance)
     T = nx.minimum_spanning_tree(G)
 
     # 2: C := s1 s2 . . . sk s1
@@ -152,10 +155,54 @@ def tsp_with_partial_order_lower_bound(
     return max(weight, 0)
 
 
-def create_graph(instance: typing.List[Circle]):
+def _create_graph(instance: typing.List[Circle]):
     G = nx.Graph()
     for u_idx, u in enumerate(instance):
         G.add_node(u_idx)
         for v_idx, v in enumerate(instance[:u_idx]):
-            G.add_edge(u_idx, v_idx, weight=dist(u, v))
+            G.add_edge(u_idx, v_idx, weight=_dist(u, v))
     return G
+
+
+# Compute a random subset of the discs which do not intersect one another, except the partial order
+# which is always included
+def _random_non_intersecting_subset(
+    instance: typing.List[Circle], partial_order: typing.List[int]
+) -> typing.List[int]:
+    discs = set(partial_order)
+
+    hull = ConvexHull([(p.x, p.y) for p in instance]).vertices
+    hull -= discs
+    # TODO remove implicitly covered discs
+
+    non_hull = set(range(len(instance))) - (hull + discs)
+
+    # Iterate over the discs one by one, first the convex hull, in random order
+    for i in itertools.chain(random.shuffle(hull), random.shuffle(non_hull)):
+        u = instance[i]
+        too_close = False
+        for j in discs:
+            v = instance[j]
+            if _dist(u, v) < u.radius + v.radius:
+                too_close = True
+                break
+        if not too_close:
+            discs.add(i)
+
+    return discs
+
+
+def tsp_with_partial_order_lower_bound_non_intersecting_subset(
+    instance: typing.List[Circle], partial_order: typing.List[int]
+) -> float:
+    subset_indices = _random_non_intersecting_subset(instance, partial_order)
+    assert set(partial_order) <= set(
+        subset_indices
+    ), "subset must include partial order"
+    new_indices = [None] * len(instance)
+    subset = [None] * len(subset_indices)
+    for new_idx, old_idx in enumerate(subset_indices):
+        new_indices[old_idx] = new_idx
+        subset[new_idx] = instance[old_idx]
+    partial_order = [new_indices[old_idx] for old_idx in partial_order]
+    return tsp_with_partial_order_lower_bound(subset, partial_order)
