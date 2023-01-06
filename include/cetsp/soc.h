@@ -5,6 +5,8 @@
 #include <vector>
 namespace cetsp {
 
+std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(const std::vector<Circle> &circle_sequence,
+                                                                                const bool path);
 Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
                         const bool path = false);
 

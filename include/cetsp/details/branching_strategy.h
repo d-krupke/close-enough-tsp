@@ -277,14 +277,13 @@ public:
       const auto &p = points[i];
       double squared_radius = instance->at(i).radius * instance->at(i).radius;
       for (const auto &s : ch_segments) {
-        if (squared_distance(s, points[i]) <= 1.01*squared_radius) {
+        if (squared_distance(s, points[i]) <= squared_radius) {
           // segment in range
           auto w = get_distance_on_segment(s, p);
           if (w) {
             weight += *w;
             is_ordered[i] = true;
             order_values[i] = weight;
-            std::cout << i << " " << weight << std::endl;
             break;
           }
         }

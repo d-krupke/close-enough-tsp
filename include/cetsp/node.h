@@ -17,6 +17,9 @@ public:
                 Node *parent = nullptr)
       : branch_sequence{std::move(branch_sequence)}, parent{parent},
         instance{instance} {
+    if (parent != nullptr) {
+      _depth = parent->depth() + 1;
+    }
     for (const auto &i : branch_sequence) {
       assert(i < static_cast<int>(instance->size()));
     }
@@ -40,18 +43,40 @@ public:
     return branch_sequence;
   }
 
+  [[nodiscard]] const std::vector<int> get_spanning_sequence() {
+    if(!relaxed_solution) {  // only available if the relaxed solution has been computed.
+      get_relaxed_solution();
+    }
+    std::vector<int> spanning_sequence;
+    spanning_sequence.reserve(branch_sequence.size());
+    for(int i =0; i<branch_sequence.size(); ++i){
+      if(spanning_circles[i]) {
+        spanning_sequence.push_back(branch_sequence[i]);
+      }
+    }
+    return spanning_sequence;
+  }
+
   [[nodiscard]] auto is_pruned() const -> bool { return pruned; }
 
   [[nodiscard]] Instance *get_instance() { return instance; }
+
+
+  [[nodiscard]] int depth() const {
+    return _depth;
+  }
 
 private:
   void reevaluate_children();
 
   std::vector<int> branch_sequence;           // fixed part of the solution
   std::optional<Trajectory> relaxed_solution; // relaxed solution
+  std::vector<bool> spanning_circles;  // information on which circles are  spanning
   std::optional<double> lower_bound;
   std::vector<Node> children;
   Node *parent;
+
+  int _depth = 0;
   bool pruned = false;
   Instance *instance;
   int feasible_revision = -1;

@@ -80,7 +80,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def(py::init<Point, double>())
       .def_readwrite("center", &Circle::center)
       .def_readwrite("radius", &Circle::radius)
-      .def("contains", &Circle::contains)
+      .def("contains", [](const Circle& self, const Point& p){return self.contains(p);})
       .def("__repr__", [](const Circle &self) {
         return fmt::format("Circle(({}, {}), {})", self.center.x, self.center.y,
                            self.radius);
@@ -97,6 +97,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("is_simple", &Trajectory::is_simple);
 
   py::class_<Node>(m, "Node", "Node in the BnB-tree.")
+      .def("depth", &Node::depth)
       .def("get_lower_bound", &Node::get_lower_bound)
       .def("get_relaxed_solution", &Node::get_relaxed_solution)
       .def("add_lower_bound", &Node::add_lower_bound)

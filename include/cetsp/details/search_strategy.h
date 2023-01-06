@@ -36,7 +36,18 @@ public:
    */
   virtual bool has_next() = 0;
 
-  virtual void notify_of_feasible(Node &node) = 0;
+  /**
+   * Called when the (last) node has been feasible. This allows you for
+   * example to switch the strategy every time a new solution has been found.
+   * @param node The last node.
+   */
+  virtual void notify_of_feasible(Node &node) {};
+
+  /**
+   * Called when the (last) node gets pruned.
+   * @param node The last node.
+   */
+  virtual void notify_of_prune(Node &node) {};
 };
 
 class CheapestChildDepthFirst : public SearchStrategy {
@@ -57,9 +68,11 @@ public:
   }
 
   void notify_of_feasible(Node &node) override {
-    std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
-      return a->get_lower_bound() > b->get_lower_bound();
-    });
+    sort_to_priotize_lowest_value();
+  }
+
+  void notify_of_prune(Node &node )override {
+    sort_to_priotize_lowest_value();
   }
 
   Node *next() override {
@@ -79,6 +92,12 @@ public:
   }
 
 private:
+  void sort_to_priotize_lowest_value() {
+    std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
+      return a->get_lower_bound() > b->get_lower_bound();
+    });
+  }
+
   std::vector<Node *> queue;
 };
 

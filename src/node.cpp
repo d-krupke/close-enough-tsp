@@ -5,7 +5,7 @@
 #include "cetsp/node.h"
 namespace cetsp {
 void Node::add_lower_bound(double lb) {
-  if (!lower_bound || *lower_bound < lb) {
+  if (get_lower_bound() < lb) {
     lower_bound = lb;
     if (parent != nullptr) {
       parent->reevaluate_children();
@@ -61,7 +61,9 @@ auto Node::get_relaxed_solution() -> const Trajectory & {
         circles.push_back((*instance).at(i));
       }
       assert(circles.size() == branch_sequence.size());
-      relaxed_solution = compute_tour(circles, false);
+      auto soc = compute_tour_with_spanning_information(circles, false);
+      relaxed_solution = std::move(soc.first);
+      spanning_circles = std::move(soc.second);
     } else {
       std::vector<Circle> circles;
       circles.reserve(branch_sequence.size() + 2);
@@ -71,7 +73,9 @@ auto Node::get_relaxed_solution() -> const Trajectory & {
       }
       circles.push_back(Circle(instance->path->second, 0));
       assert(circles.size() == branch_sequence.size() + 2);
-      relaxed_solution = compute_tour(circles, true);
+      auto soc = compute_tour_with_spanning_information(circles, true);
+      relaxed_solution = std::move(soc.first);
+      spanning_circles = std::move(soc.second);
     }
   }
   return *relaxed_solution;
@@ -98,6 +102,7 @@ void Node::reevaluate_children() {
           return (node.is_pruned() ? std::numeric_limits<double>::infinity()
                                    : node.get_lower_bound());
         });
+    //std::cout << "Reevaluated children at depth "<<depth()<< " to "<<lb<<std::endl;
     add_lower_bound(lb);
   }
 }

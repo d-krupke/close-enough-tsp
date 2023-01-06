@@ -56,6 +56,10 @@ public:
     return center.squared_dist(point) <= radius * radius;
   }
 
+  bool contains(const Circle &circle) const {
+    return center.dist(circle.center) + circle.radius <= 1.001 * radius;
+  }
+
   Point center;
   double radius;
 };
@@ -71,10 +75,17 @@ TEST_CASE("Circle") {
 class Instance : public std::vector<Circle> {
 public:
   Instance() {}
-  Instance(const std::vector<Circle> &circles) {
+  Instance(std::vector<Circle> circles) {
     reserve(circles.size());
-    for (const auto &c : circles) {
-      push_back(c);
+    std::sort(circles.begin(), circles.end(),
+              [](const auto &a, const auto &b) { return a.radius < b.radius; });
+    for (const auto &circle : circles) {
+      if (std::any_of(begin(), end(),
+                      [&circle](auto &c) { return circle.contains(c); })) {
+        std::cout << "Removed implicit circle ("<< circle.center.x<<", "<<circle.center.y<< std::endl;
+        continue;
+      }
+      push_back(circle);
     }
   }
   bool is_path() const {
@@ -93,6 +104,10 @@ public:
   }
 
   void add_circle(Circle &circle) {
+    if (std::any_of(begin(), end(),
+                    [&circle](auto &c) { return circle.contains(c); })) {
+      return;
+    }
     push_back(circle);
     revision += 1;
   }
@@ -146,7 +161,8 @@ public:
   bool is_simple() const {
     std::vector<details::Point> points_;
     for (const auto &p : points) {
-      if(!points_.empty() && p.dist(Point(points_.back().x(), points_.back().y())) < 0.01) {
+      if (!points_.empty() &&
+          p.dist(Point(points_.back().x(), points_.back().y())) < 0.01) {
         continue;
       }
       points_.emplace_back(p.x, p.y);
