@@ -45,19 +45,37 @@ private:
 std::tuple<std::unique_ptr<Trajectory>, double>
 branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
-                 Trajectory *initial_solution, int timelimit) {
+                 Trajectory *initial_solution, int timelimit,
+                 std::string branching, std::string search, std::string root) {
   PythonUserCallbacks pnp(py_callback);
   std::unique_ptr<RootNodeStrategy> rns;
-  if (instance.is_tour()) {
+  if (root == "ConvexHull") {
     rns = std::make_unique<ConvexHull>();
-  } else {
+  } else if (root == "LongestEdgePlusFurthestCircle") {
     rns = std::make_unique<LongestEdgePlusFurthestCircle>();
+  } else {
+    throw std::invalid_argument("Invalid root node strategy");
   }
-  ChFarthestCircle branching_strategy;
-
-  CheapestChildDepthFirst search_strategy;
+  std::unique_ptr<BranchingStrategy> branching_strategy;
+  if (branching == "ChFarthestCircle") {
+    branching_strategy = std::make_unique<ChFarthestCircle>(false);
+  } else if (branching == "ChFarthestCircleSimplifying") {
+    branching_strategy = std::make_unique<ChFarthestCircle>(false);
+  } else {
+    throw std::invalid_argument("Invalid branching strategy.");
+  }
+  std::unique_ptr<SearchStrategy> search_strategy;
+  if (search == "DfsBfs") {
+    search_strategy = std::make_unique<DfsBfs>();
+  } else if (search == "CheapestChildDepthFirst") {
+    search_strategy = std::make_unique<CheapestChildDepthFirst>();
+  } else if (search == "CheapestBreadthFirst") {
+    search_strategy = std::make_unique<CheapestBreadthFirst>();
+  } else {
+    throw std::invalid_argument("Invalid search strategy.");
+  }
   BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),
-                               branching_strategy, search_strategy, pnp);
+                               *branching_strategy, *search_strategy, pnp);
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
   }
@@ -121,7 +139,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
             instance.path = {a, b};
             return instance;
           }))
-      .def("__len__", [](const Instance& self) { return self.size();})
+      .def("__len__", [](const Instance &self) { return self.size(); })
       .def("__getitem__",
            [](const Instance &self, int i) { return self.at(i); })
       .def("circles", [](const Instance &self) {
@@ -176,5 +194,8 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         py::overload_cast<const std::vector<Circle> &, bool>(&compute_tour),
         "Computes a close-enough tour based on a given circle sequence.");
   m.def("branch_and_bound", &branch_and_bound,
-        "Computes an optimal solution based on BnB.");
+        "Computes an optimal solution based on BnB.", py::arg("instance"),
+        py::arg("callback"), py::arg("initial_solution"), py::arg("timelimit"),
+        py::arg("branching") = "ChFarthestCircleSimplifying",
+        py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull");
 }

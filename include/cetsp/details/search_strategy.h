@@ -50,7 +50,7 @@ public:
   virtual void notify_of_prune(Node &node){};
 };
 
-class CheapestChildDepthFirst : public SearchStrategy {
+class DfsBfs : public SearchStrategy {
 public:
   void init(Node &root) override { queue.push_back(&root); }
 
@@ -96,6 +96,74 @@ private:
     });
   }
 
+  std::vector<Node *> queue;
+};
+class CheapestChildDepthFirst : public SearchStrategy {
+public:
+  void init(Node &root) override { queue.push_back(&root); }
+
+  void notify_of_branch(Node &node) override {
+    std::vector<Node *> children;
+    for (auto &child : node.get_children()) {
+      children.push_back(&child);
+    }
+    std::sort(children.begin(), children.end(), [](Node *a, Node *b) {
+      return a->get_lower_bound() > b->get_lower_bound();
+    });
+    for (auto child : children) {
+      queue.push_back(child);
+    }
+  }
+
+  Node *next() override {
+    if (!has_next()) {
+      return nullptr;
+    }
+    Node *n = queue.back();
+    queue.pop_back();
+    return n;
+  }
+  bool has_next() override {
+    // remove all pruned entries  from  the back
+    while (!queue.empty() && queue.back()->is_pruned()) {
+      queue.pop_back();
+    }
+    return !queue.empty();
+  }
+
+private:
+  std::vector<Node *> queue;
+};
+class CheapestBreadthFirst : public SearchStrategy {
+public:
+  void init(Node &root) override { queue.push_back(&root); }
+
+  void notify_of_branch(Node &node) override {
+    for (auto &child : node.get_children()) {
+      queue.push_back(&child);
+    }
+    std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
+      return a->get_lower_bound() > b->get_lower_bound();
+    });
+  }
+
+  Node *next() override {
+    if (!has_next()) {
+      return nullptr;
+    }
+    Node *n = queue.back();
+    queue.pop_back();
+    return n;
+  }
+  bool has_next() override {
+    // remove all pruned entries  from  the back
+    while (!queue.empty() && queue.back()->is_pruned()) {
+      queue.pop_back();
+    }
+    return !queue.empty();
+  }
+
+private:
   std::vector<Node *> queue;
 };
 
