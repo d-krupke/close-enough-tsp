@@ -42,7 +42,7 @@ private:
  * @param timelimit Timelimit in seconds for the BnB algorithm.
  * @return Best solution found within timelimit or nullptr.
  */
-std::unique_ptr<Trajectory>
+std::tuple<std::unique_ptr<Trajectory>, double>
 branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
                  Trajectory *initial_solution, int timelimit) {
@@ -62,7 +62,7 @@ branch_and_bound(Instance instance,
     baba.add_upper_bound(*initial_solution);
   }
   baba.optimize(timelimit);
-  return baba.get_solution();
+  return {baba.get_solution(), baba.get_lower_bound()};
 }
 
 PYBIND11_MODULE(_cetsp_bindings, m) {
@@ -121,7 +121,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
             instance.path = {a, b};
             return instance;
           }))
-      .def("__len__", &Instance::size)
+      .def("__len__", [](const Instance& self) { return self.size();})
       .def("__getitem__",
            [](const Instance &self, int i) { return self.at(i); })
       .def("circles", [](const Instance &self) {
