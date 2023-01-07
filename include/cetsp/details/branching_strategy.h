@@ -33,8 +33,8 @@ class FarthestCircle : public BranchingStrategy {
    * to the relaxed solution.
    */
 public:
-  FarthestCircle(bool simplify=false): simplify{simplify} {
-    if(simplify) {
+  FarthestCircle(bool simplify = false) : simplify{simplify} {
+    if (simplify) {
       std::cout << "Using node simplification." << std::endl;
     }
   }
@@ -133,7 +133,7 @@ public:
     // segment in range
     Ray_2 r1{s.source(), Direction_2{-(s.target().y() - s.source().y()),
                                      (s.target().x() - s.source().x())}};
-    Ray_2 r2{s.source(), Direction_2{-(s.target().y() - s.source().y()),
+    Ray_2 r2{s.target(), Direction_2{-(s.target().y() - s.source().y()),
                                      (s.target().x() - s.source().x())}};
     if (squared_distance(r1, p) <= s.squared_length() &&
         squared_distance(r2, p) <= s.squared_length()) {
@@ -144,6 +144,8 @@ public:
   }
 
   void compute_weights(Instance *instance, Node *root) {
+    // Compute the weights used to check if the partial solution
+    // obeys the convex hull.
     auto points = get_circle_centers(*instance);
     auto ch_segments = compute_convex_hull_segments(points);
     for (unsigned i = 0; i < instance->size(); ++i) {
@@ -166,17 +168,40 @@ public:
     }
   }
 
-  ChFarthestCircle(bool simplify=true) : FarthestCircle(simplify) {
-    std::cout << "Using ChFarthestCircle-Branching" <<std::endl;
+  ChFarthestCircle(bool simplify = true) : FarthestCircle(simplify) {
+    std::cout << "Using ChFarthestCircle-Branching" << std::endl;
   }
 
 protected:
   bool sequence_is_ch_ordered(const std::vector<int> &seqeuence) {
     double weight = 0;
+    int jumped = -1;
     for (auto j : seqeuence) {
       if (is_ordered[j]) {
         if (order_values[j] < 0.999 * weight) {
-          return false;
+          if (jumped == -1) {
+            jumped = j;
+            weight = order_values[j];
+          } else {
+            return false;
+          }
+        } else {
+          weight = order_values[j];
+        }
+      }
+    }
+    for (auto j : seqeuence) {
+      if(jumped==j) {
+        break;
+      }
+      if (is_ordered[j]) {
+        if (order_values[j] < 0.999 * weight) {
+          if (jumped == -1) {
+            jumped = j;
+            weight = order_values[j];
+          } else {
+            return false;
+          }
         } else {
           weight = order_values[j];
         }
@@ -185,7 +210,8 @@ protected:
     return true;
   }
   virtual bool is_sequence_ok(const std::vector<int> &sequence) override {
-    return sequence_is_ch_ordered(sequence);
+    auto is_ok = sequence_is_ch_ordered(sequence);
+    return is_ok;
   }
 
 private:
@@ -297,7 +323,8 @@ public:
     }
   }
 
-  TmChFarthestCircle(bool simplify=true) : FarthestCircle(simplify), tm{instance} {}
+  TmChFarthestCircle(bool simplify = true)
+      : FarthestCircle(simplify), tm{instance} {}
 
 protected:
   bool sequence_is_ch_ordered(const std::vector<int> &seqeuence) {

@@ -12,7 +12,7 @@ CPMAddPackage("gh:pybind/pybind11@2.10.0")  # pybind11, essential
 
 # ~~~~~~~~~~ Create a new Python-module ~~~~~~~~~~~~~~~~~~~~~
 pybind11_add_module(_cetsp_bindings  # target name with leading `_` as this will be a protected module.
-        cetsp/core/_cetsp_bindings.cpp)  # the file with the API.
+        cetsp_bnb2/core/_cetsp_bindings.cpp)  # the file with the API.
 # link your C++-library to the API.
 target_link_libraries(_cetsp_bindings PRIVATE cetsp)
 # link other dependencies
@@ -27,5 +27,5 @@ target_compile_definitions(_cetsp_bindings PRIVATE DOCTEST_CONFIG_DISABLE PYBIND
 # !!! This part is critical and a wrong configuration leads to bad packages
 # !!! without an error. Use a path relative to the project root (or
 # !!! `cmake_install_dir`[setup.py], if used).
-install(TARGETS _cetsp_bindings DESTINATION ./pysrc/cetsp/core)
+install(TARGETS _cetsp_bindings DESTINATION ./pysrc/cetsp_bnb2/core)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

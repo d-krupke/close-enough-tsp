@@ -8,3 +8,5 @@ rich>=12.4.1
 scikit-build>=0.15.0
 setuptools>=61.2.0
 shapely>=2.0.0
+aemeasure
+slurminade

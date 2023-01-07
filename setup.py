@@ -37,8 +37,8 @@ def readme():
 run_conan()  # automatically running conan. Ugly workaround, but does its job.
 setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # ~~~~~~~~~ BASIC INFORMATION ~~~~~~~~~~~
-    name="cetsp",
-    version="0.0.1",  # TODO: Use better approach for managing version number.
+    name="cetsp-bnb2",
+    version="0.1.0",  # TODO: Use better approach for managing version number.
     # ~~~~~~~~~~~~ CRITICAL PYTHON SETUP ~~~~~~~~~~~~~~~~~~~
     # This project structures defines the python packages in a subfolder.
     # Thus, we have to collect this subfolder and define it as root.

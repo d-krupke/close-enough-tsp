@@ -43,6 +43,7 @@ void Node::branch(std::vector<Node> &&children_) {
   }
   assert(!is_feasible());
   if (children_.empty()) {
+    std::cout << "empty branch"<<std::endl;
     prune();
     children = std::vector<Node>{};
   } else {
