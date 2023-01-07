@@ -57,7 +57,9 @@ branch_and_bound(Instance instance,
     throw std::invalid_argument("Invalid root node strategy");
   }
   std::unique_ptr<BranchingStrategy> branching_strategy;
-  if (branching == "ChFarthestCircle") {
+  if (branching == "FarthestCircle") {
+    branching_strategy = std::make_unique<FarthestCircle>(false);
+  } else if (branching == "ChFarthestCircle") {
     branching_strategy = std::make_unique<ChFarthestCircle>(false);
   } else if (branching == "ChFarthestCircleSimplifying") {
     branching_strategy = std::make_unique<ChFarthestCircle>(false);

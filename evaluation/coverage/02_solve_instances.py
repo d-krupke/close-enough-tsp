@@ -36,12 +36,27 @@ def run_for_instance(instance_name, timelimit):
             for d in instances[instance_name]["circles"]
         ]
     )
+    configuration = {
+        "root": "ConvexHull",
+        # "root": "LongestEdgePlusFurthestCircle",
+        # "branching":    "FarthestCircle",
+        # "branching": "ChFarthestCircle",
+        "branching": "ChFarthestCircleSimplifying",
+        "search": "DfsBfs",
+        # "search": "CheapestChildDepthFirst",
+        # "search" : "CheapestBreadthFirst"
+    }
     with MeasurementSeries(result_folder) as ms:
         with ms.measurement() as m:
             initial_solution = compute_tour_by_2opt(instance)
             ub, lb = branch_and_bound(
-                instance, lambda event: None, initial_solution, timelimit
+                instance,
+                lambda event: None,
+                initial_solution,
+                timelimit,
+                **configuration
             )
+            m["configuration"] = configuration
             m["instance"] = instance_name
             m["ub"] = ub.length()
             m["lb"] = lb
