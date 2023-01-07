@@ -41,13 +41,13 @@ public:
    * example to switch the strategy every time a new solution has been found.
    * @param node The last node.
    */
-  virtual void notify_of_feasible(Node &node) {};
+  virtual void notify_of_feasible(Node &node){};
 
   /**
    * Called when the (last) node gets pruned.
    * @param node The last node.
    */
-  virtual void notify_of_prune(Node &node) {};
+  virtual void notify_of_prune(Node &node){};
 };
 
 class CheapestChildDepthFirst : public SearchStrategy {
@@ -71,9 +71,7 @@ public:
     sort_to_priotize_lowest_value();
   }
 
-  void notify_of_prune(Node &node )override {
-    sort_to_priotize_lowest_value();
-  }
+  void notify_of_prune(Node &node) override { sort_to_priotize_lowest_value(); }
 
   Node *next() override {
     if (!has_next()) {

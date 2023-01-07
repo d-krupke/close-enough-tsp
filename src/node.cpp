@@ -43,7 +43,7 @@ void Node::branch(std::vector<Node> &&children_) {
   }
   assert(!is_feasible());
   if (children_.empty()) {
-    std::cout << "empty branch"<<std::endl;
+    std::cout << "empty branch" << std::endl;
     prune();
     children = std::vector<Node>{};
   } else {
@@ -103,7 +103,8 @@ void Node::reevaluate_children() {
           return (node.is_pruned() ? std::numeric_limits<double>::infinity()
                                    : node.get_lower_bound());
         });
-    //std::cout << "Reevaluated children at depth "<<depth()<< " to "<<lb<<std::endl;
+    // std::cout << "Reevaluated children at depth "<<depth()<< " to
+    // "<<lb<<std::endl;
     add_lower_bound(lb);
   }
 }

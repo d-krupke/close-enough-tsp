@@ -80,7 +80,8 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def(py::init<Point, double>())
       .def_readwrite("center", &Circle::center)
       .def_readwrite("radius", &Circle::radius)
-      .def("contains", [](const Circle& self, const Point& p){return self.contains(p);})
+      .def("contains",
+           [](const Circle &self, const Point &p) { return self.contains(p); })
       .def("__repr__", [](const Circle &self) {
         return fmt::format("Circle(({}, {}), {})", self.center.x, self.center.y,
                            self.radius);

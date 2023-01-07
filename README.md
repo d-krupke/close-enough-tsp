@@ -6,7 +6,7 @@ check out [this video](https://youtu.be/KMlyhggSqYw).
 
 ## Related Work
 
-This Branch and Bound algorithm is an improved version of [this  paper](https://optimization-online.org/2014/02/4248/).
+This Branch and Bound algorithm is an improved version of [this paper](https://optimization-online.org/2014/02/4248/).
 
 This [master thesis](https://dspace.cvut.cz/bitstream/handle/10467/96747/F3-DP-2021-Fanta-Lukas-Fanta_Lukas_The_Close_Enough%20_Travelling%20_Salesman_Problem_in_polygonal_domain.pdf?sequence=-1&isAllowed=y)
 provides a good overview over the previous work and provides an LNS-algorithm
@@ -102,27 +102,27 @@ common guidelines. It uses
 - `tests` Your tests for C++ and Python. Read
   also [this](https://blog.ionelmc.ro/2014/05/25/python-packaging/#the-structure).
 - `.clang_format` (C&P) C++-formatting rules, so we have a common standard.
-    - Needs to be edited if: You want a different C++-coding style.
+  - Needs to be edited if: You want a different C++-coding style.
 - `.flake8` (C&P) Python checking rules
-    - Needs to be edited if: The rules do not fit your project. Especially, if there are too many false positives of
-      some rule.
+  - Needs to be edited if: The rules do not fit your project. Especially, if there are too many false positives of
+    some rule.
 - `.gitignore` (C&P) Automatically ignore system specific files
-    - Needs to be edited if: You use some uncommon tool that creates some kind of artifacts not covered by the current
-      rules.
+  - Needs to be edited if: You use some uncommon tool that creates some kind of artifacts not covered by the current
+    rules.
 - `pyproject.toml` (C&P) Tells pip the dependencies for running `setup.py`.
-    - Needs to be edited if: You use additional/different packages in `setup.py`
+  - Needs to be edited if: You use additional/different packages in `setup.py`
 - `.pre-commit-config.yaml` (C&P) For applying a set of checks locally. Run, e.g., via `pre-commit run --all-files`.
-    - Needs to be edited if: Better tools appear you would like to use, like a better `black` etc.
+  - Needs to be edited if: Better tools appear you would like to use, like a better `black` etc.
 - `CMakeLists.txt` Defines your C++-project. This is a complex topic we won't dive into here. You should know the basics
   of CMake to continue.
 - `conanfile.txt` Defines the C++-dependencies installed via conan (use CPM within CMakeLists.txt for copy&paste
   dependencies).
-    - Needs to be edited if: You change C++-dependencies.
+  - Needs to be edited if: You change C++-dependencies.
 - `MANIFEST.in` (C&P) Defines all the files that need to be packaged for pip.
-    - Needs to be edited if: You need some files included that do not fit the basic coding files, e.g., images.
+  - Needs to be edited if: You need some files included that do not fit the basic coding files, e.g., images.
 - `setup.py` Scripts for building and installing the package.
-    - Needs to be edited if: You add dependencies, rename the project, want to change metadata, change the project
-      structure, etc.
-    - If you don't have any CPP-components yet, you need to set the target to None!
+  - Needs to be edited if: You add dependencies, rename the project, want to change metadata, change the project
+    structure, etc.
+  - If you don't have any CPP-components yet, you need to set the target to None!
 - `requirements.txt` The recommended requirements for development on this package
-    - Needs to be edited if: You are using further python packages.
+  - Needs to be edited if: You are using further python packages.

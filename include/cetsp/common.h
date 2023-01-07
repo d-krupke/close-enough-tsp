@@ -82,7 +82,8 @@ public:
     for (const auto &circle : circles) {
       if (std::any_of(begin(), end(),
                       [&circle](auto &c) { return circle.contains(c); })) {
-        std::cout << "Removed implicit circle ("<< circle.center.x<<", "<<circle.center.y<< std::endl;
+        std::cout << "Removed implicit circle (" << circle.center.x << ", "
+                  << circle.center.y << std::endl;
         continue;
       }
       push_back(circle);
@@ -129,14 +130,14 @@ public:
 
   double distance(const Circle &circle) const {
     double min_dist = std::numeric_limits<double>::infinity();
-    details::Point p(circle.center.x, circle.center.y);
+    details::cgPoint p(circle.center.x, circle.center.y);
     if (points.size() == 1) {
-      details::Point tp(points[0].x, points[0].y);
+      details::cgPoint tp(points[0].x, points[0].y);
       min_dist = CGAL::squared_distance(tp, p);
     }
     for (unsigned i = 0; i < points.size() - 1; i++) {
-      details::Segment segment({points[i].x, points[i].y},
-                               {points[i + 1].x, points[i + 1].y});
+      details::cgSegment segment({points[i].x, points[i].y},
+                                 {points[i + 1].x, points[i + 1].y});
       double dist = CGAL::squared_distance(segment, p);
       if (dist < min_dist) {
         min_dist = dist;
@@ -149,8 +150,8 @@ public:
     if (!_length) {
       double l = 0;
       for (unsigned i = 0; i < points.size() - 1; i++) {
-        details::Segment segment({points[i].x, points[i].y},
-                                 {points[i + 1].x, points[i + 1].y});
+        details::cgSegment segment({points[i].x, points[i].y},
+                                   {points[i + 1].x, points[i + 1].y});
         l += std::sqrt(segment.squared_length());
       }
       _length = l;
@@ -159,7 +160,7 @@ public:
   }
 
   bool is_simple() const {
-    std::vector<details::Point> points_;
+    std::vector<details::cgPoint> points_;
     for (const auto &p : points) {
       if (!points_.empty() &&
           p.dist(Point(points_.back().x(), points_.back().y())) < 0.01) {
@@ -168,12 +169,12 @@ public:
       points_.emplace_back(p.x, p.y);
     }
     if (points.front() == points.back()) {
-      details::Polygon poly{points_.begin(), points_.end() - 1};
+      details::cgPolygon poly{points_.begin(), points_.end() - 1};
       return poly.is_simple();
     } else {
       std::cout << "Warning! `is_simple`  does not work for paths right now!"
                 << std::endl;
-      details::Polygon poly{points_.begin(), points_.end()};
+      details::cgPolygon poly{points_.begin(), points_.end()};
       return poly.is_simple();
     }
   }

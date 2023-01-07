@@ -12,10 +12,10 @@
 #include <CGAL/squared_distance_2.h>
 namespace cetsp {
 namespace details {
-using Kernel = CGAL::Cartesian<double>;
-using Point = CGAL::Point_2<Kernel>;
-using Segment = CGAL::Segment_2<Kernel>;
-using Polygon = CGAL::Polygon_2<Kernel>;
+using cgKernel = CGAL::Cartesian<double>;
+using cgPoint = CGAL::Point_2<cgKernel>;
+using cgSegment = CGAL::Segment_2<cgKernel>;
+using cgPolygon = CGAL::Polygon_2<cgKernel>;
 } // namespace details
 } // namespace cetsp
 #endif // SAMPLNS_CGAL_KERNEL_H

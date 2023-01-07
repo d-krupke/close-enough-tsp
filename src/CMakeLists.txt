@@ -1,4 +1,4 @@
-add_library(cetsp ../include/cetsp/heuristics.h heuristics.cpp node.cpp ../include/cetsp/node.h ../include/cetsp/bnb.h ../include/cetsp/details/root_node_strategy.h ../include/cetsp/details/solution_pool.h ../include/cetsp/details/branching_strategy.h ../include/cetsp/details/search_strategy.h ../include/cetsp/callbacks.h root_node_strategy.cpp branching_strategy.cpp ../include/cetsp/details/triple_map.h)
+add_library(cetsp ../include/cetsp/heuristics.h heuristics.cpp node.cpp ../include/cetsp/node.h ../include/cetsp/bnb.h ../include/cetsp/details/root_node_strategy.h ../include/cetsp/details/solution_pool.h ../include/cetsp/details/branching_strategy.h ../include/cetsp/details/search_strategy.h ../include/cetsp/callbacks.h root_node_strategy.cpp branching_strategy.cpp ../include/cetsp/details/triple_map.h ../include/cetsp/details/convex_hull_order.h convex_hull_order.cpp)
 target_sources(cetsp
         PUBLIC
         ../include/cetsp/common.h

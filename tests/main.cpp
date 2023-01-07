@@ -2,6 +2,7 @@
 #include "cetsp/bnb.h"
 #include "cetsp/common.h"
 #include "cetsp/details/branching_strategy.h"
+#include "cetsp/details/convex_hull_order.h"
 #include "cetsp/details/root_node_strategy.h"
 #include "cetsp/details/search_strategy.h"
 #include "cetsp/heuristics.h"

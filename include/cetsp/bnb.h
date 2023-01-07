@@ -149,10 +149,7 @@ private:
     return true;
   }
 
-  void on_prune(Node& node) {
-
-    search_strategy.notify_of_prune(node);
-  }
+  void on_prune(Node &node) { search_strategy.notify_of_prune(node); }
 
   void on_feasible(EventContext &context) {
 

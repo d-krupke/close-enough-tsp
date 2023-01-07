@@ -4,8 +4,8 @@
 #include <vector>
 namespace cetsp {
 
-std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(const std::vector<Circle> &circle_sequence,
-                        const bool path) {
+std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
+    const std::vector<Circle> &circle_sequence, const bool path) {
   static GRBEnv env;
   GRBModel model(&env);
 
@@ -84,15 +84,14 @@ std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
     const auto si = s[i].get(GRB_DoubleAttr_X);
     const auto ti = t[i].get(GRB_DoubleAttr_X);
     const auto r = circle_sequence[i].radius;
-    bool is_spanning = std::sqrt(si*si+ti*ti) >= 0.99* r;
-    spanning_circles[i]=is_spanning;
+    bool is_spanning = std::sqrt(si * si + ti * ti) >= 0.99 * r;
+    spanning_circles[i] = is_spanning;
   }
   if (!path) {
     points.push_back(points[0]);
   }
   return {Trajectory(points), spanning_circles};
 }
-
 
 Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
                         const bool path) {
