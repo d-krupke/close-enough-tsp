@@ -36,7 +36,12 @@ bool FarthestCircle::branch(Node &node) {
     return false;
   }
   std::vector<Node> children;
-  std::vector<int> seqeuence = node.get_spanning_sequence();
+  std::vector<int> seqeuence;
+  if (simplify) {
+    seqeuence = node.get_spanning_sequence();
+  } else {
+    seqeuence = node.get_fixed_sequence();
+  }
   seqeuence.push_back(*c);
   if (instance->is_path()) {
     // for path, this position may not be symmetric.

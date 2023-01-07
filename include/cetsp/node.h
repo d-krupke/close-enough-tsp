@@ -34,23 +34,40 @@ public:
   void branch(std::vector<Node> &&children_);
 
   const std::vector<Node> &get_children() const { return children; }
-  std::vector<Node> &get_children() { return children; }
+  [[nodiscard]] std::vector<Node> &get_children() { return children; }
+
+  [[nodiscard]] Node *get_parent() { return parent; }
+  [[nodiscard]] const Node *get_parent() const { return parent; }
 
   auto get_relaxed_solution() -> const Trajectory &;
+
+  /**
+   * Will prune the node, i.e., mark it as not leading to an optimal solution
+   * and thus stopping at it. Pruned nodes are allowed to be deleted from
+   * memory.
+   */
   void prune();
 
   [[nodiscard]] const std::vector<int> &get_fixed_sequence() {
     return branch_sequence;
   }
 
+  /**
+   * The spanning sequence is a subset of the fixed sequence, but with
+   * all indices belonging to circles that to not span/define the trajectroy
+   * removed.
+   * @return The orded list of indices of the circles spanning the current
+   * trajectory.
+   */
   [[nodiscard]] const std::vector<int> get_spanning_sequence() {
-    if(!relaxed_solution) {  // only available if the relaxed solution has been computed.
+    if (!relaxed_solution) { // only available if the relaxed solution has been
+                             // computed.
       get_relaxed_solution();
     }
     std::vector<int> spanning_sequence;
     spanning_sequence.reserve(branch_sequence.size());
-    for(int i =0; i<branch_sequence.size(); ++i){
-      if(spanning_circles[i]) {
+    for (int i = 0; i < branch_sequence.size(); ++i) {
+      if (spanning_circles[i]) {
         spanning_sequence.push_back(branch_sequence[i]);
       }
     }
@@ -61,17 +78,15 @@ public:
 
   [[nodiscard]] Instance *get_instance() { return instance; }
 
-
-  [[nodiscard]] int depth() const {
-    return _depth;
-  }
+  [[nodiscard]] int depth() const { return _depth; }
 
 private:
+  // Check if the children allow to improve the lower bound.
   void reevaluate_children();
 
   std::vector<int> branch_sequence;           // fixed part of the solution
   std::optional<Trajectory> relaxed_solution; // relaxed solution
-  std::vector<bool> spanning_circles;  // information on which circles are  spanning
+  std::vector<bool> spanning_circles;         // which circles are spanning
   std::optional<double> lower_bound;
   std::vector<Node> children;
   Node *parent;

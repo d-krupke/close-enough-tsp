@@ -33,7 +33,11 @@ class FarthestCircle : public BranchingStrategy {
    * to the relaxed solution.
    */
 public:
-  FarthestCircle() {}
+  FarthestCircle(bool simplify=false): simplify{simplify} {
+    if(simplify) {
+      std::cout << "Using node simplification." << std::endl;
+    }
+  }
 
   virtual void setup(Instance *instance_, Node *root,
                      SolutionPool *solution_pool) override {
@@ -56,6 +60,7 @@ protected:
     return true;
   }
   Instance *instance = nullptr;
+  bool simplify;
 };
 
 class ChFarthestCircle : public FarthestCircle {
@@ -161,7 +166,7 @@ public:
     }
   }
 
-  ChFarthestCircle() : FarthestCircle() {
+  ChFarthestCircle(bool simplify=true) : FarthestCircle(simplify) {
     std::cout << "Using ChFarthestCircle-Branching" <<std::endl;
   }
 
@@ -292,7 +297,7 @@ public:
     }
   }
 
-  TmChFarthestCircle() : FarthestCircle(), tm{instance} {}
+  TmChFarthestCircle(bool simplify=true) : FarthestCircle(simplify), tm{instance} {}
 
 protected:
   bool sequence_is_ch_ordered(const std::vector<int> &seqeuence) {
