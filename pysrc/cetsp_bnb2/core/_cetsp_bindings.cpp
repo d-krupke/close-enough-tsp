@@ -62,7 +62,7 @@ branch_and_bound(Instance instance,
   } else if (branching == "ChFarthestCircle") {
     branching_strategy = std::make_unique<ChFarthestCircle>(false);
   } else if (branching == "ChFarthestCircleSimplifying") {
-    branching_strategy = std::make_unique<ChFarthestCircle>(false);
+    branching_strategy = std::make_unique<ChFarthestCircle>(true);
   } else {
     throw std::invalid_argument("Invalid branching strategy.");
   }
