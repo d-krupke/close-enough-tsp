@@ -83,7 +83,7 @@ public:
       if (std::any_of(begin(), end(),
                       [&circle](auto &c) { return circle.contains(c); })) {
         std::cout << "Removed implicit circle (" << circle.center.x << ", "
-                  << circle.center.y << std::endl;
+                  << circle.center.y << ")"<<std::endl;
         continue;
       }
       push_back(circle);
@@ -114,7 +114,7 @@ public:
   }
 
   std::optional<std::pair<Point, Point>> path;
-  int revision = 0;
+  int revision = 0;  // actually the size  should already say enough about  the revision.
   double eps = 0.01;
 };
 
