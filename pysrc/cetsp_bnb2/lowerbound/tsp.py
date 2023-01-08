@@ -1,6 +1,6 @@
 import typing
 import math
-from cetsp.common import Circle
+from ..common import Circle
 import networkx as nx
 from scipy.spatial import ConvexHull
 import itertools

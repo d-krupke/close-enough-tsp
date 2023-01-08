@@ -36,25 +36,27 @@ def run_for_instance(instance_name, timelimit):
             for d in instances[instance_name]["circles"]
         ]
     )
+    # This configuration allows you to change the basic behaviour of the
+    # branch and bound algorithm. You can do further improvements, such
+    # as improving the lower bound or adding solutions usinng the callback.
     configuration = {
         "root": "ConvexHull",
-        # "root": "LongestEdgePlusFurthestCircle",
-        # "branching":    "FarthestCircle",
-        # "branching": "ChFarthestCircle",
+        #"root": "LongestEdgePlusFurthestCircle",
+        #"branching":    "FarthestCircle",
+        #"branching": "ChFarthestCircle",
         "branching": "ChFarthestCircleSimplifying",
         "search": "DfsBfs",
-        # "search": "CheapestChildDepthFirst",
-        # "search" : "CheapestBreadthFirst"
+        #"search": "CheapestChildDepthFirst",
+        #"search" : "CheapestBreadthFirst"
     }
+    # This callback currently does nothing. However, you can use the context
+    # object as described in 
+    callback = lambda context: None
     with MeasurementSeries(result_folder) as ms:
         with ms.measurement() as m:
             initial_solution = compute_tour_by_2opt(instance)
             ub, lb = branch_and_bound(
-                instance,
-                lambda event: None,
-                initial_solution,
-                timelimit,
-                **configuration
+                instance, callback, initial_solution, timelimit, **configuration
             )
             m["configuration"] = configuration
             m["instance"] = instance_name
