@@ -41,13 +41,13 @@ def run_for_instance(instance_name, timelimit):
     # as improving the lower bound or adding solutions usinng the callback.
     configuration = {
         "root": "ConvexHull",
-        #"root": "LongestEdgePlusFurthestCircle",
-        #"branching":    "FarthestCircle",
-        #"branching": "ChFarthestCircle",
+        # "root": "LongestEdgePlusFurthestCircle",
+        # "branching":    "FarthestCircle",
+        # "branching": "ChFarthestCircle",
         "branching": "ChFarthestCircleSimplifying",
         "search": "DfsBfs",
-        #"search": "CheapestChildDepthFirst",
-        #"search" : "CheapestBreadthFirst"
+        # "search": "CheapestChildDepthFirst",
+        # "search" : "CheapestBreadthFirst"
     }
     # This callback currently does nothing. However, you can use the context
     # object as described in pysrc/cetsp_bnb2/core/_cetsp_bindings.cpp

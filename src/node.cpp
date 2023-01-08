@@ -16,6 +16,11 @@ void Node::add_lower_bound(double lb) {
 auto Node::get_lower_bound() -> double {
   if (!lower_bound) {
     lower_bound = get_relaxed_solution().length();
+    if (parent != nullptr) {
+      if (lower_bound < parent->get_lower_bound()) {
+        lower_bound = parent->get_lower_bound();
+      }
+    }
   }
   return *lower_bound;
 }

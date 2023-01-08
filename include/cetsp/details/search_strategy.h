@@ -52,7 +52,10 @@ public:
 
 class DfsBfs : public SearchStrategy {
 public:
-  void init(Node &root) override { queue.push_back(&root); }
+  void init(Node &root) override {
+    std::cout << "Using DfsBfs search" << std::endl;
+    queue.push_back(&root);
+  }
 
   void notify_of_branch(Node &node) override {
     std::vector<Node *> children;
@@ -60,6 +63,12 @@ public:
       children.push_back(&child);
     }
     std::sort(children.begin(), children.end(), [](Node *a, Node *b) {
+      const auto lb_a = a->get_lower_bound();
+      const auto lb_b = b->get_lower_bound();
+      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+        return a->get_relaxed_solution().length() >
+               b->get_relaxed_solution().length();
+      }
       return a->get_lower_bound() > b->get_lower_bound();
     });
     for (auto child : children) {
@@ -92,7 +101,13 @@ public:
 private:
   void sort_to_priotize_lowest_value() {
     std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
-      return a->get_lower_bound() > b->get_lower_bound();
+      const auto lb_a = a->get_lower_bound();
+      const auto lb_b = b->get_lower_bound();
+      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+        return a->get_relaxed_solution().length() >
+               b->get_relaxed_solution().length();
+      }
+      return lb_a > lb_b;
     });
   }
 
@@ -108,7 +123,13 @@ public:
       children.push_back(&child);
     }
     std::sort(children.begin(), children.end(), [](Node *a, Node *b) {
-      return a->get_lower_bound() > b->get_lower_bound();
+      const auto lb_a = a->get_lower_bound();
+      const auto lb_b = b->get_lower_bound();
+      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+        return a->get_relaxed_solution().length() >
+               b->get_relaxed_solution().length();
+      }
+      return lb_a > lb_b;
     });
     for (auto child : children) {
       queue.push_back(child);
@@ -143,7 +164,13 @@ public:
       queue.push_back(&child);
     }
     std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
-      return a->get_lower_bound() > b->get_lower_bound();
+      const auto lb_a = a->get_lower_bound();
+      const auto lb_b = b->get_lower_bound();
+      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+        return a->get_relaxed_solution().length() >
+               b->get_relaxed_solution().length();
+      }
+      return lb_a > lb_b;
     });
   }
 

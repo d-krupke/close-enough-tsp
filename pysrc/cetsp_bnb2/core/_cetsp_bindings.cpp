@@ -125,7 +125,8 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("prune", &Node::prune)
       .def("is_pruned", &Node::is_pruned)
       .def("is_feasible", &Node::is_feasible)
-      .def("get_fixed_sequence", &Node::get_fixed_sequence);
+      .def("get_fixed_sequence", &Node::get_fixed_sequence)
+      .def("get_spanning_sequence", &Node::get_spanning_sequence);
 
   py::class_<SolutionPool>(m, "SolutionPool")
       .def("add_solution", &SolutionPool::add_solution)
