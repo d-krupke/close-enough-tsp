@@ -50,7 +50,8 @@ def run_for_instance(instance_name, timelimit):
         #"search" : "CheapestBreadthFirst"
     }
     # This callback currently does nothing. However, you can use the context
-    # object as described in 
+    # object as described in pysrc/cetsp_bnb2/core/_cetsp_bindings.cpp
+    # to access the current node, trajectory, sequence, solutions, etc.
     callback = lambda context: None
     with MeasurementSeries(result_folder) as ms:
         with ms.measurement() as m:
