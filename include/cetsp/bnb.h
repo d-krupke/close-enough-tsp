@@ -135,7 +135,7 @@ private:
     num_explored +=  1;
     EventContext context{node, &root, instance, &solution_pool, num_iterations};
     user_callbacks.on_entering_node(context);
-    if(!node->is_pruned()) {
+    if(!node->is_pruned()) {  // the user callback may have pruned the node
       explore_node(node, context, gap);
     }
     on_leaving_node(context);
@@ -164,8 +164,6 @@ private:
   void on_prune(Node &node) { search_strategy.notify_of_prune(node); }
 
   void on_feasible(EventContext &context) {
-
-    //
     search_strategy.notify_of_feasible(*(context.current_node));
   }
 

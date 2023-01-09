@@ -90,6 +90,13 @@ public:
     order_values.resize(instance->size());
     is_ordered.resize(instance->size(), false);
     compute_weights(instance, root);
+
+    if(!sequence_is_ch_ordered(root->get_fixed_sequence())) {
+      for(auto i: root->get_fixed_sequence()){
+        std::cout <<  i << ":  "<<order_values[i]<<" "<<is_ordered[i]<<std::endl;
+      }
+      throw std::invalid_argument("Root does not obey the convex  hull.");
+    }
   }
 
   std::vector<Point> get_circle_centers(Instance &instance) const {
@@ -131,8 +138,8 @@ protected:
     }
     // The minimal element may be in the middle. So we rotate the minimal
     // element to the front.
-    auto min = std::min(order_values_.begin(), order_values_.end());
-    std::rotate(order_values_.begin(), min, order_values_.end());
+    auto min_ = std::min_element(order_values_.begin(), order_values_.end());
+    std::rotate(order_values_.begin(), min_, order_values_.end());
     return std::is_sorted(order_values_.begin(), order_values_.end());
   }
   virtual bool is_sequence_ok(const std::vector<int> &sequence) override {
