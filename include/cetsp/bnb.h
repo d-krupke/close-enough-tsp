@@ -69,28 +69,30 @@ public:
     if (verbose) {
       std::cout << "Starting with root node of size "
                 << root.get_fixed_sequence().size() << std::endl;
-      std::cout << "i\tLB\t|\tUB" << std::endl;
+      std::cout << "i\tLB\t|\tUB\t|\tTime" << std::endl;
     }
     using namespace std::chrono;
     auto start = high_resolution_clock::now();
-    while (step()) {
+    while (step(gap)) {
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
+      auto now = high_resolution_clock::now();
+      const auto time_used  = duration_cast<seconds>(now - start).count();
       if (verbose) {
         if (num_iterations <= 10 ||
             (num_iterations < 100 && num_iterations % 10 == 0) ||
             (num_iterations < 1000 && num_iterations % 100 == 0) ||
             (num_iterations % 1000 == 0)) {
           std::cout << num_iterations << "\t" << lb << "\t|\t" << ub
-                    << std::endl;
+                    <<"\t|\t"<< time_used <<"s"<< std::endl;
         }
       }
       if (ub <= (1 + gap) * lb) {
         break;
       }
       ++num_iterations;
-      auto now = high_resolution_clock::now();
-      if (duration_cast<seconds>(now - start).count() > timelimit_s) {
+
+      if (time_used > timelimit_s) {
         if (verbose) {
           std::cout << "Timeout." << std::endl;
         }
@@ -102,36 +104,45 @@ public:
       auto ub = get_upper_bound();
       std::cout << "---------------" << std::endl
                 << num_iterations << "\t" << lb << "\t|\t" << ub << std::endl;
+      std::cout << num_steps << " iterations with "<<num_explored<<" nodes explored and "<<num_branches<<" branches." << std::endl;
     }
   }
 
 private:
-  /**
-   * Executes a step/node exploration in the BnB-algorithm.
-   * @return
-   */
-  bool step() {
-    Node *node = search_strategy.next();
-
-    // No further node to explore.
-    if (node == nullptr) {
-      return false;
-    }
-    // Automatically prune if worse than upper bound.
+  bool prune_if_above_ub(Node* node, const double gap) {
     if (node->is_pruned() ||
-        node->get_lower_bound() >= solution_pool.get_upper_bound()) {
+        node->get_lower_bound() >= (1.0-gap)*solution_pool.get_upper_bound()) {
       node->prune();
       on_prune(*node);
       return true;
     }
+    return  false;
+  }
+
+  /**
+   * Executes a step/node exploration in the BnB-algorithm.
+   * @return
+   */
+  bool step(double gap) {
+    num_steps +=  1;
+    Node *node = search_strategy.next();
+
+    // No further node to explore.
+    if (node == nullptr) { return false; }
+    // Automatically prune if worse than upper bound.
+    if(prune_if_above_ub(node, gap)) { return true; }
     // Explore  node.
+    num_explored +=  1;
     EventContext context{node, &root, instance, &solution_pool, num_iterations};
     user_callbacks.on_entering_node(context);
-    if (node->is_pruned()) {
-      on_prune(*node);
-      on_leaving_node(context);
-      return true;
+    if(!node->is_pruned()) {
+      explore_node(node, context, gap);
     }
+    on_leaving_node(context);
+    return true;
+  }
+
+  void explore_node(Node* node, EventContext& context, const double gap){
     if (node->is_feasible()) {
       // If node is  feasible, check lazy constraints.
       user_callbacks.add_lazy_constraints(context);
@@ -140,13 +151,14 @@ private:
       solution_pool.add_solution(node->get_relaxed_solution());
       on_feasible(context);
     } else {
+      // Check again for the bound before branching.
+      if(prune_if_above_ub(node, gap)) { return; }
       // branch if not yet feasible.
       if (branching_strategy.branch(*node)) {
+        num_branches += 1;
         search_strategy.notify_of_branch(*node);
       }
     }
-    on_leaving_node(context);
-    return true;
   }
 
   void on_prune(Node &node) { search_strategy.notify_of_prune(node); }
@@ -169,6 +181,9 @@ private:
   BranchingStrategy &branching_strategy;
   SolutionPool solution_pool;
   int num_iterations = 0;
+  int num_steps = 0;
+  int num_explored = 0;
+  int num_branches = 0;
 };
 
 TEST_CASE("Branch and Bound  1") {

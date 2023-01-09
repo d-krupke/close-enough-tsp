@@ -25,6 +25,7 @@ public:
   virtual void setup(Instance *instance, Node *root,
                      SolutionPool *solution_pool) {}
   virtual bool branch(Node &node) = 0;
+  virtual ~BranchingStrategy() = default;
 };
 
 class FarthestCircle : public BranchingStrategy {
@@ -33,7 +34,7 @@ class FarthestCircle : public BranchingStrategy {
    * to the relaxed solution.
    */
 public:
-  FarthestCircle(bool simplify = false) : simplify{simplify} {
+  explicit FarthestCircle(bool simplify = false) : simplify{simplify} {
     if (simplify) {
       std::cout << "Using node simplification." << std::endl;
     }
@@ -47,6 +48,7 @@ public:
   bool branch(Node &node) override;
 
   virtual bool allows_lazy_constraints() { return true; }
+
 
 protected:
   /**

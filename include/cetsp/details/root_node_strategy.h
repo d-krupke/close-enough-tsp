@@ -19,6 +19,7 @@ namespace cetsp {
 class RootNodeStrategy {
 public:
   virtual Node get_root_node(Instance &instance) = 0;
+  virtual ~RootNodeStrategy() = default;
 };
 
 class LongestEdgePlusFurthestCircle : public RootNodeStrategy {

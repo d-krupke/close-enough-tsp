@@ -70,4 +70,5 @@ add_subdirectory(pysrc)  # defined in a separate CMakeLists.txt
 #~~~~~~~~~~~~~~~~ Apps ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if (NOT SKBUILD)  # only make available if not using SKBUILD.
     # define your apps here
+    add_subdirectory(apps)
 endif ()

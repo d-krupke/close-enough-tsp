@@ -48,6 +48,8 @@ public:
    * @param node The last node.
    */
   virtual void notify_of_prune(Node &node){};
+
+  virtual ~SearchStrategy()  = default;
 };
 
 class DfsBfs : public SearchStrategy {
