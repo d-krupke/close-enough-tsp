@@ -11,4 +11,3 @@ target_compile_options(profiling PRIVATE
         "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>")
 target_compile_options(profiling PRIVATE
         "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>")
-

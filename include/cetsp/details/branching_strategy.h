@@ -49,7 +49,6 @@ public:
 
   virtual bool allows_lazy_constraints() { return true; }
 
-
 protected:
   /**
    * Override this method to filter the branching in advance.
@@ -91,9 +90,10 @@ public:
     is_ordered.resize(instance->size(), false);
     compute_weights(instance, root);
 
-    if(!sequence_is_ch_ordered(root->get_fixed_sequence())) {
-      for(auto i: root->get_fixed_sequence()){
-        std::cout <<  i << ":  "<<order_values[i]<<" "<<is_ordered[i]<<std::endl;
+    if (!sequence_is_ch_ordered(root->get_fixed_sequence())) {
+      for (auto i : root->get_fixed_sequence()) {
+        std::cout << i << ":  " << order_values[i] << " " << is_ordered[i]
+                  << std::endl;
       }
       throw std::invalid_argument("Root does not obey the convex  hull.");
     }

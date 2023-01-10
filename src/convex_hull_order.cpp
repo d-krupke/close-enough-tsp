@@ -38,16 +38,19 @@ std::optional<double> ConvexHullOrder::operator()(const Circle &circle) {
         return squared_distance(s_a, p) < squared_distance(s_b, p);
       });
   // if the closest segment is still out of range -> not ordered by CH.
-  if(squared_distance(*closest_segment, p) > radius*radius) {
+  if (squared_distance(*closest_segment, p) > radius * radius) {
     return {}; // not on convex  hull;
   }
   // sum up  the lengths of all prior segments
-  for(auto it = segments.begin(); it!=closest_segment; ++it){
+  for (auto it = segments.begin(); it != closest_segment; ++it) {
     weight += std::sqrt(it->squared_length());
   }
   // plus the distance travelled on the closest.
-  Ray_2 r1{closest_segment->source(), Direction_2{-(closest_segment->target().y() - closest_segment->source().y()),
-                                   (closest_segment->target().x() - closest_segment->source().x())}};
+  Ray_2 r1{
+      closest_segment->source(),
+      Direction_2{
+          -(closest_segment->target().y() - closest_segment->source().y()),
+          (closest_segment->target().x() - closest_segment->source().x())}};
   return weight + std::sqrt(squared_distance(r1, p));
 }
 
@@ -72,4 +75,4 @@ std::vector<Segment_2> ConvexHullOrder::compute_convex_hull_segments(
   }
   return ch_segments;
 }
-} // namespace cetsp
+} // namespace cetsp::details

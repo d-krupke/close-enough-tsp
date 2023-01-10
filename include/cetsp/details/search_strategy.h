@@ -49,7 +49,7 @@ public:
    */
   virtual void notify_of_prune(Node &node){};
 
-  virtual ~SearchStrategy()  = default;
+  virtual ~SearchStrategy() = default;
 };
 
 class DfsBfs : public SearchStrategy {

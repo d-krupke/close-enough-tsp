@@ -77,14 +77,14 @@ public:
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
       auto now = high_resolution_clock::now();
-      const auto time_used  = duration_cast<seconds>(now - start).count();
+      const auto time_used = duration_cast<seconds>(now - start).count();
       if (verbose) {
         if (num_iterations <= 10 ||
             (num_iterations < 100 && num_iterations % 10 == 0) ||
             (num_iterations < 1000 && num_iterations % 100 == 0) ||
             (num_iterations % 1000 == 0)) {
-          std::cout << num_iterations << "\t" << lb << "\t|\t" << ub
-                    <<"\t|\t"<< time_used <<"s"<< std::endl;
+          std::cout << num_iterations << "\t" << lb << "\t|\t" << ub << "\t|\t"
+                    << time_used << "s" << std::endl;
         }
       }
       if (ub <= (1 + gap) * lb) {
@@ -104,19 +104,22 @@ public:
       auto ub = get_upper_bound();
       std::cout << "---------------" << std::endl
                 << num_iterations << "\t" << lb << "\t|\t" << ub << std::endl;
-      std::cout << num_steps << " iterations with "<<num_explored<<" nodes explored and "<<num_branches<<" branches." << std::endl;
+      std::cout << num_steps << " iterations with " << num_explored
+                << " nodes explored and " << num_branches << " branches."
+                << std::endl;
     }
   }
 
 private:
-  bool prune_if_above_ub(Node* node, const double gap) {
+  bool prune_if_above_ub(Node *node, const double gap) {
     if (node->is_pruned() ||
-        node->get_lower_bound() >= (1.0-gap)*solution_pool.get_upper_bound()) {
+        node->get_lower_bound() >=
+            (1.0 - gap) * solution_pool.get_upper_bound()) {
       node->prune();
       on_prune(*node);
       return true;
     }
-    return  false;
+    return false;
   }
 
   /**
@@ -124,25 +127,29 @@ private:
    * @return
    */
   bool step(double gap) {
-    num_steps +=  1;
+    num_steps += 1;
     Node *node = search_strategy.next();
 
     // No further node to explore.
-    if (node == nullptr) { return false; }
+    if (node == nullptr) {
+      return false;
+    }
     // Automatically prune if worse than upper bound.
-    if(prune_if_above_ub(node, gap)) { return true; }
+    if (prune_if_above_ub(node, gap)) {
+      return true;
+    }
     // Explore  node.
-    num_explored +=  1;
+    num_explored += 1;
     EventContext context{node, &root, instance, &solution_pool, num_iterations};
     user_callbacks.on_entering_node(context);
-    if(!node->is_pruned()) {  // the user callback may have pruned the node
+    if (!node->is_pruned()) { // the user callback may have pruned the node
       explore_node(node, context, gap);
     }
     on_leaving_node(context);
     return true;
   }
 
-  void explore_node(Node* node, EventContext& context, const double gap){
+  void explore_node(Node *node, EventContext &context, const double gap) {
     if (node->is_feasible()) {
       // If node is  feasible, check lazy constraints.
       user_callbacks.add_lazy_constraints(context);
@@ -152,7 +159,9 @@ private:
       on_feasible(context);
     } else {
       // Check again for the bound before branching.
-      if(prune_if_above_ub(node, gap)) { return; }
+      if (prune_if_above_ub(node, gap)) {
+        return;
+      }
       // branch if not yet feasible.
       if (branching_strategy.branch(*node)) {
         num_branches += 1;

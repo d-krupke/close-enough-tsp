@@ -51,7 +51,14 @@ def run_for_instance(instance_name, timelimit):
     with MeasurementSeries(result_folder) as ms:
         for radius in [0.25, 0.5]:
             n_ = len(instances[instance_name]["circles"])
-            instance = Instance( [ Circle(Point(float(d["x"]), float(d["y"])), 0.0 if i==0 else radius) for i, d in enumerate(instances[instance_name]["circles"]) ] )
+            instance = Instance(
+                [
+                    Circle(
+                        Point(float(d["x"]), float(d["y"])), 0.0 if i == 0 else radius
+                    )
+                    for i, d in enumerate(instances[instance_name]["circles"])
+                ]
+            )
             with ms.measurement() as m:
                 print(instance_name, radius)
                 initial_solution = compute_tour_by_2opt(instance)
@@ -73,6 +80,6 @@ def run_for_instance(instance_name, timelimit):
 if __name__ == "__main__":
     # Read data
     instances = load_instances()
-    #run_for_instance.distribute("bedhani/CETSP-25-10", timelimit)
+    # run_for_instance.distribute("bedhani/CETSP-25-10", timelimit)
     for instance in instances.keys():
         run_for_instance.distribute(instance, timelimit)

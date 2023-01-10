@@ -10,6 +10,9 @@
 #include <CGAL/property_map.h>
 namespace cetsp {
 std::pair<int, int> find_max_pair(const std::vector<Circle> &instance) {
+  /**
+   * Find the circle pair with the longest distance  between its centers.
+   */
   double max_dist = 0;
   std::pair<int, int> best_pair;
   for (unsigned i = 0; i < instance.size(); i++) {
@@ -36,9 +39,14 @@ auto most_distanced_circle(const Instance &instance) {
   return std::distance(instance.begin(), max_el);
 }
 Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
+  /**
+   * Compute a  root note consisting of three circles by first finding
+   * the most distanced pair and then adding a third circle that has the
+   * longest sum of  distance to the two end points.
+   */
   if (instance.is_path()) {
     std::vector<int> seq;
-    seq.push_back(most_distanced_circle(instance));
+    seq.push_back(static_cast<int>(most_distanced_circle(instance)));
     assert(seq[0] < static_cast<int>(instance.size()));
     return Node(seq, &instance);
   } else {
@@ -92,7 +100,8 @@ Node ConvexHull::get_root_node(Instance &instance) {
     ch_circles.push_back(instance[i]);
   }
   //  Only use circles that are  explicitly contained.
-  const auto traj = compute_tour_with_spanning_information(ch_circles, /*path=*/false);
+  const auto traj =
+      compute_tour_with_spanning_information(ch_circles, /*path=*/false);
   std::vector<int> sequence;
   std::copy_if(out.begin(), out.end(), std::back_inserter(sequence),
                [&traj](auto i) { return traj.second[i]; });
