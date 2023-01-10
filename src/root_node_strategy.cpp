@@ -81,7 +81,7 @@ Node ConvexHull::get_root_node(Instance &instance) {
   std::vector<Point_2> points;
   points.reserve(instance.size());
   for (const auto &c : instance) {
-    points.push_back({c.center.x, c.center.y});
+    points.emplace_back(c.center.x, c.center.y);
   }
   std::vector<int> indices(points.size()), out;
   std::iota(indices.begin(), indices.end(), 0);
@@ -92,10 +92,10 @@ Node ConvexHull::get_root_node(Instance &instance) {
     ch_circles.push_back(instance[i]);
   }
   //  Only use circles that are  explicitly contained.
-  auto ch_traj = compute_tour(ch_circles);
+  const auto traj = compute_tour_with_spanning_information(ch_circles, /*path=*/false);
   std::vector<int> sequence;
   std::copy_if(out.begin(), out.end(), std::back_inserter(sequence),
-               [&](auto i) { return ch_traj.distance(instance[i]) >= -0.01; });
+               [&traj](auto i) { return traj.second[i]; });
   return Node{out, &instance};
 }
 } // namespace cetsp
