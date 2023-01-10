@@ -11,6 +11,7 @@
 #include "cetsp/details/root_node_strategy.h"
 #include "cetsp/details/search_strategy.h"
 #include "cetsp/details/solution_pool.h"
+#include "cetsp/utils/timer.h"
 #include "node.h"
 #include <chrono>
 namespace cetsp {
@@ -53,8 +54,20 @@ public:
    */
   void add_lower_bound(double lb) { root.add_lower_bound(lb); }
 
+  /**
+   * Returns the current best known upper bound.
+   */
   double get_upper_bound() { return solution_pool.get_upper_bound(); }
+  /**
+   * Returns the current best known lower bound.
+   * @return
+   */
   double get_lower_bound() { return root.get_lower_bound(); }
+
+  /**
+   * Returns the currently best solution, if one exists.
+   * @return A feasible solution trajectory.
+   */
   std::unique_ptr<Trajectory> get_solution() {
     return solution_pool.get_best_solution();
   }
@@ -66,51 +79,73 @@ public:
    * @param verbose Defines if you want to see a progress log.
    */
   void optimize(int timelimit_s, double gap = 0.01, bool verbose = true) {
+    print_start_stats(verbose);
+    utils::Timer timer(timelimit_s);
+    while (search_strategy.has_next()) {
+      visit_node(search_strategy.next(), gap);
+      auto lb = get_lower_bound();
+      auto ub = get_upper_bound();
+      print_iteration_stats(verbose, lb, ub, timer.seconds());
+      if (ub <= (1 + gap) * lb) { // check termination criterion
+        break;
+      }
+
+      if (timer.timeout()) {
+        print_timeout(verbose);
+        break;
+      }
+    }
+    print_final_stats(verbose);
+  }
+
+private:
+  void print_timeout(bool verbose) {
+    if (verbose) {
+      std::cout << "Timeout." << std::endl;
+    }
+  }
+
+  void print_start_stats(bool verbose) {
     if (verbose) {
       std::cout << "Starting with root node of size "
                 << root.get_fixed_sequence().size() << std::endl;
       std::cout << "i\tLB\t|\tUB\t|\tTime" << std::endl;
     }
-    using namespace std::chrono;
-    auto start = high_resolution_clock::now();
-    while (step(gap)) {
-      auto lb = get_lower_bound();
-      auto ub = get_upper_bound();
-      auto now = high_resolution_clock::now();
-      const auto time_used = duration_cast<seconds>(now - start).count();
-      if (verbose) {
-        if (num_iterations <= 10 ||
-            (num_iterations < 100 && num_iterations % 10 == 0) ||
-            (num_iterations < 1000 && num_iterations % 100 == 0) ||
-            (num_iterations % 1000 == 0)) {
-          std::cout << num_iterations << "\t" << lb << "\t|\t" << ub << "\t|\t"
-                    << time_used << "s" << std::endl;
-        }
-      }
-      if (ub <= (1 + gap) * lb) {
-        break;
-      }
-      ++num_iterations;
+  }
 
-      if (time_used > timelimit_s) {
-        if (verbose) {
-          std::cout << "Timeout." << std::endl;
-        }
-        break;
+  void print_iteration_stats(bool verbose, double lb, double ub,
+                             double time_used) {
+    if (verbose) {
+      if (num_iterations <= 10 ||
+          (num_iterations < 100 && num_iterations % 10 == 0) ||
+          (num_iterations < 1000 && num_iterations % 100 == 0) ||
+          (num_iterations % 1000 == 0)) {
+        std::cout << num_iterations << "\t" << lb << "\t|\t" << ub << "\t|\t"
+                  << time_used << "s" << std::endl;
       }
     }
+  }
+
+  void print_final_stats(bool verbose) {
     if (verbose) {
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
       std::cout << "---------------" << std::endl
                 << num_iterations << "\t" << lb << "\t|\t" << ub << std::endl;
-      std::cout << num_steps << " iterations with " << num_explored
+      std::cout << num_iterations << " iterations with " << num_explored
                 << " nodes explored and " << num_branches << " branches."
                 << std::endl;
     }
   }
 
-private:
+  /**
+   * Check if the node's potential solution is above the upper  bound (or
+   * close to it according  to  the gap) and prune it if  it is, as we won't
+   * find a  solution that is better than the gap in this branch.
+   * @param node The node to be checked
+   * @param gap The gap. E.g. 0.01 means 1% within the current upper bound.
+   * @return True iff the node was pruned.
+   */
   bool prune_if_above_ub(Node *node, const double gap) {
     if (node->is_pruned() ||
         node->get_lower_bound() >=
@@ -126,17 +161,11 @@ private:
    * Executes a step/node exploration in the BnB-algorithm.
    * @return
    */
-  bool step(double gap) {
-    num_steps += 1;
-    Node *node = search_strategy.next();
-
-    // No further node to explore.
-    if (node == nullptr) {
-      return false;
-    }
+  void visit_node(Node *node, double gap) {
+    ++num_iterations;
     // Automatically prune if worse than upper bound.
     if (prune_if_above_ub(node, gap)) {
-      return true;
+      return;
     }
     // Explore  node.
     num_explored += 1;
@@ -145,52 +174,58 @@ private:
     if (!node->is_pruned()) { // the user callback may have pruned the node
       explore_node(node, context, gap);
     }
-    on_leaving_node(context);
-    return true;
+    user_callbacks.on_leaving_node(context);
   }
 
+  /**
+   * Take a deeper look at the node.
+   * @param node
+   * @param context
+   * @param gap
+   */
   void explore_node(Node *node, EventContext &context, const double gap) {
+    add_lazy_constraints_if_feasible(node, context);
     if (node->is_feasible()) {
-      // If node is  feasible, check lazy constraints.
-      user_callbacks.add_lazy_constraints(context);
-    }
-    if (node->is_feasible()) { // this can have changed after lazy callbacks.
-      solution_pool.add_solution(node->get_relaxed_solution());
-      on_feasible(context);
+      process_feasible_node(node, context);
     } else {
       // Check again for the bound before branching.
-      if (prune_if_above_ub(node, gap)) {
-        return;
+      if (!prune_if_above_ub(node, gap)) {
+        branch_node(node); // branch if not yet feasible.
       }
-      // branch if not yet feasible.
-      if (branching_strategy.branch(*node)) {
-        num_branches += 1;
-        search_strategy.notify_of_branch(*node);
-      }
+    }
+  }
+
+  void add_lazy_constraints_if_feasible(Node *node, EventContext &context) {
+    if (node->is_feasible()) {
+      // If node is feasible, check lazy constraints (the user may decide
+      // to add further circles, making it infeasible again).
+      user_callbacks.add_lazy_constraints(context);
+    }
+  }
+
+  void branch_node(Node *node) {
+    if (branching_strategy.branch(*node)) {
+      num_branches += 1;
+      search_strategy.notify_of_branch(*node);
     }
   }
 
   void on_prune(Node &node) { search_strategy.notify_of_prune(node); }
 
-  void on_feasible(EventContext &context) {
+  void process_feasible_node(Node *node, EventContext &context) {
+    solution_pool.add_solution(node->get_relaxed_solution());
     search_strategy.notify_of_feasible(*(context.current_node));
   }
 
-  void on_leaving_node(EventContext &context) {
-    user_callbacks.on_leaving_node(context);
-  }
-
-  Instance *instance;
-
-  Node root;
-  SearchStrategy &search_strategy;
-  UserCallbacks user_callbacks;
-  BranchingStrategy &branching_strategy;
-  SolutionPool solution_pool;
-  int num_iterations = 0;
-  int num_steps = 0;
-  int num_explored = 0;
-  int num_branches = 0;
+  Instance *instance;  // the instance to solve.
+  Node root;  // the root node to start the search with
+  SearchStrategy &search_strategy;  // will decide  which node to visit next
+  UserCallbacks user_callbacks;  // Allows to modify the BnB-behavior.
+  BranchingStrategy &branching_strategy;  // decides how to branch on a node, if it is not yet feasible.
+  SolutionPool solution_pool;  // Saves all solutions found so far.
+  int num_iterations = 0;  // how many nodes have been looked at
+  int num_explored = 0;  // how many nodes have been explored
+  int num_branches = 0;  // how many of those nodes have been branched upon
 };
 
 TEST_CASE("Branch and Bound  1") {

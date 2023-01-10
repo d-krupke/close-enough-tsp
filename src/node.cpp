@@ -4,25 +4,32 @@
 
 #include "cetsp/node.h"
 namespace cetsp {
-void Node::add_lower_bound(double lb) {
+void Node::add_lower_bound(const double lb) {
   if (get_lower_bound() < lb) {
-    lower_bound = lb;
-    if (parent != nullptr) {
+    lazy_lower_bound_value = lb;
+    // propagate to parent
+    if (parent != nullptr && parent->get_lower_bound() < lb) {
       parent->reevaluate_children();
+    }
+    // Potentially also propagate to children.
+    if (!children.empty()) {
+      for(auto&  child: children) {
+        child.add_lower_bound(lb);
+      }
     }
   }
 }
 
 auto Node::get_lower_bound() -> double {
-  if (!lower_bound) {
-    lower_bound = get_relaxed_solution().length();
+  if (!lazy_lower_bound_value) {
+    lazy_lower_bound_value = get_relaxed_solution().length();
     if (parent != nullptr) {
-      if (lower_bound < parent->get_lower_bound()) {
-        lower_bound = parent->get_lower_bound();
+      if (lazy_lower_bound_value < parent->get_lower_bound()) {
+        lazy_lower_bound_value = parent->get_lower_bound();
       }
     }
   }
-  return *lower_bound;
+  return *lazy_lower_bound_value;
 }
 
 bool Node::is_feasible() {
@@ -78,9 +85,7 @@ auto Node::get_relaxed_solution() -> const Trajectory & {
       }
       circles.push_back(Circle(instance->path->second, 0));
       assert(circles.size() == branch_sequence.size() + 2);
-      auto soc = compute_tour_with_spanning_information(circles, true);
-      relaxed_solution = std::move(soc.first);
-      spanning_circles = std::move(soc.second);
+      std::tie(relaxed_solution, spanning_circles) = compute_tour_with_spanning_information(circles, true);
     }
   }
   return *relaxed_solution;

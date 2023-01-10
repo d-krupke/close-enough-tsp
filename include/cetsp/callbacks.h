@@ -40,12 +40,12 @@ struct EventContext {
    * Returns the global(!) lower bound. Use `current_node` to
    * access the lower bound of the node.
    */
-  double get_lower_bound() { return root_node->get_lower_bound(); }
+  double get_lower_bound() const { return root_node->get_lower_bound(); }
 
   /**
    * Returns the global upper bound.
    */
-  double get_upper_bound() { return solution_pool->get_upper_bound(); }
+  double get_upper_bound() const { return solution_pool->get_upper_bound(); }
 
   /**
    * Returns true if the currently considered node would be
@@ -53,14 +53,14 @@ struct EventContext {
    * May be useful to query in combination with adding lazy
    * constraints.
    */
-  bool is_feasible() { return current_node->is_feasible(); }
+  bool is_feasible() const { return current_node->is_feasible(); }
 
   /**
    * Returns the relaxed solutio of the currently investigated
    * node. Use `node->get_lower_bound()` to query the  lowr bound
    * and do not  compute the length of the relaxed solution.
    */
-  Trajectory get_relaxed_solution() {
+  Trajectory get_relaxed_solution() const {
     return current_node->get_relaxed_solution();
   }
 
@@ -68,7 +68,7 @@ struct EventContext {
    * Returns the currently best known feasible solution,
    * if available.
    */
-  std::unique_ptr<Trajectory> get_best_solution() {
+  std::unique_ptr<Trajectory> get_best_solution() const {
     return solution_pool->get_best_solution();
   }
 };

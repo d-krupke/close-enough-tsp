@@ -13,16 +13,17 @@ class Node {
 public:
   Node(Node &node) = delete;
   Node(Node &&node) = default;
-  explicit Node(std::vector<int> branch_sequence, Instance *instance,
+  explicit Node(std::vector<int> branch_sequence_, Instance *instance,
                 Node *parent = nullptr)
-      : branch_sequence{std::move(branch_sequence)}, parent{parent},
+      : branch_sequence{std::move(branch_sequence_)}, parent{parent},
         instance{instance} {
     if (parent != nullptr) {
       _depth = parent->depth() + 1;
     }
-    for (const auto &i : branch_sequence) {
-      assert(i < static_cast<int>(instance->size()));
-    }
+    assert(std::all_of(branch_sequence.begin(), branc_sequence.end(),
+                       [&instance](auto i) {
+                         return i < static_cast<int>(instance->size());
+                       }));
   }
 
   void add_lower_bound(double lb);
@@ -59,14 +60,15 @@ public:
    * @return The orded list of indices of the circles spanning the current
    * trajectory.
    */
-  [[nodiscard]] const std::vector<int> get_spanning_sequence() {
+  [[nodiscard]] std::vector<int> get_spanning_sequence() {
     if (!relaxed_solution) { // only available if the relaxed solution has been
                              // computed.
       get_relaxed_solution();
     }
     std::vector<int> spanning_sequence;
     spanning_sequence.reserve(branch_sequence.size());
-    for (int i = 0; i < branch_sequence.size(); ++i) {
+    int n  = branch_sequence.size();
+    for (int i = 0; i < n; ++i) {
       if (spanning_circles[i]) {
         spanning_sequence.push_back(branch_sequence[i]);
       }
@@ -87,7 +89,7 @@ private:
   std::vector<int> branch_sequence;           // fixed part of the solution
   std::optional<Trajectory> relaxed_solution; // relaxed solution
   std::vector<bool> spanning_circles;         // which circles are spanning
-  std::optional<double> lower_bound;
+  std::optional<double> lazy_lower_bound_value;
   std::vector<Node> children;
   Node *parent;
 
