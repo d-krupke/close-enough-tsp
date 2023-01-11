@@ -78,7 +78,10 @@ std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
     }
   }
   model.set(GRB_IntParam_OutputFlag, 0);
-  model.set(GRB_IntParam_Presolve, 0);  // seems to speed things up
+  // tuned via the built-in tune() function of Gurobi.
+  model.set(GRB_IntParam_Presolve, 0);
+  model.set(GRB_IntParam_SimplexPricing, 3);
+  //model.set(GRB_IntParam_PrePasses, 8);
   model.optimize();
   std::vector<Point> points;
   points.reserve(n + 1);
