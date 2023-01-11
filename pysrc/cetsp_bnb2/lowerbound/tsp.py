@@ -1,6 +1,6 @@
 import typing
 import math
-from ..common import Circle
+from cetsp.common import Circle
 import networkx as nx
 from scipy.spatial import ConvexHull
 import itertools
@@ -36,8 +36,9 @@ def tsp_with_partial_order_lower_bound(
     # 2: C := s1 s2 . . . sk s1
     # 3: Let e1 and e2 be the two most expensive edges of C and let C′ := C − e1 − e2
     C1 = []
-    for u in partial_order:
-        v = partial_order[(u + 1) % len(partial_order)]
+    for idx in range(len(partial_order)):
+        u = partial_order[idx]
+        v = partial_order[(idx + 1) % len(partial_order)]
         C1.append((u, v, G[u][v]["weight"]))
     C2 = C1.copy()
     e1 = max(C2, key=lambda e: e[2])
@@ -151,7 +152,7 @@ def tsp_with_partial_order_lower_bound(
 
     # Calc lower bound
     weight /= 2.5 - 2 / len(partial_order)
-    weight -= sum(c.radius for c in instance)
+    weight -= sum(2*c.radius for c in instance)
     return max(weight, 0)
 
 
@@ -171,19 +172,25 @@ def _random_non_intersecting_subset(
 ) -> typing.List[int]:
     discs = set(partial_order)
 
-    hull = ConvexHull([(p.x, p.y) for p in instance]).vertices
+    hull = set(ConvexHull([(p.x, p.y) for p in instance]).vertices)
     hull -= discs
     # TODO remove implicitly covered discs
 
-    non_hull = set(range(len(instance))) - (hull + discs)
+    non_hull = set(range(len(instance))) - (hull | discs)
+
+    # Tradeoff of how dense the subset is
+    margin_constant = 1
 
     # Iterate over the discs one by one, first the convex hull, in random order
-    for i in itertools.chain(random.shuffle(hull), random.shuffle(non_hull)):
+    hull, non_hull = list(hull), list(non_hull)
+    random.shuffle(hull)
+    random.shuffle(non_hull)
+    for i in itertools.chain(hull, non_hull):
         u = instance[i]
         too_close = False
         for j in discs:
             v = instance[j]
-            if _dist(u, v) < u.radius + v.radius:
+            if _dist(u, v) < margin_constant*(u.radius + v.radius):
                 too_close = True
                 break
         if not too_close:

@@ -33,7 +33,7 @@ def run_for_instance(instance_name, timelimit):
 
     # This configuration allows you to change the basic behaviour of the
     # branch and bound algorithm. You can do further improvements, such
-    # as improving the lower bound or adding solutions usinng the callback.
+    # as improving the lower bound or adding solutions using the callback.
     configuration = {
         "root": "ConvexHull",
         # "root": "LongestEdgePlusFurthestCircle",
