@@ -4,7 +4,6 @@
 #include <vector>
 namespace cetsp {
 
-
 std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
     const std::vector<Circle> &circle_sequence, const bool path) {
   constexpr auto SPANNING_TOLERANCE = 0.01;
@@ -81,7 +80,7 @@ std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
   // tuned via the built-in tune() function of Gurobi.
   model.set(GRB_IntParam_Presolve, 0);
   model.set(GRB_IntParam_SimplexPricing, 3);
-  //model.set(GRB_IntParam_PrePasses, 8);
+  // model.set(GRB_IntParam_PrePasses, 8);
   model.optimize();
   std::vector<Point> points;
   points.reserve(n + 1);
@@ -91,7 +90,8 @@ std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
     const auto si = s[i].get(GRB_DoubleAttr_X);
     const auto ti = t[i].get(GRB_DoubleAttr_X);
     const auto r = circle_sequence[i].radius;
-    bool is_spanning = std::sqrt(si * si + ti * ti) >= (1-SPANNING_TOLERANCE) * r;
+    bool is_spanning =
+        std::sqrt(si * si + ti * ti) >= (1 - SPANNING_TOLERANCE) * r;
     spanning_circles[i] = is_spanning;
   }
   if (!path) {

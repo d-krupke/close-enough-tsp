@@ -20,7 +20,7 @@ public:
     if (parent != nullptr) {
       _depth = parent->depth() + 1;
     }
-    assert(std::all_of(branch_sequence.begin(), branc_sequence.end(),
+    assert(std::all_of(branch_sequence.begin(), branch_sequence.end(),
                        [&instance](auto i) {
                          return i < static_cast<int>(instance->size());
                        }));
@@ -67,7 +67,7 @@ public:
     }
     std::vector<int> spanning_sequence;
     spanning_sequence.reserve(branch_sequence.size());
-    int n  = branch_sequence.size();
+    int n = branch_sequence.size();
     for (int i = 0; i < n; ++i) {
       if (spanning_circles[i]) {
         spanning_sequence.push_back(branch_sequence[i]);

@@ -14,6 +14,13 @@ namespace cetsp {
  */
 auto compute_tour_by_2opt(Instance &instance) -> Trajectory;
 
+auto tour_lns(const Instance& instance, const std::vector<int>& sequence, const Trajectory& trajectory, int begin, int end) {
+  assert(sequence.size() == trajectory.points.size()-1);
+  const auto lns_path_begin = trajectory.points[begin];
+  const auto lns_path_end = trajectory.points[end];
+
+}
+
 TEST_CASE("2Opt") {
   const std::vector<Circle> seq = {
       {{0, 0}, 0}, {{1, 1}, 0}, {{1, 0}, 0}, {{0, 1}, 0}};

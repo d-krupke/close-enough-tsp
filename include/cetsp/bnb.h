@@ -217,15 +217,16 @@ private:
     search_strategy.notify_of_feasible(*(context.current_node));
   }
 
-  Instance *instance;  // the instance to solve.
-  Node root;  // the root node to start the search with
-  SearchStrategy &search_strategy;  // will decide  which node to visit next
-  UserCallbacks user_callbacks;  // Allows to modify the BnB-behavior.
-  BranchingStrategy &branching_strategy;  // decides how to branch on a node, if it is not yet feasible.
-  SolutionPool solution_pool;  // Saves all solutions found so far.
-  int num_iterations = 0;  // how many nodes have been looked at
-  int num_explored = 0;  // how many nodes have been explored
-  int num_branches = 0;  // how many of those nodes have been branched upon
+  Instance *instance;              // the instance to solve.
+  Node root;                       // the root node to start the search with
+  SearchStrategy &search_strategy; // will decide  which node to visit next
+  UserCallbacks user_callbacks;    // Allows to modify the BnB-behavior.
+  BranchingStrategy &branching_strategy; // decides how to branch on a node, if
+                                         // it is not yet feasible.
+  SolutionPool solution_pool;            // Saves all solutions found so far.
+  int num_iterations = 0;                // how many nodes have been looked at
+  int num_explored = 0;                  // how many nodes have been explored
+  int num_branches = 0; // how many of those nodes have been branched upon
 };
 
 TEST_CASE("Branch and Bound  1") {

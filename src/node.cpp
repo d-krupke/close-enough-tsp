@@ -13,7 +13,7 @@ void Node::add_lower_bound(const double lb) {
     }
     // Potentially also propagate to children.
     if (!children.empty()) {
-      for(auto&  child: children) {
+      for (auto &child : children) {
         child.add_lower_bound(lb);
       }
     }
@@ -85,7 +85,8 @@ auto Node::get_relaxed_solution() -> const Trajectory & {
       }
       circles.push_back(Circle(instance->path->second, 0));
       assert(circles.size() == branch_sequence.size() + 2);
-      std::tie(relaxed_solution, spanning_circles) = compute_tour_with_spanning_information(circles, true);
+      std::tie(relaxed_solution, spanning_circles) =
+          compute_tour_with_spanning_information(circles, true);
     }
   }
   return *relaxed_solution;

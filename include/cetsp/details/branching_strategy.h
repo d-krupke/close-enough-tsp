@@ -80,7 +80,6 @@ public:
   virtual void setup(Instance *instance_, Node *root,
                      SolutionPool *solution_pool_) override {
     FarthestCircle::setup(instance_, root, solution_pool_);
-    solution_pool = solution_pool_;
     if (instance->is_path()) {
       // Should be possible to extend the idea to paths.
       throw std::invalid_argument(
@@ -150,7 +149,6 @@ protected:
 private:
   std::vector<double> order_values;
   std::vector<bool> is_ordered;
-  SolutionPool *solution_pool;
 };
 
 class TmChFarthestCircle : public FarthestCircle {

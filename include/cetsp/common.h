@@ -162,7 +162,7 @@ public:
 
   bool is_simple() const {
     if (points.front() == points.back()) {
-      auto points_  = get_simplified_points(0.01);
+      auto points_ = get_simplified_points(0.01);
       details::cgPolygon poly{points_.begin(), points_.end() - 1};
       return poly.is_simple();
     } else {
@@ -172,27 +172,29 @@ public:
     }
   }
 
-  [[nodiscard]] bool covers(const Circle &circle, double FEASIBILITY_TOLERANCE = 0.0) const {
+  [[nodiscard]] bool covers(const Circle &circle,
+                            double FEASIBILITY_TOLERANCE = 0.0) const {
     return distance(circle) <= FEASIBILITY_TOLERANCE;
   }
 
   template <typename It>
-  [[nodiscard]] auto covers(It begin, It end, double FEASIBILITY_TOLERANCE = 0.0) const -> bool {
-    return std::all_of(begin, end,
-                       [&](const Circle &c) { return this->covers(c, FEASIBILITY_TOLERANCE); });
+  [[nodiscard]] auto covers(It begin, It end,
+                            double FEASIBILITY_TOLERANCE = 0.0) const -> bool {
+    return std::all_of(begin, end, [&](const Circle &c) {
+      return this->covers(c, FEASIBILITY_TOLERANCE);
+    });
   }
 
   std::vector<Point> points;
 
 private:
-
   /**
    * Merge very close points to prevent numerical stuff (there are often
    * the same point with some tiny numerical variation.
    * @param eps Points with this  distance are considered identical.
    * @return
    */
-  std::vector<details::cgPoint> get_simplified_points(double eps=0.01) const {
+  std::vector<details::cgPoint> get_simplified_points(double eps = 0.01) const {
     std::vector<details::cgPoint> points_;
     for (const auto &p : points) {
       if (!points_.empty() &&
