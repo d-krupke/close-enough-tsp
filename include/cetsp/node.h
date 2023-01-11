@@ -9,6 +9,20 @@
 #include <numeric>
 namespace cetsp {
 
+/**
+ * Represent an intersection in a specific trajectory.
+ * The intersection is between two edges of the cycles c1c2, c3c4 which have the
+ * exact coordinates p1p2, p3p4
+ */
+struct TrajectoryIntersection {
+public:
+  Point p1, p2, p3, p4;
+  Circle c1, c2, c3, c4;
+  TrajectoryIntersection(Point p1, Point p2, Circle c1, Circle c2, Point p3,
+                         Point p4, Circle c3, Circle c4)
+      : p1(p1), p2(p2), c1(c1), c2(c2), p3(p3), p4(p4), c3(c3), c4(c4) {}
+};
+
 class Node {
 public:
   Node(Node &node) = delete;
@@ -81,6 +95,8 @@ public:
   [[nodiscard]] Instance *get_instance() { return instance; }
 
   [[nodiscard]] int depth() const { return _depth; }
+
+  std::vector<TrajectoryIntersection> get_intersections();
 
 private:
   // Check if the children allow to improve the lower bound.
