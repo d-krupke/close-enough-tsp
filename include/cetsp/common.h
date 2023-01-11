@@ -75,7 +75,7 @@ TEST_CASE("Circle") {
 class Instance : public std::vector<Circle> {
 public:
   Instance() {}
-  Instance(std::vector<Circle> circles) {
+  explicit Instance(std::vector<Circle> circles) {
     reserve(circles.size());
     std::sort(circles.begin(), circles.end(),
               [](const auto &a, const auto &b) { return a.radius < b.radius; });
@@ -89,7 +89,7 @@ public:
       push_back(circle);
     }
   }
-  bool is_path() const {
+  [[nodiscard]] bool is_path() const {
     if (path) {
       return true;
     } else {
@@ -97,7 +97,7 @@ public:
     }
   }
 
-  bool is_tour() const {
+  [[nodiscard]] bool is_tour() const {
     if (path) {
       return false;
     }
@@ -128,6 +128,30 @@ public:
   explicit Trajectory(std::vector<Point> points) : points{std::move(points)} {}
 
   bool is_tour() const { return points[0] == points[points.size() - 1]; }
+
+  /**
+   * Returns a sub-trajectory. If the trajectory is a tour, begin can be
+   * after end (then modulo is used, the last point will not be repeated).
+   * @param begin The index of the first point in the sub-trajectory.
+   * @param end The index of the last point in the sub-trajectory.
+   * @return The sub-trajectory.
+   */
+  Trajectory sub(int begin, int end) const {
+    std::vector<Point> path;
+    auto n = points.size() - 1;
+    auto i = begin;
+    if (is_tour()) {
+      while (i > end) {
+        path.push_back(points[i]);
+        i = (i + 1) % n;
+      }
+    }
+    while (i <= end) {
+      path.push_back(points[i]);
+      ++i;
+    }
+    return Trajectory{path};
+  }
 
   double distance(const Circle &circle) const {
     double min_dist = std::numeric_limits<double>::infinity();
@@ -215,6 +239,24 @@ TEST_CASE("Trajectory") {
   CHECK(traj.distance(c1) == -1);
   CHECK(traj.covers(c1));
   CHECK(traj.length() == 10.0);
+}
+
+TEST_CASE("Trajectory Sub") {
+  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0,5}, {0,0}}};
+  CHECK(traj.is_tour());
+  auto sub = traj.sub(0, 2);
+  CHECK(sub.points.size() == 3);
+  CHECK(sub.points[0]==Point(0,0));
+  CHECK(sub.points[2]==Point(5,5));
+}
+
+TEST_CASE("Trajectory Sub 2") {
+  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0,5}, {0,0}}};
+  CHECK(traj.is_tour());
+  auto sub = traj.sub(3, 1);
+  CHECK(sub.points.size() == 3);
+  CHECK(sub.points[0]==Point(0,5));
+  CHECK(sub.points[2]==Point(5,0));
 }
 }; // namespace cetsp
 

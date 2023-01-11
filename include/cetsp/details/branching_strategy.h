@@ -80,11 +80,6 @@ public:
   virtual void setup(Instance *instance_, Node *root,
                      SolutionPool *solution_pool_) override {
     FarthestCircle::setup(instance_, root, solution_pool_);
-    if (instance->is_path()) {
-      // Should be possible to extend the idea to paths.
-      throw std::invalid_argument(
-          "ConvexHull Strategy only feasible for tours.");
-    }
     order_values.resize(instance->size());
     is_ordered.resize(instance->size(), false);
     compute_weights(instance, root);
