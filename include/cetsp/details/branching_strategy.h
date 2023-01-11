@@ -127,19 +127,87 @@ public:
     std::cout << "Using ChFarthestCircle-Branching" << std::endl;
   }
 
-protected:
-  bool sequence_is_ch_ordered(const std::vector<int> &seqeuence) {
-    std::vector<double> order_values_;
-    for (const auto &i : seqeuence) {
-      if (is_ordered[i]) {
-        order_values_.push_back(order_values[i]);
+  static bool
+  is_path_sequence_possible(const std::vector<int> &sequence, unsigned int n,
+                            const std::vector<bool> &is_in_ch,
+                            const std::vector<double> &order_values) {
+    /* Create convex hull */
+    /* hull[] = {disc_index, order_value[disc_index]} */
+    std::vector<std::pair<unsigned int, double>> hull;
+    for (const auto &i : sequence) {
+      if (is_in_ch[i]) {
+        hull.push_back({i, order_values[i]});
       }
     }
-    // The minimal element may be in the middle. So we rotate the minimal
-    // element to the front.
-    auto min_ = std::min_element(order_values_.begin(), order_values_.end());
-    std::rotate(order_values_.begin(), min_, order_values_.end());
-    return std::is_sorted(order_values_.begin(), order_values_.end());
+    /* Sort by order on the CH */
+    std::sort(std::begin(hull), std::end(hull),
+              [](const auto &a, const auto &b) { return a.second < b.second; });
+    if (hull.size() <= 2)
+      return true;
+
+    /* ch_numbers[disc_index] = index on CH */
+    std::vector<unsigned int> ch_numbers(n);
+    for (unsigned int i = 0; i < hull.size(); i++) {
+      ch_numbers[hull[i].first] = i;
+    }
+
+    /* Compute the order the CH vertices are visited by the sequence */
+    std::vector<unsigned int> ch_order(hull.size());
+    unsigned int steps = 0;
+    for (const auto &i : sequence) {
+      if (is_in_ch[i]) {
+        ch_order[ch_numbers[i]] = steps++;
+      }
+    }
+
+    /* Rotate the order such that 0,1 are the first two elements in ch_order */
+    auto first_on_ch = std::find(std::begin(ch_order), std::end(ch_order), 0);
+    std::rotate(std::begin(ch_order), first_on_ch, std::end(ch_order));
+    unsigned int first_on_ch_idx =
+        std::distance(std::begin(ch_order), first_on_ch);
+    bool is_rotated = ch_order[(first_on_ch_idx + 1) % ch_order.size()] != 1;
+    if (is_rotated) {
+      std::reverse(std::begin(ch_order), std::end(ch_order));
+      std::rotate(std::begin(ch_order), std::end(ch_order) - 1,
+                  std::end(ch_order));
+    }
+
+    /* Check if ch_order is composed of a monotone increasing sequence followed
+     * by a monotone decreasing sequence */
+    unsigned int i = 0;
+    for (; i < ch_order.size()-1; i++) {
+      if (ch_order[i] > ch_order[i + 1]) {
+        break;
+      }
+    }
+    for (; i < ch_order.size()-1; i++) {
+      if (ch_order[i] < ch_order[i + 1]) {
+        break;
+      }
+    }
+    return i == ch_order.size()-1;
+  }
+
+protected:
+  bool sequence_is_ch_ordered(const std::vector<int> &sequence) {
+    if (instance->is_path()) {
+      return is_path_sequence_possible(sequence, instance->size(), is_ordered,
+                                       order_values);
+
+    } else { /* tour */
+      std::vector<double> order_values_;
+      for (const auto &i : sequence) {
+        if (is_ordered[i]) {
+          order_values_.push_back(order_values[i]);
+        }
+      }
+
+      // The minimal element may be in the middle. So we rotate the minimal
+      // element to the front.
+      auto min_ = std::min_element(order_values_.begin(), order_values_.end());
+      std::rotate(order_values_.begin(), min_, order_values_.end());
+      return std::is_sorted(order_values_.begin(), order_values_.end());
+    }
   }
   virtual bool is_sequence_ok(const std::vector<int> &sequence) override {
     auto is_ok = sequence_is_ch_ordered(sequence);
@@ -258,9 +326,9 @@ public:
       : FarthestCircle(simplify), tm{instance} {}
 
 protected:
-  bool sequence_is_ch_ordered(const std::vector<int> &seqeuence) {
+  bool sequence_is_ch_ordered(const std::vector<int> &sequence) {
     double weight = 0;
-    for (auto j : seqeuence) {
+    for (auto j : sequence) {
       if (is_ordered[j]) {
         if (order_values[j] < 0.999 * weight) {
           return false;
@@ -286,6 +354,7 @@ private:
   std::vector<bool> is_ordered;
   SolutionPool *solution_pool;
 };
+
 TEST_CASE("Branching Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
@@ -302,5 +371,34 @@ TEST_CASE("Branching Strategy") {
   CHECK(bs.branch(root2) == true);
   CHECK(root2.get_children().size() == 3);
 }
+
+TEST_CASE("Path Convex Hull Strategy true") {
+  std::vector<Circle> instance_ = {
+      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
+  Instance instance(instance_);
+  instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
+
+  std::vector<int> sequence = {1,0,5,2,3,4};
+  unsigned int n = 6;
+  std::vector<bool> is_in_ch = {true, true, true, true, true, true};
+  std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
+
+  CHECK(ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+}
+
+TEST_CASE("Path Convex Hull Strategy false") {
+  std::vector<Circle> instance_ = {
+      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
+  Instance instance(instance_);
+  instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
+
+  std::vector<int> sequence = {1,0,3,2,5,4};
+  unsigned int n = 6;
+  std::vector<bool> is_in_ch = {true, true, true, true, true, true};
+  std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
+
+  CHECK(!ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+}
+
 } // namespace cetsp
 #endif // CETSP_BRANCHING_STRATEGY_H
