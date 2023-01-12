@@ -33,20 +33,7 @@ auto Node::get_lower_bound() -> double {
 }
 
 bool Node::is_feasible() {
-  if (instance->revision == feasible_revision) {
-    return true;
-  }
-  if (feasible_revision == -2) {
-    return false;
-  }
-  if (get_relaxed_solution().covers(instance->begin(), instance->end(),
-                                    instance->eps)) {
-    feasible_revision = instance->revision;
-    return true;
-  } else {
-    feasible_revision = -2;
-    return false;
-  }
+  return _relaxed_solution.is_feasible();
 }
 
 void Node::branch(std::vector<Node> &&children_) {
@@ -64,32 +51,7 @@ void Node::branch(std::vector<Node> &&children_) {
 }
 
 auto Node::get_relaxed_solution() -> const Trajectory & {
-  if (!relaxed_solution) {
-    if (instance->is_tour()) {
-      std::vector<Circle> circles;
-      circles.reserve(branch_sequence.size());
-      for (auto i : branch_sequence) {
-        assert(i < static_cast<int>(instance->size()));
-        circles.push_back((*instance).at(i));
-      }
-      assert(circles.size() == branch_sequence.size());
-      auto soc = compute_tour_with_spanning_information(circles, false);
-      relaxed_solution = std::move(soc.first);
-      spanning_circles = std::move(soc.second);
-    } else {
-      std::vector<Circle> circles;
-      circles.reserve(branch_sequence.size() + 2);
-      circles.push_back(Circle(instance->path->first, 0));
-      for (auto i : branch_sequence) {
-        circles.push_back((*instance).at(i));
-      }
-      circles.push_back(Circle(instance->path->second, 0));
-      assert(circles.size() == branch_sequence.size() + 2);
-      std::tie(relaxed_solution, spanning_circles) =
-          compute_tour_with_spanning_information(circles, true);
-    }
-  }
-  return *relaxed_solution;
+  return _relaxed_solution.get_trajectory();
 }
 
 void Node::prune() {

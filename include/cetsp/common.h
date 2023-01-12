@@ -9,6 +9,7 @@
 #include "doctest/doctest.h"
 #include <CGAL/squared_distance_2.h> //for 2D functions
 #include <cmath>
+#include <utility>
 
 namespace cetsp {
 class Point {
@@ -232,6 +233,8 @@ private:
   mutable std::optional<double> _length;
 };
 
+
+
 TEST_CASE("Trajectory") {
   Trajectory traj{{{0, 0}, {5, 0}, {5, 5}}};
   CHECK(!traj.is_tour());
@@ -242,21 +245,21 @@ TEST_CASE("Trajectory") {
 }
 
 TEST_CASE("Trajectory Sub") {
-  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0,5}, {0,0}}};
+  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0, 5}, {0, 0}}};
   CHECK(traj.is_tour());
   auto sub = traj.sub(0, 2);
   CHECK(sub.points.size() == 3);
-  CHECK(sub.points[0]==Point(0,0));
-  CHECK(sub.points[2]==Point(5,5));
+  CHECK(sub.points[0] == Point(0, 0));
+  CHECK(sub.points[2] == Point(5, 5));
 }
 
 TEST_CASE("Trajectory Sub 2") {
-  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0,5}, {0,0}}};
+  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0, 5}, {0, 0}}};
   CHECK(traj.is_tour());
   auto sub = traj.sub(3, 1);
   CHECK(sub.points.size() == 3);
-  CHECK(sub.points[0]==Point(0,5));
-  CHECK(sub.points[2]==Point(5,0));
+  CHECK(sub.points[0] == Point(0, 5));
+  CHECK(sub.points[2] == Point(5, 0));
 }
 }; // namespace cetsp
 

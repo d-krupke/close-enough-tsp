@@ -9,3 +9,4 @@
 #include "cetsp/node.h"
 #include "cetsp/soc.h"
 #include "doctest/doctest.h"
+#include "cetsp/relaxed_solution.h"
