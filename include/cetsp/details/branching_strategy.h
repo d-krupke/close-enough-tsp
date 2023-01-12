@@ -140,9 +140,9 @@ public:
       }
     }
     /* Sort by order on the CH */
-    std::sort(std::begin(hull), std::end(hull),
+    std::sort(hull.begin(), hull.end(),
               [](const auto &a, const auto &b) { return a.second < b.second; });
-    if (hull.size() <= 2)
+    if (hull.size() <= 4)
       return true;
 
     /* ch_numbers[disc_index] = index on CH */
@@ -161,31 +161,24 @@ public:
     }
 
     /* Rotate the order such that 0,1 are the first two elements in ch_order */
-    auto first_on_ch = std::find(std::begin(ch_order), std::end(ch_order), 0);
-    std::rotate(std::begin(ch_order), first_on_ch, std::end(ch_order));
-    unsigned int first_on_ch_idx =
-        std::distance(std::begin(ch_order), first_on_ch);
-    bool is_rotated = ch_order[(first_on_ch_idx + 1) % ch_order.size()] != 1;
-    if (is_rotated) {
-      std::reverse(std::begin(ch_order), std::end(ch_order));
-      std::rotate(std::begin(ch_order), std::end(ch_order) - 1,
-                  std::end(ch_order));
+    unsigned int idx0 =
+        std::find(ch_order.begin(), ch_order.end(), 0) - ch_order.begin();
+    bool is_reversed = ch_order[(idx0 + 1) % ch_order.size()] != 1;
+    if (is_reversed) {
+      std::reverse(ch_order.begin(), ch_order.end());
     }
+    std::rotate(ch_order.begin(),
+                std::find(ch_order.begin(), ch_order.end(), 0), ch_order.end());
+    assert(ch_order[0] == 0 && ch_order[1] == 1);
 
     /* Check if ch_order is composed of a monotone increasing sequence followed
      * by a monotone decreasing sequence */
     unsigned int i = 0;
-    for (; i < ch_order.size()-1; i++) {
-      if (ch_order[i] > ch_order[i + 1]) {
-        break;
-      }
-    }
-    for (; i < ch_order.size()-1; i++) {
-      if (ch_order[i] < ch_order[i + 1]) {
-        break;
-      }
-    }
-    return i == ch_order.size()-1;
+    for (; i < ch_order.size() - 1 && ch_order[i] < ch_order[i + 1]; i++)
+      ;
+    for (; i < ch_order.size() - 1 && ch_order[i] > ch_order[i + 1]; i++)
+      ;
+    return i == ch_order.size() - 1;
   }
 
 protected:
@@ -378,12 +371,13 @@ TEST_CASE("Path Convex Hull Strategy true") {
   Instance instance(instance_);
   instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
 
-  std::vector<int> sequence = {1,0,5,2,3,4};
+  std::vector<int> sequence = {1, 0, 5, 2, 3, 4};
   unsigned int n = 6;
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
 
-  CHECK(ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+  CHECK(ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch,
+                                                    order_values));
 }
 
 TEST_CASE("Path Convex Hull Strategy false") {
@@ -392,12 +386,13 @@ TEST_CASE("Path Convex Hull Strategy false") {
   Instance instance(instance_);
   instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
 
-  std::vector<int> sequence = {1,0,3,2,5,4};
+  std::vector<int> sequence = {1, 0, 3, 2, 5, 4};
   unsigned int n = 6;
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
 
-  CHECK(!ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+  CHECK(!ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch,
+                                                     order_values));
 }
 
 } // namespace cetsp
