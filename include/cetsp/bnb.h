@@ -213,7 +213,7 @@ private:
   void on_prune(Node &node) { search_strategy.notify_of_prune(node); }
 
   void process_feasible_node(Node *node, EventContext &context) {
-    solution_pool.add_solution(node->get_relaxed_solution());
+    solution_pool.add_solution(node->get_relaxed_solution().get_trajectory());
     search_strategy.notify_of_feasible(*(context.current_node));
   }
 

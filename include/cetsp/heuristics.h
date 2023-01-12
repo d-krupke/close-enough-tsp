@@ -14,15 +14,16 @@ namespace cetsp {
  */
 auto compute_tour_by_2opt(Instance &instance) -> PartialSequenceSolution;
 
-Trajectory tour_lns(const Instance& instance, const std::vector<int>& sequence, const Trajectory& trajectory, int begin, int end) {
-  assert(sequence.size() == trajectory.points.size()-1);
-  const auto lns_path_begin = trajectory.points[begin];
-  const auto lns_path_end = trajectory.points[end];
-  auto fixed_trajectory = trajectory.sub(end, begin);
+Trajectory tour_lns(const Instance& instance, PartialSequenceSolution& solution, int begin, int end) {
+  assert(instance.is_tour());
+  solution.simplify();
+  const auto lns_path_begin = solution.trajectory_begin();
+  const auto lns_path_end = solution.trajectory_end();
+  auto fixed_trajectory = solution.get_trajectory().sub(end, begin);
   Instance missing_circles;
-  for(const auto& circle:  instance){
-    if(!fixed_trajectory.covers(circle)) {
-      missing_circles.push_back(circle);
+    for(int  i=0;i<instance.size(); ++i){
+    if(!solution.covers(i)) {
+      missing_circles.push_back(instance[i]);
     }
   }
   missing_circles.path = {lns_path_begin, lns_path_end};
@@ -39,7 +40,7 @@ Trajectory tour_lns(const Instance& instance, const std::vector<int>& sequence, 
   // build new solution
   auto sol =  baba.get_solution();
   if(!sol) {
-    return trajectory;
+    return solution.get_trajectory();
   }
   assert(!sol->is_tour());
   std::vector<Point> points;
@@ -72,10 +73,12 @@ TEST_CASE("LNS") {
   const std::vector<Circle> seq2 = {
       {{0, 0}, 1}, {{3, 0}, 1}, {{5, 2}, 1}, {{3, 3}, 1}, {{0, 4}, 1}};
   auto instance = Instance(seq2);
-  Trajectory traj{{Point{0, 0}, Point{3, 0}, Point{5, 2}, Point{3, 3}, Point{0, 4}, Point{0,0}}};
-  CHECK(traj.length() >= 1);
-  auto traj2 = tour_lns(instance, {0,1,2,3,4},traj, 1,4);
-  CHECK(traj2.length()<=traj.length());
+  CHECK(instance.is_tour());
+  PartialSequenceSolution pss(&instance, std::vector<int>{0,1,2,3,4});
+  CHECK(pss.get_trajectory().is_tour());
+  CHECK(pss.is_feasible());
+  auto traj2 = tour_lns(instance, pss, 1,3);
+  CHECK(traj2.length()<=pss.obj());
 }
 } // namespace cetsp
 #endif // CETSP_HEURISTICS_H

@@ -37,7 +37,7 @@ public:
   [[nodiscard]] Node *get_parent() { return parent; }
   [[nodiscard]] const Node *get_parent() const { return parent; }
 
-  auto get_relaxed_solution() -> const Trajectory &;
+  auto get_relaxed_solution() -> const PartialSequenceSolution &;
 
   /**
    * Will prune the node, i.e., mark it as not leading to an optimal solution
@@ -97,7 +97,7 @@ TEST_CASE("Node") {
   CHECK(seq.is_tour());
   Node node({0, 1}, &seq);
   const auto tour = node.get_relaxed_solution();
-  CHECK(tour.length() == doctest::Approx(2.0));
+  CHECK(tour.obj() == doctest::Approx(2.0));
   CHECK(node.get_lower_bound() == doctest::Approx(2.0));
   CHECK(node.is_feasible());
 }

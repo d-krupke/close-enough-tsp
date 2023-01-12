@@ -60,7 +60,7 @@ struct EventContext {
    * node. Use `node->get_lower_bound()` to query the  lowr bound
    * and do not  compute the length of the relaxed solution.
    */
-  Trajectory get_relaxed_solution() const {
+  const auto& get_relaxed_solution() const {
     return current_node->get_relaxed_solution();
   }
 

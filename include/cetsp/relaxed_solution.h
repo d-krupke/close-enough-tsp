@@ -10,6 +10,31 @@
 
 namespace cetsp {
 
+class DistanceCache {
+public:
+  explicit DistanceCache(const Instance *instance) : instance{instance} {}
+
+  double operator()(int i, const Trajectory *trajectory) {
+    assert(i < instance->size());
+    if (i >= cache.size()) {
+      fill_cache(trajectory);
+    }
+    return cache[i];
+  }
+
+  const Instance *instance;
+
+private:
+  void fill_cache(const Trajectory *trajectory) {
+    cache.reserve(instance->size());
+    for (int i = cache.size(); i < instance->size(); ++i) {
+      cache.push_back(trajectory->distance((*instance)[i]));
+    }
+  }
+
+  std::vector<double> cache;
+};
+
 class PartialSequenceSolution {
   /**
    * This class simplifies the handling of the relaxed solution that is based
@@ -18,9 +43,9 @@ class PartialSequenceSolution {
    */
 public:
   PartialSequenceSolution(const Instance *instance, std::vector<int> sequence_,
-                          double feasibility_tol = 0.01)
+                          bool simplify_ = false, double feasibility_tol = 0.001)
       : instance{instance}, sequence{std::move(sequence_)},
-        FEASIBILITY_TOL{feasibility_tol} {
+        FEASIBILITY_TOL{feasibility_tol}, distances{instance} {
     if (sequence.empty() && !instance->is_path()) {
       throw std::invalid_argument(
           "Cannot compute tour trajectory from empty sequence.");
@@ -32,6 +57,9 @@ public:
       compute_tour_trajectory();
     } else {
       compute_path_trajectory();
+    }
+    if (simplify_) {
+      simplify();
     }
   }
 
@@ -68,10 +96,28 @@ public:
 
   double obj() const { return trajectory.length(); }
 
-  bool is_feasible() {
+  double distance(int i) const { return distances(i, &get_trajectory()); }
+
+  bool covers(int i) const {
+    if (std::any_of(sequence.begin(), sequence.end(),
+                    [i](const auto &j) { return i == j; })) {
+      return true;
+    }
+    return distance(i) <= FEASIBILITY_TOL;
+  }
+
+  bool is_feasible() const {
+    if(_feasible && !*_feasible) {
+      return false;
+    }
     if (!_feasible) {
-      _feasible = trajectory.covers(instance->begin(), instance->end(),
-                                    FEASIBILITY_TOL);
+      _feasible = true;
+      for(;feasible_below<instance->size(); ++feasible_below) {
+        if(!covers(feasible_below)) {
+          _feasible = false;
+          break;
+        }
+      }
     }
     return *_feasible;
   }
@@ -81,7 +127,7 @@ public:
    * parts.
    */
   void simplify() {
-    if(simplified) {
+    if (simplified) {
       return;
     }
     std::vector<Point> points;
@@ -153,9 +199,11 @@ private:
   std::vector<int> sequence;
   Trajectory trajectory;
   std::vector<bool> spanning;
-  std::optional<bool> _feasible;
+  mutable std::optional<bool> _feasible;
   bool simplified = false;
+  mutable int feasible_below = 0;
   double FEASIBILITY_TOL;
+  mutable  DistanceCache distances;
 };
 
 TEST_CASE("PartialSequentialSolution") {

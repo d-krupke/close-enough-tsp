@@ -45,9 +45,11 @@ Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
    * longest sum of  distance to the two end points.
    */
   if (instance.is_path()) {
+    if(instance.empty()) {
+      return Node({}, &instance);
+    }
     std::vector<int> seq;
     seq.push_back(static_cast<int>(most_distanced_circle(instance)));
-    assert(seq[0] < static_cast<int>(instance.size()));
     return Node(seq, &instance);
   } else {
     if (instance.size() <= 3) { // trivial case

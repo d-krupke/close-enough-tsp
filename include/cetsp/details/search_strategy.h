@@ -68,8 +68,8 @@ public:
       const auto lb_a = a->get_lower_bound();
       const auto lb_b = b->get_lower_bound();
       if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
+        return a->get_relaxed_solution().obj() >
+               b->get_relaxed_solution().obj();
       }
       return a->get_lower_bound() > b->get_lower_bound();
     });
@@ -106,8 +106,8 @@ private:
       const auto lb_a = a->get_lower_bound();
       const auto lb_b = b->get_lower_bound();
       if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
+        return a->get_relaxed_solution().obj() >
+               b->get_relaxed_solution().obj();
       }
       return lb_a > lb_b;
     });
@@ -128,8 +128,8 @@ public:
       const auto lb_a = a->get_lower_bound();
       const auto lb_b = b->get_lower_bound();
       if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
+        return a->get_relaxed_solution().obj() >
+               b->get_relaxed_solution().obj();
       }
       return lb_a > lb_b;
     });
@@ -169,8 +169,8 @@ public:
       const auto lb_a = a->get_lower_bound();
       const auto lb_b = b->get_lower_bound();
       if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
+        return a->get_relaxed_solution().obj() >
+               b->get_relaxed_solution().obj();
       }
       return lb_a > lb_b;
     });

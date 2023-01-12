@@ -14,12 +14,16 @@ namespace cetsp {
  *          if all circles are included.
  */
 std::optional<int>
-get_index_of_most_distanced_circle(const Trajectory &solution,
+get_index_of_most_distanced_circle(const PartialSequenceSolution &solution,
                                    const Instance &instance) {
   const auto n = instance.size();
   std::vector<double> distances(n);
   for (unsigned i = 0; i < n; ++i) {
-    distances[i] = solution.distance(instance[i]);
+    if(solution.covers(i)) {
+      distances[i]=0;
+    } else {
+      distances[i] = solution.distance(i);
+    }
   }
   auto max_dist = std::max_element(distances.begin(), distances.end());
   if (*max_dist <= 0) {

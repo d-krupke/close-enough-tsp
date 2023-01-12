@@ -189,6 +189,8 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   py::class_<TripleMap>(m, "TripleMap", "bla")
       .def(py::init<Instance *>())
       .def("get_cost", &TripleMap::get_cost);
+  py::class_<PartialSequenceSolution>(m, "PartialSequenceSolution")
+      .def("get_trajectory", &PartialSequenceSolution::get_trajectory);
 
   // functions
   m.def("compute_tour_by_2opt", &compute_tour_by_2opt,

@@ -22,7 +22,7 @@ void Node::add_lower_bound(const double lb) {
 
 auto Node::get_lower_bound() -> double {
   if (!lazy_lower_bound_value) {
-    lazy_lower_bound_value = get_relaxed_solution().length();
+    lazy_lower_bound_value = get_relaxed_solution().obj();
     if (parent != nullptr) {
       if (lazy_lower_bound_value < parent->get_lower_bound()) {
         lazy_lower_bound_value = parent->get_lower_bound();
@@ -50,8 +50,8 @@ void Node::branch(std::vector<Node> &&children_) {
   }
 }
 
-auto Node::get_relaxed_solution() -> const Trajectory & {
-  return _relaxed_solution.get_trajectory();
+auto Node::get_relaxed_solution() -> const PartialSequenceSolution & {
+  return _relaxed_solution;
 }
 
 void Node::prune() {
