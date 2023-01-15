@@ -6,6 +6,7 @@
 #ifndef CLOSE_ENOUGH_TSP_COMMON_H
 #define CLOSE_ENOUGH_TSP_COMMON_H
 #include "cetsp/details/cgal_kernel.h"
+#include "cetsp/utils/geometry.h"
 #include "doctest/doctest.h"
 #include <CGAL/squared_distance_2.h> //for 2D functions
 #include <cmath>
@@ -159,17 +160,21 @@ public:
     details::cgPoint p(circle.center.x, circle.center.y);
     if (points.size() == 1) {
       details::cgPoint tp(points[0].x, points[0].y);
-      min_dist = CGAL::squared_distance(tp, p);
+      min_dist =
+          points[0].dist(circle.center); // CGAL::squared_distance(tp, p);
     }
     for (unsigned i = 0; i < points.size() - 1; i++) {
-      details::cgSegment segment({points[i].x, points[i].y},
-                                 {points[i + 1].x, points[i + 1].y});
-      double dist = CGAL::squared_distance(segment, p);
+      auto dist = utils::distance_to_segment({points[i].x, points[i].y},
+                                             {points[i + 1].x, points[i + 1].y},
+                                             {p.x(), p.y()});
+      // details::cgSegment segment({points[i].x, points[i].y},
+      //                            {points[i + 1].x, points[i + 1].y});
+      // double dist = CGAL::squared_distance(segment, p);
       if (dist < min_dist) {
         min_dist = dist;
       }
     }
-    return std::sqrt(min_dist) - circle.radius;
+    return min_dist - circle.radius;
   }
 
   double length() const {
@@ -232,8 +237,6 @@ private:
   }
   mutable std::optional<double> _length;
 };
-
-
 
 TEST_CASE("Trajectory") {
   Trajectory traj{{{0, 0}, {5, 0}, {5, 5}}};

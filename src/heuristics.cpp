@@ -17,10 +17,12 @@ bool swap_improves(std::vector<std::pair<Circle, int>> &circles, int i, int j) {
   if (prev_i == j || next_j == i) {
     return false;
   }
-  const auto prev_dist = circles[i].first.center.dist(circles[prev_i].first.center) +
-                         circles[j].first.center.dist(circles[next_j].first.center);
-  const auto new_dist = circles[i].first.center.dist(circles[next_j].first.center) +
-                        circles[j].first.center.dist(circles[prev_i].first.center);
+  const auto prev_dist =
+      circles[i].first.center.dist(circles[prev_i].first.center) +
+      circles[j].first.center.dist(circles[next_j].first.center);
+  const auto new_dist =
+      circles[i].first.center.dist(circles[next_j].first.center) +
+      circles[j].first.center.dist(circles[prev_i].first.center);
   return new_dist < 0.999 * prev_dist;
 }
 
@@ -28,7 +30,7 @@ PartialSequenceSolution compute_tour_by_2opt(Instance &instance) {
   auto rd = std::random_device{};
   auto rng = std::default_random_engine{rd()};
   std::vector<std::pair<Circle, int>> circles;
-  int i =0;
+  int i = 0;
   for (const auto &c : instance) {
     circles.push_back({c, i});
     i++;
@@ -50,9 +52,11 @@ PartialSequenceSolution compute_tour_by_2opt(Instance &instance) {
   }
   // TODO: This is ugly as it does not care for begin and end.
   std::vector<int> sequence;
-  for(const auto& c: circles) {
+  for (const auto &c : circles) {
     sequence.push_back(c.second);
   }
-  return PartialSequenceSolution(&instance, sequence);
+  PartialSequenceSolution sol(&instance, sequence);
+  sol.simplify();
+  return sol;
 }
 } // namespace cetsp

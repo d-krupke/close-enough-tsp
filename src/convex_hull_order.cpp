@@ -1,7 +1,8 @@
 /**
- * In this file we compute the convex hull order  that has to be maintained.
- * This order is unique, if every circle has only one closest segment or vertex.
- * Despite of that, it may suffer from small numerical inaccuracies.
+ * In this file we trigger_lazy_computation the convex hull order  that has to
+ * be maintained. This order is unique, if every circle has only one closest
+ * segment or vertex. Despite of that, it may suffer from small numerical
+ * inaccuracies.
  *
  * If the convex  hull is degenerated to a line or a point, things become ugly.
  */

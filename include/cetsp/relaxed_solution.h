@@ -1,66 +1,47 @@
-//
-// Created by Dominik Krupke on 12.01.23.
-//
+/**
+ * The partial sequence solution is a fundamental part of the BnB.
+ * It essentially represents the relaxed solution, but also takes care of the
+ * nasty computation of the optimal tour through the circles.
+ * Using this class, you can easily build you own BnB-algorithm.
+ * It is important that some of the operators are lazy.
+ */
 
 #ifndef CETSP_RELAXED_SOLUTION_H
 #define CETSP_RELAXED_SOLUTION_H
 #include "cetsp/common.h"
-#include "cetsp/soc.h"
+#include "cetsp/details/distance_cache.h"
+#include "cetsp/details/lazy_trajectory.h"
 #include <vector>
 
 namespace cetsp {
 
-class DistanceCache {
-public:
-  explicit DistanceCache(const Instance *instance) : instance{instance} {}
-
-  double operator()(int i, const Trajectory *trajectory) {
-    assert(i < instance->size());
-    if (i >= cache.size()) {
-      fill_cache(trajectory);
-    }
-    return cache[i];
-  }
-
-  const Instance *instance;
-
-private:
-  void fill_cache(const Trajectory *trajectory) {
-    cache.reserve(instance->size());
-    for (int i = cache.size(); i < instance->size(); ++i) {
-      cache.push_back(trajectory->distance((*instance)[i]));
-    }
-  }
-
-  std::vector<double> cache;
-};
-
 class PartialSequenceSolution {
   /**
    * This class simplifies the handling of the relaxed solution that is based
-   * on a sequence of circles, that allow to compute the optimal tour respecting
-   * this order using a second order cone program.
+   * on a sequence of circles, that allow to trigger_lazy_computation the
+   * optimal tour respecting this order using a second order cone program.
    */
 public:
   PartialSequenceSolution(const Instance *instance, std::vector<int> sequence_,
-                          bool simplify_ = false, double feasibility_tol = 0.001)
-      : instance{instance}, sequence{std::move(sequence_)},
+                          double feasibility_tol = 0.001)
+      : instance{instance}, spanning_trajectory(instance, std::move(sequence_)),
         FEASIBILITY_TOL{feasibility_tol}, distances{instance} {
+    const auto &sequence = spanning_trajectory.sequence;
     if (sequence.empty() && !instance->is_path()) {
-      throw std::invalid_argument(
-          "Cannot compute tour trajectory from empty sequence.");
+      throw std::invalid_argument("Cannot trigger_lazy_computation tour "
+                                  "trajectory from empty sequence.");
     }
     assert(std::all_of(sequence.begin(), sequence.end(), [&instance](auto i) {
       return i < static_cast<int>(instance->size());
     }));
-    if (instance->is_tour()) {
-      compute_tour_trajectory();
-    } else {
-      compute_path_trajectory();
+  }
+
+  bool trigger_lazy_computation(bool with_feasibility = false) const {
+    const auto fresh = spanning_trajectory.trigger_computation();
+    if (with_feasibility) {
+      auto feas = is_feasible();
     }
-    if (simplify_) {
-      simplify();
-    }
+    return fresh;
   }
 
   /**
@@ -70,11 +51,16 @@ public:
    * circle in the solution.
    * @return True if it spans the trajectory.
    */
-  bool is_sequence_index_spanning(int i) const { return spanning[i]; }
+  bool is_sequence_index_spanning(int i) const {
+    trigger_lazy_computation();
+    return spanning_trajectory.get_spanning_information()[i];
+  }
 
-  const Point &trajectory_begin() const { return trajectory.points.front(); }
+  const Point &trajectory_begin() const {
+    return get_trajectory().points.front();
+  }
 
-  const Point &trajectory_end() const { return trajectory.points.back(); }
+  const Point &trajectory_end() const { return get_trajectory().points.back(); }
 
   /**
    * Returns the point that covers the i-th circle in the sequence. These
@@ -84,126 +70,42 @@ public:
    */
   const Point &get_sequence_hitting_point(int i) const {
     if (instance->is_tour()) {
-      return trajectory.points[i];
+      return get_trajectory().points[i];
     } else {
-      return trajectory.points[i + 1];
+      return get_trajectory().points[i + 1];
     }
   }
 
-  const Trajectory &get_trajectory() const { return trajectory; }
+  const Trajectory &get_trajectory() const {
+    return spanning_trajectory.get_trajectory();
+  }
 
-  const std::vector<int> &get_sequence() const { return sequence; }
+  const std::vector<int> &get_sequence() const {
+    return spanning_trajectory.sequence;
+  }
 
-  double obj() const { return trajectory.length(); }
+  double obj() const { return get_trajectory().length(); }
 
   double distance(int i) const { return distances(i, &get_trajectory()); }
 
-  bool covers(int i) const {
-    if (std::any_of(sequence.begin(), sequence.end(),
-                    [i](const auto &j) { return i == j; })) {
-      return true;
-    }
-    return distance(i) <= FEASIBILITY_TOL;
-  }
+  bool covers(int i) const;
 
-  bool is_feasible() const {
-    if(_feasible && !*_feasible) {
-      return false;
-    }
-    if (!_feasible) {
-      _feasible = true;
-      for(;feasible_below<instance->size(); ++feasible_below) {
-        if(!covers(feasible_below)) {
-          _feasible = false;
-          break;
-        }
-      }
-    }
-    return *_feasible;
-  }
+  bool is_feasible() const;
 
   /**
    * Simplify the sequence and the solution by removing implicitly covered
    * parts.
    */
-  void simplify() {
-    if (simplified) {
-      return;
-    }
-    std::vector<Point> points;
-    std::vector<int> simplified_sequence;
-    std::vector<bool> is_spanning;
-    if (instance->is_path()) {
-      // Trajectory of a path has a fixed beginning, not represented in the
-      // sequence
-      points.push_back(trajectory_begin());
-    }
-    // add all spanning circles and their hitting points
-    for (int i = 0; i < sequence.size(); ++i) {
-      if (is_sequence_index_spanning(i)) {
-        points.push_back(get_sequence_hitting_point(i));
-        simplified_sequence.push_back(sequence[i]);
-        is_spanning.push_back(true);
-      }
-    }
-    // Close the trajectory
-    if (instance->is_path()) {
-      // Trajectory of a path has a fixed ending, not represented in the
-      // sequence
-      points.push_back(trajectory_end());
-    } else {
-      // close the tour by going back to  the beginning
-      points.push_back(points.front());
-    }
-    // update the trajectory and sequence. Feasibility etc. doesn't change.
-    trajectory = Trajectory(std::move(points));
-    sequence = std::move(simplified_sequence);
-    spanning = std::move(is_spanning);
-    simplified = true;
-  }
+  void simplify();
 
 private:
-  void compute_tour_trajectory() {
-    // compute the optimal tour trajectory through the sequence
-    std::vector<Circle> circles;
-    circles.reserve(sequence.size());
-    for (auto i : sequence) {
-      assert(i < static_cast<int>(instance->size()));
-      circles.push_back((*instance).at(i));
-    }
-    assert(circles.size() == sequence.size());
-    auto soc = compute_tour_with_spanning_information(circles, false);
-    trajectory = std::move(soc.first);
-    spanning = std::move(soc.second);
-  }
-
-  void compute_path_trajectory() {
-    // compute the optimal path trajectory through the sequence
-    std::vector<Circle> circles;
-    circles.reserve(sequence.size() + 2);
-    circles.emplace_back(instance->path->first, 0);
-    for (auto i : sequence) {
-      circles.push_back((*instance).at(i));
-    }
-    circles.emplace_back(instance->path->second, 0);
-    assert(circles.size() == sequence.size() + 2);
-    auto soc = compute_tour_with_spanning_information(circles, true);
-    trajectory = std::move(soc.first);
-    spanning.reserve(sequence.size());
-    for (int i = 1; i < soc.second.size() - 1; ++i) {
-      spanning[i - 1] = soc.second[i];
-    }
-  }
-
   const Instance *instance;
-  std::vector<int> sequence;
-  Trajectory trajectory;
-  std::vector<bool> spanning;
+  details::LazyTrajectoryComputation spanning_trajectory;
   mutable std::optional<bool> _feasible;
   bool simplified = false;
   mutable int feasible_below = 0;
   double FEASIBILITY_TOL;
-  mutable  DistanceCache distances;
+  mutable details::DistanceCache distances;
 };
 
 TEST_CASE("PartialSequentialSolution") {

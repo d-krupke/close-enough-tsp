@@ -4,8 +4,9 @@
 #include <vector>
 namespace cetsp {
 
-std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
-    const std::vector<Circle> &circle_sequence, const bool path) {
+std::pair<Trajectory, std::vector<bool>>
+compute_trajectory_with_information(const std::vector<Circle> &circle_sequence,
+                                    bool path) {
   constexpr auto SPANNING_TOLERANCE = 0.01;
 
   static GRBEnv env;
@@ -102,6 +103,6 @@ std::pair<Trajectory, std::vector<bool>> compute_tour_with_spanning_information(
 
 Trajectory compute_tour(const std::vector<Circle> &circle_sequence,
                         const bool path) {
-  return compute_tour_with_spanning_information(circle_sequence, path).first;
+  return compute_trajectory_with_information(circle_sequence, path).first;
 }
 } // namespace cetsp

@@ -18,19 +18,19 @@ namespace cetsp {
 
 class RootNodeStrategy {
 public:
-  virtual Node get_root_node(Instance &instance) = 0;
+  virtual std::shared_ptr<Node> get_root_node(Instance &instance) = 0;
   virtual ~RootNodeStrategy() = default;
 };
 
 class LongestEdgePlusFurthestCircle : public RootNodeStrategy {
 
 public:
-  Node get_root_node(Instance &instance);
+  std::shared_ptr<Node> get_root_node(Instance &instance);
 };
 
 class ConvexHull : public RootNodeStrategy {
 public:
-  Node get_root_node(Instance &instance);
+  std::shared_ptr<Node> get_root_node(Instance &instance);
 };
 
 TEST_CASE("Root Node Selection") {
@@ -42,8 +42,8 @@ TEST_CASE("Root Node Selection") {
   instance.push_back({{6, 0}, 1});
   instance.push_back({{3, 6}, 1});
   LongestEdgePlusFurthestCircle rns;
-  Node root = rns.get_root_node(instance);
-  CHECK(root.is_feasible());
+  auto root = rns.get_root_node(instance);
+  CHECK(root->is_feasible());
 }
 } // namespace cetsp
 #endif // CETSP_ROOT_NODE_STRATEGY_H

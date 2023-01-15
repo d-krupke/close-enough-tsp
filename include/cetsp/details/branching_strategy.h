@@ -22,7 +22,7 @@
 namespace cetsp {
 class BranchingStrategy {
 public:
-  virtual void setup(Instance *instance, Node *root,
+  virtual void setup(Instance *instance, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool) {}
   virtual bool branch(Node &node) = 0;
   virtual ~BranchingStrategy() = default;
@@ -40,7 +40,7 @@ public:
     }
   }
 
-  virtual void setup(Instance *instance_, Node *root,
+  virtual void setup(Instance *instance_, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool) override {
     instance = instance_;
   }
@@ -77,7 +77,7 @@ class ChFarthestCircle : public FarthestCircle {
 public:
   virtual bool allows_lazy_constraints() override { return false; }
 
-  virtual void setup(Instance *instance_, Node *root,
+  virtual void setup(Instance *instance_, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool_) override {
     FarthestCircle::setup(instance_, root, solution_pool_);
     order_values.resize(instance->size());
@@ -102,7 +102,7 @@ public:
     return points;
   }
 
-  void compute_weights(Instance *instance, Node *root) {
+  void compute_weights(Instance *instance, std::shared_ptr<Node> &root) {
     // Compute the weights used to check if the partial solution
     // obeys the convex hull.
     auto points = get_circle_centers(*instance);
@@ -159,7 +159,7 @@ class TmChFarthestCircle : public FarthestCircle {
 public:
   virtual bool allows_lazy_constraints() override { return false; }
 
-  virtual void setup(Instance *instance_, Node *root,
+  virtual void setup(Instance *instance_, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool_) override {
     FarthestCircle::setup(instance_, root, solution_pool_);
     solution_pool = solution_pool_;
@@ -184,7 +184,7 @@ public:
 
   /**
    * Compute the CCW segments of the convex hull of a set of points.
-   * @param points The points to compute the CH on.
+   * @param points The points to trigger_lazy_computation the CH on.
    * @return CCW ordered segements representing the CH.
    */
   std::vector<Segment_2>
@@ -226,7 +226,7 @@ public:
     return {};
   }
 
-  void compute_weights(Instance *instance, Node *root) {
+  void compute_weights(Instance *instance, std::shared_ptr<Node> &root) {
     auto points = get_circle_centers(*instance);
     auto ch_segments = compute_convex_hull_segments(points);
     for (unsigned i = 0; i < instance->size(); ++i) {
@@ -288,9 +288,9 @@ TEST_CASE("Branching Strategy") {
       {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
   Instance instance(instance_);
   FarthestCircle bs;
-  Node root({0, 1, 2, 3}, &instance);
-  bs.setup(&instance, &root, nullptr);
-  CHECK(bs.branch(root) == false);
+  auto root = std::make_shared<Node>(std::vector<int>{0, 1, 2, 3}, &instance);
+  bs.setup(&instance, root, nullptr);
+  CHECK(bs.branch(*root) == false);
 
   std::vector<Circle> seq = {{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
   Node root2({0, 1, 2}, &instance);

@@ -65,7 +65,7 @@ circles = [
 ]
 instance = Instance(circles, Point(0, 0), Point(10, 10))
 
-# compute an initial solution via 2opt
+# trigger_lazy_computation an initial solution via 2opt
 initial_solution = compute_tour_by_2opt(instance)
 
 

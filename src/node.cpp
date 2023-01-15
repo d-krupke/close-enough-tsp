@@ -14,7 +14,7 @@ void Node::add_lower_bound(const double lb) {
     // Potentially also propagate to children.
     if (!children.empty()) {
       for (auto &child : children) {
-        child.add_lower_bound(lb);
+        child->add_lower_bound(lb);
       }
     }
   }
@@ -32,20 +32,18 @@ auto Node::get_lower_bound() -> double {
   return *lazy_lower_bound_value;
 }
 
-bool Node::is_feasible() {
-  return _relaxed_solution.is_feasible();
-}
+bool Node::is_feasible() { return _relaxed_solution.is_feasible(); }
 
-void Node::branch(std::vector<Node> &&children_) {
+void Node::branch(std::vector<std::shared_ptr<Node>> &children_) {
   if (is_pruned()) {
     throw std::invalid_argument("Cannot branch on pruned node.");
   }
   assert(!is_feasible());
   if (children_.empty()) {
     prune();
-    children = std::vector<Node>{};
+    children = std::vector<std::shared_ptr<Node>>{};
   } else {
-    children = std::move(children_);
+    children = children_;
     reevaluate_children();
   }
 }
@@ -61,7 +59,7 @@ void Node::prune() {
   pruned = true;
   add_lower_bound(std::numeric_limits<double>::infinity());
   for (auto &child : children) {
-    child.prune();
+    child->prune();
   }
 }
 
@@ -71,9 +69,9 @@ void Node::reevaluate_children() {
         children.begin(), children.end(),
         std::numeric_limits<double>::infinity(),
         [](double a, double b) { return std::min(a, b); },
-        [](Node &node) {
-          return (node.is_pruned() ? std::numeric_limits<double>::infinity()
-                                   : node.get_lower_bound());
+        [](std::shared_ptr<Node> &node) {
+          return (node->is_pruned() ? std::numeric_limits<double>::infinity()
+                                    : node->get_lower_bound());
         });
     // std::cout << "Reevaluated children at depth "<<depth()<< " to
     // "<<lb<<std::endl;

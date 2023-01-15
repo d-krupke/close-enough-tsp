@@ -203,4 +203,5 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         py::arg("callback"), py::arg("initial_solution"), py::arg("timelimit"),
         py::arg("branching") = "ChFarthestCircleSimplifying",
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull");
+  m.def("optimize_tour_by_lns", &optimize_tour_by_lns);
 }

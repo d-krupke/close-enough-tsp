@@ -2,6 +2,7 @@
 // Created by Dominik Krupke on 21.12.22.
 //
 #include "cetsp/details/branching_strategy.h"
+// #include <execution>
 namespace cetsp {
 
 /**
@@ -19,8 +20,8 @@ get_index_of_most_distanced_circle(const PartialSequenceSolution &solution,
   const auto n = instance.size();
   std::vector<double> distances(n);
   for (unsigned i = 0; i < n; ++i) {
-    if(solution.covers(i)) {
-      distances[i]=0;
+    if (solution.covers(i)) {
+      distances[i] = 0;
     } else {
       distances[i] = solution.distance(i);
     }
@@ -39,7 +40,7 @@ bool FarthestCircle::branch(Node &node) {
   if (!c) {
     return false;
   }
-  std::vector<Node> children;
+  std::vector<std::shared_ptr<Node>> children;
   std::vector<int> seqeuence;
   if (simplify) {
     seqeuence = node.get_spanning_sequence();
@@ -49,16 +50,23 @@ bool FarthestCircle::branch(Node &node) {
   seqeuence.push_back(*c);
   if (instance->is_path()) {
     // for path, this position may not be symmetric.
-    children.emplace_back(seqeuence, instance, &node);
+    if (is_sequence_ok(seqeuence)) {
+      children.push_back(std::make_shared<Node>(seqeuence, instance, &node));
+    }
   }
   for (int i = seqeuence.size() - 1; i > 0; --i) {
     seqeuence[i] = seqeuence[i - 1];
     seqeuence[i - 1] = *c;
     if (is_sequence_ok(seqeuence)) {
-      children.emplace_back(seqeuence, instance, &node);
+      children.push_back(std::make_shared<Node>(seqeuence, instance, &node));
+      if (simplify) {
+        children.back()->simplify();
+      }
     }
   }
-  node.branch(std::move(children));
+  // for_each(std::execution::par, children.begin(), children.end(), [](auto&
+  // child){child.trigger_lazy_evaluation();});
+  node.branch(children);
   return true;
 }
 } // namespace cetsp

@@ -23,16 +23,24 @@ public:
     }
   }
 
+  void trigger_lazy_evaluation() {
+    _relaxed_solution.trigger_lazy_computation(true);
+  }
+
   void add_lower_bound(double lb);
 
   auto get_lower_bound() -> double;
 
   bool is_feasible();
 
-  void branch(std::vector<Node> &&children_);
+  void branch(std::vector<std::shared_ptr<Node>> &children_);
 
-  const std::vector<Node> &get_children() const { return children; }
-  [[nodiscard]] std::vector<Node> &get_children() { return children; }
+  const std::vector<std::shared_ptr<Node>> &get_children() const {
+    return children;
+  }
+  [[nodiscard]] std::vector<std::shared_ptr<Node>> &get_children() {
+    return children;
+  }
 
   [[nodiscard]] Node *get_parent() { return parent; }
   [[nodiscard]] const Node *get_parent() const { return parent; }
@@ -69,6 +77,8 @@ public:
     return spanning_sequence;
   }
 
+  void simplify() { _relaxed_solution.simplify(); }
+
   [[nodiscard]] auto is_pruned() const -> bool { return pruned; }
 
   [[nodiscard]] Instance *get_instance() { return instance; }
@@ -81,13 +91,12 @@ private:
 
   PartialSequenceSolution _relaxed_solution;
   std::optional<double> lazy_lower_bound_value;
-  std::vector<Node> children;
+  std::vector<std::shared_ptr<Node>> children;
   Node *parent;
 
   int _depth = 0;
   bool pruned = false;
   Instance *instance;
-  int feasible_revision = -1;
 };
 
 TEST_CASE("Node") {
@@ -96,7 +105,7 @@ TEST_CASE("Node") {
   seq.push_back({{3, 0}, 1});
   CHECK(seq.is_tour());
   Node node({0, 1}, &seq);
-  const auto tour = node.get_relaxed_solution();
+  const auto &tour = node.get_relaxed_solution();
   CHECK(tour.obj() == doctest::Approx(2.0));
   CHECK(node.get_lower_bound() == doctest::Approx(2.0));
   CHECK(node.is_feasible());

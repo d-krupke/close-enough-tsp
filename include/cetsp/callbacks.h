@@ -16,11 +16,11 @@ struct EventContext {
    * This class provides you the information within a callback.
    * It also allows you to modifiy the behavior of the BnB.
    */
-  Node *current_node;          // The node being investigated
-  Node *root_node;             // The root of the BnB tree
-  Instance *instance;          //  The instance being solved.
-  SolutionPool *solution_pool; // The already found solutions.
-  int num_iterations;          // number of nodes already investigated.
+  std::shared_ptr<Node> current_node; // The node being investigated
+  std::shared_ptr<Node> root_node;    // The root of the BnB tree
+  Instance *instance;                 //  The instance being solved.
+  SolutionPool *solution_pool;        // The already found solutions.
+  int num_iterations;                 // number of nodes already investigated.
 
   /**
    * Add a lazy constraint. This has to be deterministic and
@@ -58,9 +58,9 @@ struct EventContext {
   /**
    * Returns the relaxed solutio of the currently investigated
    * node. Use `node->get_lower_bound()` to query the  lowr bound
-   * and do not  compute the length of the relaxed solution.
+   * and do not  trigger_lazy_computation the length of the relaxed solution.
    */
-  const auto& get_relaxed_solution() const {
+  const auto &get_relaxed_solution() const {
     return current_node->get_relaxed_solution();
   }
 

@@ -38,26 +38,27 @@ auto most_distanced_circle(const Instance &instance) {
       });
   return std::distance(instance.begin(), max_el);
 }
-Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
+std::shared_ptr<Node>
+LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
   /**
    * Compute a  root note consisting of three circles by first finding
    * the most distanced pair and then adding a third circle that has the
    * longest sum of  distance to the two end points.
    */
   if (instance.is_path()) {
-    if(instance.empty()) {
-      return Node({}, &instance);
+    if (instance.empty()) {
+      return std::make_shared<Node>(std::vector<int>{}, &instance);
     }
     std::vector<int> seq;
     seq.push_back(static_cast<int>(most_distanced_circle(instance)));
-    return Node(seq, &instance);
+    return std::make_shared<Node>(seq, &instance);
   } else {
     if (instance.size() <= 3) { // trivial case
       std::vector<int> seq;
       for (int i = 0; i < static_cast<int>(instance.size()); ++i) {
         seq.push_back(i);
       }
-      return Node(seq, &instance);
+      return std::make_shared<Node>(seq, &instance);
     }
     auto max_pair = find_max_pair(instance);
     const auto c1 = instance[max_pair.first];
@@ -75,11 +76,12 @@ Node LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
     assert(max_pair.first < static_cast<int>(instance.size()));
     assert(max_pair.second < static_cast<int>(instance.size()));
     assert(c3 < static_cast<int>(instance.size()));
-    return Node({max_pair.first, c3, max_pair.second}, &instance);
+    return std::make_shared<Node>(
+        std::vector<int>{max_pair.first, c3, max_pair.second}, &instance);
   }
 }
 
-Node ConvexHull::get_root_node(Instance &instance) {
+std::shared_ptr<Node> ConvexHull::get_root_node(Instance &instance) {
   if (instance.is_path()) {
     throw std::invalid_argument("ConvexHull Strategy only feasible for tours.");
   }
@@ -103,10 +105,10 @@ Node ConvexHull::get_root_node(Instance &instance) {
   }
   //  Only use circles that are  explicitly contained.
   const auto traj =
-      compute_tour_with_spanning_information(ch_circles, /*path=*/false);
+      compute_trajectory_with_information(ch_circles, /*path=*/false);
   std::vector<int> sequence;
   std::copy_if(out.begin(), out.end(), std::back_inserter(sequence),
                [&traj](auto i) { return traj.second[i]; });
-  return Node{out, &instance};
+  return std::make_shared<Node>(out, &instance);
 }
 } // namespace cetsp
