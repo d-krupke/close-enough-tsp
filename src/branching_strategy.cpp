@@ -2,6 +2,7 @@
 // Created by Dominik Krupke on 21.12.22.
 //
 #include "cetsp/details/branching_strategy.h"
+#include <boost/thread/thread.hpp>
 // #include <execution>
 namespace cetsp {
 
@@ -59,11 +60,17 @@ bool FarthestCircle::branch(Node &node) {
     seqeuence[i - 1] = *c;
     if (is_sequence_ok(seqeuence)) {
       children.push_back(std::make_shared<Node>(seqeuence, instance, &node));
+      /**
       if (simplify) {
         children.back()->simplify();
-      }
+      }**/
     }
   }
+  boost::thread_group tg;
+  for(auto& child: children) {
+    tg.create_thread([&](){child->simplify();});
+  }
+  tg.join_all();
   // for_each(std::execution::par, children.begin(), children.end(), [](auto&
   // child){child.trigger_lazy_evaluation();});
   node.branch(children);

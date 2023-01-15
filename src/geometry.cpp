@@ -7,6 +7,7 @@
 namespace cetsp::utils {
 double distance_to_segment(std::pair<double, double> A, std::pair<double, double> B,
                      std::pair<double, double> E) {
+  // stolen from https://www.geeksforgeeks.org/minimum-distance-from-a-point-to-the-line-segment-using-vectors/
       using namespace std;
       // vector AB
       pair<double, double> AB;
