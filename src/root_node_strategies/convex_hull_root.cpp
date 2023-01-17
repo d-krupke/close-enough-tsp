@@ -2,8 +2,8 @@
 // Created by Dominik Krupke on 17.12.22.
 //
 
-#include "cetsp/details/root_node_strategy.h"
 #include "cetsp/details/cgal_kernel.h"
+#include "cetsp/details/root_node_strategy.h"
 
 #include <CGAL/Convex_hull_traits_adapter_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>

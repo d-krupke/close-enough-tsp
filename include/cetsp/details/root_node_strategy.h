@@ -21,7 +21,8 @@ namespace cetsp {
 
 class RootNodeStrategy {
 public:
-  [[nodiscard]] virtual std::shared_ptr<Node> get_root_node(Instance &instance) = 0;
+  [[nodiscard]] virtual std::shared_ptr<Node>
+  get_root_node(Instance &instance) = 0;
   virtual ~RootNodeStrategy() = default;
 };
 

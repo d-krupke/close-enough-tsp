@@ -18,9 +18,9 @@ namespace cetsp {
 std::optional<int>
 get_index_of_most_distanced_circle(const PartialSequenceSolution &solution,
                                    const Instance &instance) {
-  const auto n = instance.size();
+  const int n = static_cast<int>(instance.size());
   std::vector<double> distances(n);
-  for (unsigned i = 0; i < n; ++i) {
+  for (int i = 0; i < n; ++i) {
     if (solution.covers(i)) {
       distances[i] = 0;
     } else {
@@ -31,41 +31,12 @@ get_index_of_most_distanced_circle(const PartialSequenceSolution &solution,
   if (*max_dist <= 0) {
     return {};
   }
-  const int c = std::distance(distances.begin(), max_dist);
+  const int c = static_cast<int>(std::distance(distances.begin(), max_dist));
   return {c};
 }
 
-bool FarthestCircle::branch(Node &node) {
-  const auto c = get_index_of_most_distanced_circle(node.get_relaxed_solution(),
-                                                    *instance);
-  if (!c) {
-    return false;
-  }
-  std::vector<std::shared_ptr<Node>> children;
-  std::vector<int> seqeuence;
-  if (simplify) {
-    seqeuence = node.get_spanning_sequence();
-  } else {
-    seqeuence = node.get_fixed_sequence();
-  }
-  seqeuence.push_back(*c);
-  if (instance->is_path()) {
-    // for path, this position may not be symmetric.
-    if (is_sequence_ok(seqeuence)) {
-      children.push_back(std::make_shared<Node>(seqeuence, instance, &node));
-    }
-  }
-  for (int i = seqeuence.size() - 1; i > 0; --i) {
-    seqeuence[i] = seqeuence[i - 1];
-    seqeuence[i - 1] = *c;
-    if (is_sequence_ok(seqeuence)) {
-      children.push_back(std::make_shared<Node>(seqeuence, instance, &node));
-      /**
-      if (simplify) {
-        children.back()->simplify();
-      }**/
-    }
-  }
+void distributed_child_evaluation(std::vector<std::shared_ptr<Node>> &children,
+                                  bool simplify) {
   // TODO: this  is rather brutal right now. Try  to limit the threads.
   boost::thread_group tg;
   for (auto &child : children) {
@@ -77,6 +48,37 @@ bool FarthestCircle::branch(Node &node) {
     });
   }
   tg.join_all();
+}
+
+bool FarthestCircle::branch(Node &node) {
+  const auto c = get_index_of_most_distanced_circle(node.get_relaxed_solution(),
+                                                    *instance);
+  if (!c) {
+    return false;
+  }
+  std::vector<std::shared_ptr<Node>> children;
+  std::vector<int> seq;
+  if (simplify) {
+    seq = node.get_spanning_sequence();
+  } else {
+    seq = node.get_fixed_sequence();
+  }
+  seq.push_back(*c);
+  if (instance->is_path()) {
+    // for path, this position may not be symmetric.
+    if (is_sequence_ok(seq)) {
+      children.push_back(std::make_shared<Node>(seq, instance, &node));
+    }
+  }
+  for (int i = seq.size() - 1; i > 0; --i) {
+    seq[i] = seq[i - 1];
+    seq[i - 1] = *c;
+    if (is_sequence_ok(seq)) {
+      children.push_back(std::make_shared<Node>(seq, instance, &node));
+    }
+  }
+  distributed_child_evaluation(children, simplify);
+
   // for_each(std::execution::par, children.begin(), children.end(), [](auto&
   // child){child.trigger_lazy_evaluation();});
   node.branch(children);

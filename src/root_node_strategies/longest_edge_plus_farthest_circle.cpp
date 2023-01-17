@@ -72,4 +72,4 @@ LongestEdgePlusFurthestCircle::get_root_node(Instance &instance) {
         std::vector<int>{max_pair.first, c3, max_pair.second}, &instance);
   }
 }
-}
+} // namespace cetsp

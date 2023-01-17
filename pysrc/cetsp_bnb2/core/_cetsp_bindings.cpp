@@ -34,7 +34,8 @@ private:
   std::function<void(EventContext)> *f;
 };
 
-void empty_callback(EventContext ec) { /* empty  */ }
+void empty_callback(EventContext ec) { /* empty  */
+}
 
 /**
  * Explicit function for the binding  of calling the BnB algorithm.
