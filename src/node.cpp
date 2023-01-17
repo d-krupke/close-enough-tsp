@@ -57,7 +57,7 @@ void Node::prune(bool infeasible) {
     return;
   }
   pruned = true;
-  if(infeasible) {
+  if (infeasible) {
     add_lower_bound(std::numeric_limits<double>::infinity());
   }
   for (auto &child : children) {
@@ -71,9 +71,7 @@ void Node::reevaluate_children() {
         children.begin(), children.end(),
         std::numeric_limits<double>::infinity(),
         [](double a, double b) { return std::min(a, b); },
-        [](std::shared_ptr<Node> &node) {
-          return  node->get_lower_bound();
-        });
+        [](std::shared_ptr<Node> &node) { return node->get_lower_bound(); });
     // std::cout << "Reevaluated children at depth "<<depth()<< " to
     // "<<lb<<std::endl;
     add_lower_bound(lb);

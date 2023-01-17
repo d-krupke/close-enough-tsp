@@ -52,7 +52,7 @@ public:
    * and thus stopping at it. Pruned nodes are allowed to be deleted from
    * memory.
    */
-  void prune(bool infeasible=true);
+  void prune(bool infeasible = true);
 
   [[nodiscard]] const std::vector<int> &get_fixed_sequence() {
     return _relaxed_solution.get_sequence();
