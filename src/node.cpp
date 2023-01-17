@@ -52,14 +52,16 @@ auto Node::get_relaxed_solution() -> const PartialSequenceSolution & {
   return _relaxed_solution;
 }
 
-void Node::prune() {
+void Node::prune(bool infeasible) {
   if (pruned) {
     return;
   }
   pruned = true;
-  add_lower_bound(std::numeric_limits<double>::infinity());
+  if(infeasible) {
+    add_lower_bound(std::numeric_limits<double>::infinity());
+  }
   for (auto &child : children) {
-    child->prune();
+    child->prune(infeasible);
   }
 }
 
@@ -70,8 +72,7 @@ void Node::reevaluate_children() {
         std::numeric_limits<double>::infinity(),
         [](double a, double b) { return std::min(a, b); },
         [](std::shared_ptr<Node> &node) {
-          return (node->is_pruned() ? std::numeric_limits<double>::infinity()
-                                    : node->get_lower_bound());
+          return  node->get_lower_bound();
         });
     // std::cout << "Reevaluated children at depth "<<depth()<< " to
     // "<<lb<<std::endl;

@@ -20,7 +20,6 @@ template <typename UserCallbacks = DefaultUserCallbacks>
 class BranchAndBoundAlgorithm {
   /**
    * Implements the branch and bound algorithm.
-   * TODO: Make the strategies replaceable by templates.
    */
 public:
   BranchAndBoundAlgorithm(Instance *instance, std::shared_ptr<Node> root_,
@@ -151,7 +150,7 @@ private:
     if (node->is_pruned() ||
         node->get_lower_bound() >=
             (1.0 - gap) * solution_pool.get_upper_bound()) {
-      node->prune();
+      node->prune(false);
       on_prune(*node);
       return true;
     }

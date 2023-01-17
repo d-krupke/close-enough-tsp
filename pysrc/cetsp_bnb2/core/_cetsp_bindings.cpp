@@ -34,6 +34,10 @@ private:
   std::function<void(EventContext)> *f;
 };
 
+void empty_callback(EventContext ec) {
+  /* empty  */
+}
+
 /**
  * Explicit function for the binding  of calling the BnB algorithm.
  * @param instance Instance to be solved.
@@ -200,7 +204,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         "Computes a close-enough tour based on a given circle sequence.");
   m.def("branch_and_bound", &branch_and_bound,
         "Computes an optimal solution based on BnB.", py::arg("instance"),
-        py::arg("callback"), py::arg("initial_solution"), py::arg("timelimit"),
+        py::arg("callback"), py::arg("initial_solution")=nullptr, py::arg("timelimit")=300,
         py::arg("branching") = "ChFarthestCircleSimplifying",
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull");
   m.def("optimize_tour_by_lns", &optimize_tour_by_lns);

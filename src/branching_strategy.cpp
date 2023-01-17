@@ -66,9 +66,15 @@ bool FarthestCircle::branch(Node &node) {
       }**/
     }
   }
+  // TODO: this  is rather brutal right now. Try  to limit the threads.
   boost::thread_group tg;
-  for(auto& child: children) {
-    tg.create_thread([&](){child->simplify();});
+  for (auto &child : children) {
+    tg.create_thread([=, &child]() {
+      child->trigger_lazy_evaluation();
+      if (simplify) {
+        child->simplify();
+      }
+    });
   }
   tg.join_all();
   // for_each(std::execution::par, children.begin(), children.end(), [](auto&
