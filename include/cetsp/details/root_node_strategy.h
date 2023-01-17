@@ -7,6 +7,9 @@
 // as expensive as possible and thus close to the cost of the feasible
 // solutions)
 //
+// For Tours: Use Convex Hull Strategy
+// For Paths: Use Longest Edge Plus Farthest Circle
+//
 
 #ifndef CETSP_ROOT_NODE_STRATEGY_H
 #define CETSP_ROOT_NODE_STRATEGY_H
@@ -18,19 +21,36 @@ namespace cetsp {
 
 class RootNodeStrategy {
 public:
-  virtual std::shared_ptr<Node> get_root_node(Instance &instance) = 0;
+  [[nodiscard]] virtual std::shared_ptr<Node> get_root_node(Instance &instance) = 0;
   virtual ~RootNodeStrategy() = default;
 };
 
+/**
+ * The longest edge plus furthest circle-strategy, first selects the longest
+ * edge and then the circle most distanced to it. Thus, for tours the
+ * root solution will have three circles. Not that the order does not matter
+ * for three circles. When using the convex hull strategy, the root node
+ * may be illegal because of a bad rotation.
+ *
+ * For paths, this  strategy only returns the circle that is most distanced
+ * to source and target (just sum of both distances).
+ */
 class LongestEdgePlusFurthestCircle : public RootNodeStrategy {
-
 public:
-  std::shared_ptr<Node> get_root_node(Instance &instance);
+  std::shared_ptr<Node> get_root_node(Instance &instance) override;
 };
 
+/**
+ * The convex hull-strategy selects all circles on the convex hull as
+ * root solution that are not implicitly covered. So first, the solution
+ * on all circles intersecting the convex  hull is computed and then all
+ * circles that span the solution selected.
+ * This approach  IS NOT compatible with paths.
+ * This approach IS compatible with the convex hull order pruning.
+ */
 class ConvexHull : public RootNodeStrategy {
 public:
-  std::shared_ptr<Node> get_root_node(Instance &instance);
+  std::shared_ptr<Node> get_root_node(Instance &instance) override;
 };
 
 TEST_CASE("Root Node Selection") {

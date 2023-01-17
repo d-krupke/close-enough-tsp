@@ -47,7 +47,7 @@ python interface.
 
 ```python
 # import the stuff
-from cetsp.core import (
+from cetsp_bnb2 import (
     Circle,
     Instance,
     compute_tour_by_2opt,
@@ -63,7 +63,7 @@ circles = [
     for x in range(7)
     for y in range(7)
 ]
-instance = Instance(circles, Point(0, 0), Point(10, 10))
+instance = Instance(circles)
 
 # trigger_lazy_computation an initial solution via 2opt
 initial_solution = compute_tour_by_2opt(instance)
