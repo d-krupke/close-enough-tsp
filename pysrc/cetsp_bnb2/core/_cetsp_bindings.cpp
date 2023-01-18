@@ -50,7 +50,7 @@ void local_cross_lower_bound_callback(EventContext context) {
                                    const Circle &q) {
       double current_edge_len = p1.dist(p2);
       /* TODO use TripleMap */
-      double workaround_len = compute_tour({c1, q, c2}, true).length() / 2;
+      double workaround_len = compute_tour({c1, q, c2}, true).length();
       /* radiuses_compensation can be lower: the distance <p1, w> where w is the
        * point of p1 used by workaround_len */
       double radiuses_compensation = 2 * c1.radius + 2 * c2.radius;
