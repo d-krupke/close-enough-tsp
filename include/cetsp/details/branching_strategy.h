@@ -109,5 +109,34 @@ TEST_CASE("Branching Strategy") {
   CHECK(bs.branch(root2) == true);
   CHECK(root2.get_children().size() == 3);
 }
+
+TEST_CASE("Path Convex Hull Strategy true") {
+  std::vector<Circle> instance_ = {
+      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
+  Instance instance(instance_);
+  instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
+
+  std::vector<int> sequence = {1,0,5,2,3,4};
+  unsigned int n = 6;
+  std::vector<bool> is_in_ch = {true, true, true, true, true, true};
+  std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
+
+  //CHECK(ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+}
+
+TEST_CASE("Path Convex Hull Strategy false") {
+  std::vector<Circle> instance_ = {
+      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
+  Instance instance(instance_);
+  instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
+
+  std::vector<int> sequence = {1,0,3,2,5,4};
+  unsigned int n = 6;
+  std::vector<bool> is_in_ch = {true, true, true, true, true, true};
+  std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
+
+  //CHECK(!ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+}
+
 } // namespace cetsp
 #endif // CETSP_BRANCHING_STRATEGY_H
