@@ -73,19 +73,23 @@ struct EventContext {
   }
 };
 
-class DefaultUserCallbacks {
+class B2BNodeCallback {
+
   /**
    * Interface for implementing callbacks that can
    * influence the BnB by, e.g., improving the lower bounds.
    */
 public:
-  void on_entering_node(EventContext &) {
+  B2BNodeCallback(){};
+  virtual ~B2BNodeCallback() = default;
+
+  virtual void on_entering_node(EventContext &) {
     /**
      * This would be a good place to improve the lower bounds
      * of the current node.
      */
   }
-  void add_lazy_constraints(EventContext &) {
+  virtual void add_lazy_constraints(EventContext &) {
     /**
      * This would be a good place to add lazy constraints for
      * a currently feasible solution. Note that this function
@@ -93,7 +97,7 @@ public:
      * current constraints.
      */
   }
-  void on_leaving_node(EventContext &) {
+  virtual void on_leaving_node(EventContext &) {
     /**
      * This is a good place to collect some statistics or
      * provide some nice printed output, as you can see

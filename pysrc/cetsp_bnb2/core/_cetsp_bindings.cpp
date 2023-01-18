@@ -3,6 +3,7 @@
  */
 #include "cetsp/bnb.h"
 #include "cetsp/common.h"
+#include "cetsp/details/cross_lower_bound.h"
 #include "cetsp/details/triple_map.h"
 #include "cetsp/heuristics.h"
 #include "cetsp/node.h"
@@ -13,68 +14,27 @@
 #include <pybind11/stl.h> // automatic conversion of vectors
 namespace py = pybind11;
 using namespace cetsp;
+using namespace cetsp::details;
 
-class UserCallbacks : public DefaultUserCallbacks {
+class PythonCallback : public B2BNodeCallback {
   /*
    * Allowing user-callbacks to influence/improve the branch
    * and bound algorithm.
    */
 public:
-  UserCallbacks() {}
+  PythonCallback(std::function<void(EventContext)> *callback)
+      : callback(callback) {}
 
   void on_entering_node(EventContext &e) {
-    for (const auto &callback : entering_node_callbacks) {
-      EventContext e_ = e; // making sure, the callback will get a copy and
-                           // there won't be any accidental ownership problems.
-      assert(callback != nullptr);
-      (*callback)(e_);
-    }
-  }
-
-  void add_entering_node_callback(std::function<void(EventContext)> *f) {
-    assert(f != nullptr);
-    entering_node_callbacks.push_back(f);
+    EventContext e_ = e; // making sure, the callback will get a copy and
+                         // there won't be any accidental ownership problems.
+    assert(callback != nullptr);
+    (*callback)(e_);
   }
 
 private:
-  std::vector<std::function<void(EventContext)> *> entering_node_callbacks;
+  std::function<void(EventContext)> *callback;
 };
-
-void empty_callback(EventContext ec) { /* empty  */ }
-void local_cross_lower_bound_callback(EventContext context) {
-  for (const auto &inter : context.current_node->get_intersections()) {
-
-    /* Consider replacing an edge c1c2 (with exact points p1,p2) by the
-     * workaround c1,q,c2 */
-    auto calc_lowerbound_diff = [](const Circle &c1, const Circle &c2,
-                                   const Point &p1, const Point &p2,
-                                   const Circle &q) {
-      double current_edge_len = p1.dist(p2);
-      /* TODO use TripleMap */
-      double workaround_len = compute_tour({c1, q, c2}, true).length();
-      /* radiuses_compensation can be lower: the distance <p1, w> where w is the
-       * point of p1 used by workaround_len */
-      double radiuses_compensation = 2 * c1.radius + 2 * c2.radius;
-      return -current_edge_len + workaround_len - radiuses_compensation;
-    };
-
-    /* For each edge (for example c1c2), consider removing it and go around
-     * using c1,c3,c2 and similarly with c4 */
-    std::vector<double> diffs{
-        calc_lowerbound_diff(inter.c1, inter.c2, inter.p1, inter.p2, inter.c3),
-        calc_lowerbound_diff(inter.c1, inter.c2, inter.p1, inter.p2, inter.c4),
-        calc_lowerbound_diff(inter.c3, inter.c4, inter.p3, inter.p4, inter.c1),
-        calc_lowerbound_diff(inter.c3, inter.c4, inter.p3, inter.p4, inter.c2),
-    };
-    double lower_bound_diff = *std::min_element(diffs.begin(), diffs.end());
-
-    if (lower_bound_diff > 0) {
-      double current_len =
-          context.current_node->get_relaxed_solution().get_trajectory().length();
-      context.current_node->add_lower_bound(current_len + lower_bound_diff);
-    }
-  }
-}
 
 /**
  * Explicit function for the binding  of calling the BnB algorithm.
@@ -89,13 +49,6 @@ branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
                  Trajectory *initial_solution, int timelimit,
                  std::string branching, std::string search, std::string root) {
-  UserCallbacks user_callbacks;
-  user_callbacks.add_entering_node_callback(py_callback);
-
-  std::function<void(EventContext)> local_cross_lower_bound_callback_f =
-      [](EventContext e) { local_cross_lower_bound_callback(e); };
-  user_callbacks.add_entering_node_callback(
-      &local_cross_lower_bound_callback_f);
 
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
@@ -125,9 +78,12 @@ branch_and_bound(Instance instance,
   } else {
     throw std::invalid_argument("Invalid search strategy.");
   }
+
   BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),
-                               *branching_strategy, *search_strategy,
-                               user_callbacks);
+                               *branching_strategy, *search_strategy);
+  baba.add_node_callback(std::make_unique<CrossLowerBoundCallback>());
+  baba.add_node_callback(std::make_unique<PythonCallback>(py_callback));
+
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
   }

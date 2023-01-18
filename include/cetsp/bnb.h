@@ -16,7 +16,6 @@
 #include <chrono>
 namespace cetsp {
 
-template <typename UserCallbacks = DefaultUserCallbacks>
 class BranchAndBoundAlgorithm {
   /**
    * Implements the branch and bound algorithm.
@@ -24,13 +23,17 @@ class BranchAndBoundAlgorithm {
 public:
   BranchAndBoundAlgorithm(Instance *instance, std::shared_ptr<Node> root_,
                           BranchingStrategy &branching_strategy,
-                          SearchStrategy &search_strategy,
-                          UserCallbacks user_callbacks = DefaultUserCallbacks())
+                          SearchStrategy &search_strategy)
       : instance{instance}, root{std::move(root_)},
-        search_strategy{search_strategy}, user_callbacks{user_callbacks},
+        search_strategy{search_strategy},
         branching_strategy(branching_strategy) {
     branching_strategy.setup(instance, root, &solution_pool);
     search_strategy.init(root);
+  }
+
+  void add_node_callback(std::unique_ptr<B2BNodeCallback> &&callback) {
+    assert(callback != nullptr);
+    node_callbacks.push_back(std::move(callback));
   }
 
   /**
@@ -170,11 +173,15 @@ private:
     // Explore  node.
     num_explored += 1;
     EventContext context{node, root, instance, &solution_pool, num_iterations};
-    user_callbacks.on_entering_node(context);
+    for (auto &callback : node_callbacks) {
+      callback->on_entering_node(context);
+    }
     if (!node->is_pruned()) { // the user callback may have pruned the node
       explore_node(node, context, gap);
     }
-    user_callbacks.on_leaving_node(context);
+    for (auto &callback : node_callbacks) {
+      callback->on_leaving_node(context);
+    }
   }
 
   /**
@@ -201,7 +208,9 @@ private:
     if (node->is_feasible()) {
       // If node is feasible, check lazy constraints (the user may decide
       // to add further circles, making it infeasible again).
-      user_callbacks.add_lazy_constraints(context);
+      for (auto &callback : node_callbacks) {
+        callback->add_lazy_constraints(context);
+      }
     }
   }
 
@@ -223,7 +232,8 @@ private:
   Instance *instance;              // the instance to solve.
   std::shared_ptr<Node> root;      // the root node to start the search with
   SearchStrategy &search_strategy; // will decide  which node to visit next
-  UserCallbacks user_callbacks;    // Allows to modify the BnB-behavior.
+  std::vector<std::unique_ptr<B2BNodeCallback>>
+      node_callbacks;                    // Allows to modify the BnB-behavior.
   BranchingStrategy &branching_strategy; // decides how to branch on a node, if
                                          // it is not yet feasible.
   SolutionPool solution_pool;            // Saves all solutions found so far.
