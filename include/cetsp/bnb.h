@@ -20,17 +20,16 @@ template <typename UserCallbacks = DefaultUserCallbacks>
 class BranchAndBoundAlgorithm {
   /**
    * Implements the branch and bound algorithm.
-   * TODO: Make the strategies replaceable by templates.
    */
 public:
-  BranchAndBoundAlgorithm(Instance *instance, Node root_,
+  BranchAndBoundAlgorithm(Instance *instance, std::shared_ptr<Node> root_,
                           BranchingStrategy &branching_strategy,
                           SearchStrategy &search_strategy,
                           UserCallbacks user_callbacks = DefaultUserCallbacks())
       : instance{instance}, root{std::move(root_)},
         search_strategy{search_strategy}, user_callbacks{user_callbacks},
         branching_strategy(branching_strategy) {
-    branching_strategy.setup(instance, &root, &solution_pool);
+    branching_strategy.setup(instance, root, &solution_pool);
     search_strategy.init(root);
   }
 
@@ -52,7 +51,7 @@ public:
    * to the optimum.
    * @param lb The lower bound.
    */
-  void add_lower_bound(double lb) { root.add_lower_bound(lb); }
+  void add_lower_bound(double lb) { root->add_lower_bound(lb); }
 
   /**
    * Returns the current best known upper bound.
@@ -62,7 +61,7 @@ public:
    * Returns the current best known lower bound.
    * @return
    */
-  double get_lower_bound() { return root.get_lower_bound(); }
+  double get_lower_bound() { return root->get_lower_bound(); }
 
   /**
    * Returns the currently best solution, if one exists.
@@ -82,7 +81,8 @@ public:
     print_start_stats(verbose);
     utils::Timer timer(timelimit_s);
     while (search_strategy.has_next()) {
-      visit_node(search_strategy.next(), gap);
+      auto next = search_strategy.next();
+      visit_node(next, gap);
       auto lb = get_lower_bound();
       auto ub = get_upper_bound();
       print_iteration_stats(verbose, lb, ub, timer.seconds());
@@ -108,7 +108,7 @@ private:
   void print_start_stats(bool verbose) {
     if (verbose) {
       std::cout << "Starting with root node of size "
-                << root.get_fixed_sequence().size() << std::endl;
+                << root->get_fixed_sequence().size() << std::endl;
       std::cout << "i\tLB\t|\tUB\t|\tTime" << std::endl;
     }
   }
@@ -146,11 +146,11 @@ private:
    * @param gap The gap. E.g. 0.01 means 1% within the current upper bound.
    * @return True iff the node was pruned.
    */
-  bool prune_if_above_ub(Node *node, const double gap) {
+  bool prune_if_above_ub(std::shared_ptr<Node> &node, const double gap) {
     if (node->is_pruned() ||
         node->get_lower_bound() >=
             (1.0 - gap) * solution_pool.get_upper_bound()) {
-      node->prune();
+      node->prune(false);
       on_prune(*node);
       return true;
     }
@@ -161,7 +161,7 @@ private:
    * Executes a step/node exploration in the BnB-algorithm.
    * @return
    */
-  void visit_node(Node *node, double gap) {
+  void visit_node(std::shared_ptr<Node> &node, double gap) {
     ++num_iterations;
     // Automatically prune if worse than upper bound.
     if (prune_if_above_ub(node, gap)) {
@@ -169,7 +169,7 @@ private:
     }
     // Explore  node.
     num_explored += 1;
-    EventContext context{node, &root, instance, &solution_pool, num_iterations};
+    EventContext context{node, root, instance, &solution_pool, num_iterations};
     user_callbacks.on_entering_node(context);
     if (!node->is_pruned()) { // the user callback may have pruned the node
       explore_node(node, context, gap);
@@ -183,7 +183,8 @@ private:
    * @param context
    * @param gap
    */
-  void explore_node(Node *node, EventContext &context, const double gap) {
+  void explore_node(std::shared_ptr<Node> &node, EventContext &context,
+                    const double gap) {
     add_lazy_constraints_if_feasible(node, context);
     if (node->is_feasible()) {
       process_feasible_node(node, context);
@@ -195,7 +196,8 @@ private:
     }
   }
 
-  void add_lazy_constraints_if_feasible(Node *node, EventContext &context) {
+  void add_lazy_constraints_if_feasible(std::shared_ptr<Node> &node,
+                                        EventContext &context) {
     if (node->is_feasible()) {
       // If node is feasible, check lazy constraints (the user may decide
       // to add further circles, making it infeasible again).
@@ -203,7 +205,7 @@ private:
     }
   }
 
-  void branch_node(Node *node) {
+  void branch_node(std::shared_ptr<Node> &node) {
     if (branching_strategy.branch(*node)) {
       num_branches += 1;
       search_strategy.notify_of_branch(*node);
@@ -212,13 +214,14 @@ private:
 
   void on_prune(Node &node) { search_strategy.notify_of_prune(node); }
 
-  void process_feasible_node(Node *node, EventContext &context) {
-    solution_pool.add_solution(node->get_relaxed_solution());
+  void process_feasible_node(std::shared_ptr<Node> &node,
+                             EventContext &context) {
+    solution_pool.add_solution(node->get_relaxed_solution().get_trajectory());
     search_strategy.notify_of_feasible(*(context.current_node));
   }
 
   Instance *instance;              // the instance to solve.
-  Node root;                       // the root node to start the search with
+  std::shared_ptr<Node> root;      // the root node to start the search with
   SearchStrategy &search_strategy; // will decide  which node to visit next
   UserCallbacks user_callbacks;    // Allows to modify the BnB-behavior.
   BranchingStrategy &branching_strategy; // decides how to branch on a node, if
@@ -290,6 +293,7 @@ TEST_CASE("Branch and Bound Path") {
                               branching_strategy, search_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
+  CHECK(bnb.get_solution()->covers(instance.begin(), instance.end(), 0.001));
   CHECK(bnb.get_upper_bound() == doctest::Approx(42.0747));
 }
 } // namespace cetsp

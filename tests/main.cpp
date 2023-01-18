@@ -7,5 +7,8 @@
 #include "cetsp/details/search_strategy.h"
 #include "cetsp/heuristics.h"
 #include "cetsp/node.h"
+#include "cetsp/relaxed_solution.h"
 #include "cetsp/soc.h"
+#include "cetsp/utils/geometry.h"
+#include "cetsp/utils/lazy_member.h"
 #include "doctest/doctest.h"

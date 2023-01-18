@@ -61,7 +61,7 @@ def run_for_instance(instance_name, timelimit):
             )
             with ms.measurement() as m:
                 print(instance_name, radius)
-                initial_solution = compute_tour_by_2opt(instance)
+                initial_solution = compute_tour_by_2opt(instance).get_trajectory()
                 ub, lb = branch_and_bound(
                     instance, callback, initial_solution, timelimit, **configuration
                 )

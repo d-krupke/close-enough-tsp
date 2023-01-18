@@ -17,7 +17,7 @@ namespace cetsp {
 
 class SearchStrategy {
 public:
-  virtual void init(Node &root) = 0;
+  virtual void init(std::shared_ptr<Node> &root) = 0;
   /**
    * Gets called after a node has brachned.
    * @param node The node that  just branched.
@@ -28,7 +28,7 @@ public:
    * should not be returned again.
    * @return
    */
-  virtual Node *next() = 0;
+  virtual std::shared_ptr<Node> next() = 0;
   /**
    * Checks if there is a node left to explore.
    * @return True if there is a node that requires  exploration. False  if the
@@ -54,25 +54,23 @@ public:
 
 class DfsBfs : public SearchStrategy {
 public:
-  void init(Node &root) override {
+  void init(std::shared_ptr<Node> &root) override {
     std::cout << "Using DfsBfs search" << std::endl;
-    queue.push_back(&root);
+    queue.push_back(root);
   }
 
   void notify_of_branch(Node &node) override {
-    std::vector<Node *> children;
-    for (auto &child : node.get_children()) {
-      children.push_back(&child);
-    }
-    std::sort(children.begin(), children.end(), [](Node *a, Node *b) {
-      const auto lb_a = a->get_lower_bound();
-      const auto lb_b = b->get_lower_bound();
-      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
-      }
-      return a->get_lower_bound() > b->get_lower_bound();
-    });
+    auto children = node.get_children();
+    std::sort(children.begin(), children.end(),
+              [](std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
+                const auto lb_a = a->get_lower_bound();
+                const auto lb_b = b->get_lower_bound();
+                if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+                  return a->get_relaxed_solution().obj() >
+                         b->get_relaxed_solution().obj();
+                }
+                return a->get_lower_bound() > b->get_lower_bound();
+              });
     for (auto child : children) {
       queue.push_back(child);
     }
@@ -84,11 +82,11 @@ public:
 
   void notify_of_prune(Node &node) override { sort_to_priotize_lowest_value(); }
 
-  Node *next() override {
+  std::shared_ptr<Node> next() override {
     if (!has_next()) {
       return nullptr;
     }
-    Node *n = queue.back();
+    auto n = queue.back();
     queue.pop_back();
     return n;
   }
@@ -102,47 +100,46 @@ public:
 
 private:
   void sort_to_priotize_lowest_value() {
-    std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
-      const auto lb_a = a->get_lower_bound();
-      const auto lb_b = b->get_lower_bound();
-      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
-      }
-      return lb_a > lb_b;
-    });
+    std::sort(queue.begin(), queue.end(),
+              [](std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
+                const auto lb_a = a->get_lower_bound();
+                const auto lb_b = b->get_lower_bound();
+                if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+                  return a->get_relaxed_solution().obj() >
+                         b->get_relaxed_solution().obj();
+                }
+                return lb_a > lb_b;
+              });
   }
 
-  std::vector<Node *> queue;
+  std::vector<std::shared_ptr<Node>> queue;
 };
 class CheapestChildDepthFirst : public SearchStrategy {
 public:
-  void init(Node &root) override { queue.push_back(&root); }
+  void init(std::shared_ptr<Node> &root) override { queue.push_back(root); }
 
   void notify_of_branch(Node &node) override {
-    std::vector<Node *> children;
-    for (auto &child : node.get_children()) {
-      children.push_back(&child);
-    }
-    std::sort(children.begin(), children.end(), [](Node *a, Node *b) {
-      const auto lb_a = a->get_lower_bound();
-      const auto lb_b = b->get_lower_bound();
-      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
-      }
-      return lb_a > lb_b;
-    });
-    for (auto child : children) {
+    auto children = node.get_children();
+    std::sort(children.begin(), children.end(),
+              [](std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
+                const auto lb_a = a->get_lower_bound();
+                const auto lb_b = b->get_lower_bound();
+                if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+                  return a->get_relaxed_solution().obj() >
+                         b->get_relaxed_solution().obj();
+                }
+                return lb_a > lb_b;
+              });
+    for (auto &child : children) {
       queue.push_back(child);
     }
   }
 
-  Node *next() override {
+  std::shared_ptr<Node> next() override {
     if (!has_next()) {
       return nullptr;
     }
-    Node *n = queue.back();
+    auto n = queue.back();
     queue.pop_back();
     return n;
   }
@@ -155,32 +152,33 @@ public:
   }
 
 private:
-  std::vector<Node *> queue;
+  std::vector<std::shared_ptr<Node>> queue;
 };
 class CheapestBreadthFirst : public SearchStrategy {
 public:
-  void init(Node &root) override { queue.push_back(&root); }
+  void init(std::shared_ptr<Node> &root) override { queue.push_back(root); }
 
   void notify_of_branch(Node &node) override {
     for (auto &child : node.get_children()) {
-      queue.push_back(&child);
+      queue.push_back(child);
     }
-    std::sort(queue.begin(), queue.end(), [](Node *a, Node *b) {
-      const auto lb_a = a->get_lower_bound();
-      const auto lb_b = b->get_lower_bound();
-      if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-        return a->get_relaxed_solution().length() >
-               b->get_relaxed_solution().length();
-      }
-      return lb_a > lb_b;
-    });
+    std::sort(queue.begin(), queue.end(),
+              [](std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
+                const auto lb_a = a->get_lower_bound();
+                const auto lb_b = b->get_lower_bound();
+                if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
+                  return a->get_relaxed_solution().obj() >
+                         b->get_relaxed_solution().obj();
+                }
+                return lb_a > lb_b;
+              });
   }
 
-  Node *next() override {
+  std::shared_ptr<Node> next() override {
     if (!has_next()) {
       return nullptr;
     }
-    Node *n = queue.back();
+    auto n = queue.back();
     queue.pop_back();
     return n;
   }
@@ -193,7 +191,7 @@ public:
   }
 
 private:
-  std::vector<Node *> queue;
+  std::vector<std::shared_ptr<Node>> queue;
 };
 
 TEST_CASE("Search Strategy") {
@@ -201,18 +199,18 @@ TEST_CASE("Search Strategy") {
   // second circle.
   Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
   FarthestCircle bs;
-  Node root({0, 1, 2, 3}, &instance);
-  bs.setup(&instance, &root, nullptr);
+  auto root = std::make_shared<Node>(std::vector<int>{0, 1, 2, 3}, &instance);
+  bs.setup(&instance, root, nullptr);
   CheapestChildDepthFirst ss;
   ss.init(root);
-  auto *node = ss.next();
+  auto node = ss.next();
   CHECK(node != nullptr);
   CHECK(bs.branch(*node) == false);
   ss.notify_of_branch(*node);
   CHECK(ss.next() == nullptr);
 
   std::vector<Circle> seq = {{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
-  Node root2({0, 1, 2}, &instance);
+  auto root2 = std::make_shared<Node>(std::vector<int>{0, 1, 2}, &instance);
   CheapestChildDepthFirst ss2;
   ss2.init(root2);
   node = ss2.next();

@@ -17,6 +17,60 @@ This [paper](https://www.researchgate.net/profile/Carmine-Cerrone/publication/30
 uses a GTSP-MIP for solving the CE-TSP.
 The reduction techniques and geometric observations may be intersting for us.
 
+## Modules
+
+[include/cetsp/bnb.h](include/cetsp/bnb.h)
+
+The branch and bound algorithm can be easily modified by replacing strategies.
+There are three primary strategies:
+
+### Root Node Strategy
+
+[include/cetsp/details/root_node_strategy.h](include/cetsp/details/root_node_strategy.h)
+
+The root node strategy decides the initial relaxed solution.
+It should allow to build an optimal solution. We currently have two different
+ones
+
+- _LongestEdgeFarthestCircle_: The classical idea also used in previous work that starts with a longest edge and
+  additionally the farthest circle. Thus, the initial tour is a triangle. For paths it is just the farthest circle to
+  source and target of the path.
+- _ConvexHull_: Start with the simplified convex hull. This is needed to do the convex hull pruning.
+
+### Branching Strategies
+
+[include/cetsp/details/branching_strategy.h](include/cetsp/details/branching_strategy.h)
+
+The branching strategies potentially also contain early pruning ideas that
+can work already on the sequence and don't need the trajectory computed (expensive).
+Pruning ideas that require the trajectory should be added via callbacks.
+
+- _Farthest Circle_: Try to branch on the farthest circle.
+- _ConvexHull_: Try to integrate the farthest circle to the tour (trying to increase the LB as much as possible while
+  also increasing the coverage) but directly throw away all branches that do not follow the order of the convex hull.
+  Checking this can be done without computing the relaxed solution.
+
+#### Sequence Rules
+
+Further rules on the sequence can easily be added.
+
+### Search Strategy
+
+[include/cetsp/details/search_strategy.h](include/cetsp/details/search_strategy.h)
+
+Which leaf of the branch and bound tree should be investigated next?
+
+- _Depth First_: This strategy always goes into the best child of the current node. This helps to find good feasible
+  solutions quickly.
+- _Breadth First_: Always uses the cheapest leaf, which improves the lower bound but will take a long time to find a
+  feasible solution.
+- _Mixed_: Will do depth first until the node gets pruned or becomes feasible. Then it will look for the cheapest leaf.
+  This is a popular technique used by modern MILP-solvers.
+
+### Callbacks
+
+TBD
+
 ## New Ideas
 
 1. The convex hull enforces quite a lot of order into partial solutions. This yields quite some speed ups for important
@@ -47,7 +101,7 @@ python interface.
 
 ```python
 # import the stuff
-from cetsp.core import (
+from cetsp_bnb2 import (
     Circle,
     Instance,
     compute_tour_by_2opt,
@@ -63,9 +117,9 @@ circles = [
     for x in range(7)
     for y in range(7)
 ]
-instance = Instance(circles, Point(0, 0), Point(10, 10))
+instance = Instance(circles)
 
-# compute an initial solution via 2opt
+# trigger_lazy_computation an initial solution via 2opt
 initial_solution = compute_tour_by_2opt(instance)
 
 

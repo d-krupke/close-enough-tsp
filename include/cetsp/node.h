@@ -6,6 +6,7 @@
 #include "cetsp/common.h"
 #include "cetsp/soc.h"
 #include "doctest/doctest.h"
+#include "relaxed_solution.h"
 #include <numeric>
 namespace cetsp {
 
@@ -29,15 +30,15 @@ public:
   Node(Node &&node) = default;
   explicit Node(std::vector<int> branch_sequence_, Instance *instance,
                 Node *parent = nullptr)
-      : branch_sequence{std::move(branch_sequence_)}, parent{parent},
-        instance{instance} {
+      : _relaxed_solution(instance, std::move(branch_sequence_)),
+        parent{parent}, instance{instance} {
     if (parent != nullptr) {
       _depth = parent->depth() + 1;
     }
-    assert(std::all_of(branch_sequence.begin(), branch_sequence.end(),
-                       [&instance](auto i) {
-                         return i < static_cast<int>(instance->size());
-                       }));
+  }
+
+  void trigger_lazy_evaluation() {
+    _relaxed_solution.trigger_lazy_computation(true);
   }
 
   void add_lower_bound(double lb);
@@ -46,25 +47,29 @@ public:
 
   bool is_feasible();
 
-  void branch(std::vector<Node> &&children_);
+  void branch(std::vector<std::shared_ptr<Node>> &children_);
 
-  const std::vector<Node> &get_children() const { return children; }
-  [[nodiscard]] std::vector<Node> &get_children() { return children; }
+  const std::vector<std::shared_ptr<Node>> &get_children() const {
+    return children;
+  }
+  [[nodiscard]] std::vector<std::shared_ptr<Node>> &get_children() {
+    return children;
+  }
 
   [[nodiscard]] Node *get_parent() { return parent; }
   [[nodiscard]] const Node *get_parent() const { return parent; }
 
-  auto get_relaxed_solution() -> const Trajectory &;
+  auto get_relaxed_solution() -> const PartialSequenceSolution &;
 
   /**
    * Will prune the node, i.e., mark it as not leading to an optimal solution
    * and thus stopping at it. Pruned nodes are allowed to be deleted from
    * memory.
    */
-  void prune();
+  void prune(bool infeasible = true);
 
   [[nodiscard]] const std::vector<int> &get_fixed_sequence() {
-    return branch_sequence;
+    return _relaxed_solution.get_sequence();
   }
 
   /**
@@ -75,20 +80,18 @@ public:
    * trajectory.
    */
   [[nodiscard]] std::vector<int> get_spanning_sequence() {
-    if (!relaxed_solution) { // only available if the relaxed solution has been
-                             // computed.
-      get_relaxed_solution();
-    }
     std::vector<int> spanning_sequence;
-    spanning_sequence.reserve(branch_sequence.size());
-    int n = branch_sequence.size();
+    int n = static_cast<int>(_relaxed_solution.get_sequence().size());
+    spanning_sequence.reserve(n);
     for (int i = 0; i < n; ++i) {
-      if (spanning_circles[i]) {
-        spanning_sequence.push_back(branch_sequence[i]);
+      if (_relaxed_solution.is_sequence_index_spanning(i)) {
+        spanning_sequence.push_back(_relaxed_solution.get_sequence()[i]);
       }
     }
     return spanning_sequence;
   }
+
+  void simplify() { _relaxed_solution.simplify(); }
 
   [[nodiscard]] auto is_pruned() const -> bool { return pruned; }
 
@@ -102,17 +105,14 @@ private:
   // Check if the children allow to improve the lower bound.
   void reevaluate_children();
 
-  std::vector<int> branch_sequence;           // fixed part of the solution
-  std::optional<Trajectory> relaxed_solution; // relaxed solution
-  std::vector<bool> spanning_circles;         // which circles are spanning
+  PartialSequenceSolution _relaxed_solution;
   std::optional<double> lazy_lower_bound_value;
-  std::vector<Node> children;
+  std::vector<std::shared_ptr<Node>> children;
   Node *parent;
 
   int _depth = 0;
   bool pruned = false;
   Instance *instance;
-  int feasible_revision = -1;
 };
 
 TEST_CASE("Node") {
@@ -121,8 +121,8 @@ TEST_CASE("Node") {
   seq.push_back({{3, 0}, 1});
   CHECK(seq.is_tour());
   Node node({0, 1}, &seq);
-  const auto tour = node.get_relaxed_solution();
-  CHECK(tour.length() == doctest::Approx(2.0));
+  const auto &tour = node.get_relaxed_solution();
+  CHECK(tour.obj() == doctest::Approx(2.0));
   CHECK(node.get_lower_bound() == doctest::Approx(2.0));
   CHECK(node.is_feasible());
 }

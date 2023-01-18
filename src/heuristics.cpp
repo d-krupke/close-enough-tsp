@@ -3,32 +3,37 @@
 //
 
 #include "cetsp/common.h"
+#include "cetsp/relaxed_solution.h"
 #include "cetsp/soc.h"
 #include <algorithm>
 #include <iostream>
 #include <random>
 namespace cetsp {
 
-bool swap_improves(std::vector<Circle> &circles, int i, int j) {
+bool swap_improves(std::vector<std::pair<Circle, int>> &circles, int i, int j) {
   assert(i < j);
   int prev_i = (i == 0 ? circles.size() - 1 : i - 1);
   int next_j = (j + 1) % circles.size();
   if (prev_i == j || next_j == i) {
     return false;
   }
-  const auto prev_dist = circles[i].center.dist(circles[prev_i].center) +
-                         circles[j].center.dist(circles[next_j].center);
-  const auto new_dist = circles[i].center.dist(circles[next_j].center) +
-                        circles[j].center.dist(circles[prev_i].center);
+  const auto prev_dist =
+      circles[i].first.center.dist(circles[prev_i].first.center) +
+      circles[j].first.center.dist(circles[next_j].first.center);
+  const auto new_dist =
+      circles[i].first.center.dist(circles[next_j].first.center) +
+      circles[j].first.center.dist(circles[prev_i].first.center);
   return new_dist < 0.999 * prev_dist;
 }
 
-Trajectory compute_tour_by_2opt(Instance &instance) {
+PartialSequenceSolution compute_tour_by_2opt(Instance &instance) {
   auto rd = std::random_device{};
   auto rng = std::default_random_engine{rd()};
-  std::vector<Circle> circles;
+  std::vector<std::pair<Circle, int>> circles;
+  int i = 0;
   for (const auto &c : instance) {
-    circles.push_back(c);
+    circles.push_back({c, i});
+    i++;
   }
   std::shuffle(std::begin(circles), std::end(circles), rng);
   bool changed = true;
@@ -46,10 +51,12 @@ Trajectory compute_tour_by_2opt(Instance &instance) {
     }
   }
   // TODO: This is ugly as it does not care for begin and end.
-  if (instance.is_path()) {
-    circles.insert(circles.begin(), Circle(instance.path->first, 0));
-    circles.push_back(Circle(instance.path->second, 0));
+  std::vector<int> sequence;
+  for (const auto &c : circles) {
+    sequence.push_back(c.second);
   }
-  return compute_tour(circles, instance.is_path());
+  PartialSequenceSolution sol(&instance, sequence);
+  sol.simplify();
+  return sol;
 }
 } // namespace cetsp

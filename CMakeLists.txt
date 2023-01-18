@@ -42,6 +42,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/conan)
 find_package(nlohmann_json REQUIRED)
 find_package(CGAL REQUIRED)
 find_package(gurobi REQUIRED)
+find_package(Boost REQUIRED COMPONENTS thread system)
 
 #~~~~~~~~~~~~~~~~ System dependencies ~~~~~~~~~~~~~~~~~~~~~~
 # These files have to be installed on the system

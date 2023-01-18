@@ -6,9 +6,11 @@
 #ifndef CLOSE_ENOUGH_TSP_COMMON_H
 #define CLOSE_ENOUGH_TSP_COMMON_H
 #include "cetsp/details/cgal_kernel.h"
+#include "cetsp/utils/geometry.h"
 #include "doctest/doctest.h"
 #include <CGAL/squared_distance_2.h> //for 2D functions
 #include <cmath>
+#include <utility>
 
 namespace cetsp {
 class Point {
@@ -75,7 +77,7 @@ TEST_CASE("Circle") {
 class Instance : public std::vector<Circle> {
 public:
   Instance() {}
-  Instance(std::vector<Circle> circles) {
+  explicit Instance(std::vector<Circle> circles) {
     reserve(circles.size());
     std::sort(circles.begin(), circles.end(),
               [](const auto &a, const auto &b) { return a.radius < b.radius; });
@@ -89,7 +91,7 @@ public:
       push_back(circle);
     }
   }
-  bool is_path() const {
+  [[nodiscard]] bool is_path() const {
     if (path) {
       return true;
     } else {
@@ -97,7 +99,7 @@ public:
     }
   }
 
-  bool is_tour() const {
+  [[nodiscard]] bool is_tour() const {
     if (path) {
       return false;
     }
@@ -129,22 +131,50 @@ public:
 
   bool is_tour() const { return points[0] == points[points.size() - 1]; }
 
+  /**
+   * Returns a sub-trajectory. If the trajectory is a tour, begin can be
+   * after end (then modulo is used, the last point will not be repeated).
+   * @param begin The index of the first point in the sub-trajectory.
+   * @param end The index of the last point in the sub-trajectory.
+   * @return The sub-trajectory.
+   */
+  Trajectory sub(int begin, int end) const {
+    std::vector<Point> path;
+    auto n = points.size() - 1;
+    auto i = begin;
+    if (is_tour()) {
+      while (i > end) {
+        path.push_back(points[i]);
+        i = (i + 1) % n;
+      }
+    }
+    while (i <= end) {
+      path.push_back(points[i]);
+      ++i;
+    }
+    return Trajectory{path};
+  }
+
   double distance(const Circle &circle) const {
     double min_dist = std::numeric_limits<double>::infinity();
     details::cgPoint p(circle.center.x, circle.center.y);
     if (points.size() == 1) {
       details::cgPoint tp(points[0].x, points[0].y);
-      min_dist = CGAL::squared_distance(tp, p);
+      min_dist =
+          points[0].dist(circle.center); // CGAL::squared_distance(tp, p);
     }
     for (unsigned i = 0; i < points.size() - 1; i++) {
-      details::cgSegment segment({points[i].x, points[i].y},
-                                 {points[i + 1].x, points[i + 1].y});
-      double dist = CGAL::squared_distance(segment, p);
+      auto dist = utils::distance_to_segment({points[i].x, points[i].y},
+                                             {points[i + 1].x, points[i + 1].y},
+                                             {p.x(), p.y()});
+      // details::cgSegment segment({points[i].x, points[i].y},
+      //                            {points[i + 1].x, points[i + 1].y});
+      // double dist = CGAL::squared_distance(segment, p);
       if (dist < min_dist) {
         min_dist = dist;
       }
     }
-    return std::sqrt(min_dist) - circle.radius;
+    return min_dist - circle.radius;
   }
 
   double length() const {
@@ -215,6 +245,24 @@ TEST_CASE("Trajectory") {
   CHECK(traj.distance(c1) == -1);
   CHECK(traj.covers(c1));
   CHECK(traj.length() == 10.0);
+}
+
+TEST_CASE("Trajectory Sub") {
+  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0, 5}, {0, 0}}};
+  CHECK(traj.is_tour());
+  auto sub = traj.sub(0, 2);
+  CHECK(sub.points.size() == 3);
+  CHECK(sub.points[0] == Point(0, 0));
+  CHECK(sub.points[2] == Point(5, 5));
+}
+
+TEST_CASE("Trajectory Sub 2") {
+  Trajectory traj{{{0, 0}, {5, 0}, {5, 5}, {0, 5}, {0, 0}}};
+  CHECK(traj.is_tour());
+  auto sub = traj.sub(3, 1);
+  CHECK(sub.points.size() == 3);
+  CHECK(sub.points[0] == Point(0, 5));
+  CHECK(sub.points[2] == Point(5, 0));
 }
 }; // namespace cetsp
 

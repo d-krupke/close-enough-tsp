@@ -40,6 +40,7 @@ private:
   std::vector<std::function<void(EventContext)> *> entering_node_callbacks;
 };
 
+void empty_callback(EventContext ec) { /* empty  */ }
 void local_cross_lower_bound_callback(EventContext context) {
   for (const auto &inter : context.current_node->get_intersections()) {
 
@@ -69,7 +70,7 @@ void local_cross_lower_bound_callback(EventContext context) {
 
     if (lower_bound_diff > 0) {
       double current_len =
-          context.current_node->get_relaxed_solution().length();
+          context.current_node->get_relaxed_solution().get_trajectory().length();
       context.current_node->add_lower_bound(current_len + lower_bound_diff);
     }
   }
@@ -238,6 +239,8 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   py::class_<TripleMap>(m, "TripleMap", "bla")
       .def(py::init<Instance *>())
       .def("get_cost", &TripleMap::get_cost);
+  py::class_<PartialSequenceSolution>(m, "PartialSequenceSolution")
+      .def("get_trajectory", &PartialSequenceSolution::get_trajectory);
 
   // functions
   m.def("compute_tour_by_2opt", &compute_tour_by_2opt,
@@ -247,7 +250,9 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         "Computes a close-enough tour based on a given circle sequence.");
   m.def("branch_and_bound", &branch_and_bound,
         "Computes an optimal solution based on BnB.", py::arg("instance"),
-        py::arg("callback"), py::arg("initial_solution"), py::arg("timelimit"),
+        py::arg("callback"), py::arg("initial_solution") = nullptr,
+        py::arg("timelimit") = 300,
         py::arg("branching") = "ChFarthestCircleSimplifying",
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull");
+  m.def("optimize_tour_by_lns", &optimize_tour_by_lns);
 }
