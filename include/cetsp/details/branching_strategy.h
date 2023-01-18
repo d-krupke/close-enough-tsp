@@ -110,11 +110,9 @@ private:
   std::vector<double> order_values;
   std::vector<bool> is_ordered;
 
-  bool ConvexHullRule::sequence_is_ch_ordered(const std::vector<int> &sequence);
-  std::vector<Point>
-  ConvexHullRule::get_circle_centers(const Instance &instance) const;
-  void ConvexHullRule::compute_weights(const Instance *instance,
-                                       std::shared_ptr<Node> &root);
+  bool sequence_is_ch_ordered(const std::vector<int> &sequence);
+  std::vector<Point> get_circle_centers(const Instance &instance) const;
+  void compute_weights(const Instance *instance, std::shared_ptr<Node> &root);
 };
 
 TEST_CASE("Branching Strategy") {

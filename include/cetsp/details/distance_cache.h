@@ -18,8 +18,8 @@ public:
   explicit DistanceCache(const Instance *instance) : instance{instance} {}
 
   double operator()(int i, const Trajectory *trajectory) {
-    assert(i < instance->size());
-    if (i >= cache.size()) {
+    assert(i < static_cast<int>(instance->size()));
+    if (i >= static_cast<int>(cache.size())) {
       fill_cache(trajectory);
     }
     return cache[i];
