@@ -68,7 +68,6 @@ bool FarthestCircle::branch(Node &node) {
     // for path, this position may not be symmetric.
     if (is_sequence_ok(seq)) {
       children.push_back(std::make_shared<Node>(seq, instance, &node));
-
     }
   }
   for (int i = seq.size() - 1; i > 0; --i) {

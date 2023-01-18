@@ -152,7 +152,7 @@ def tsp_with_partial_order_lower_bound(
 
     # Calc lower bound
     weight /= 2.5 - 2 / len(partial_order)
-    weight -= sum(2*c.radius for c in instance)
+    weight -= sum(2 * c.radius for c in instance)
     return max(weight, 0)
 
 
@@ -190,7 +190,7 @@ def _random_non_intersecting_subset(
         too_close = False
         for j in discs:
             v = instance[j]
-            if _dist(u, v) < margin_constant*(u.radius + v.radius):
+            if _dist(u, v) < margin_constant * (u.radius + v.radius):
                 too_close = True
                 break
         if not too_close:

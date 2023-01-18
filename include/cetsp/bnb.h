@@ -210,9 +210,10 @@ private:
       // to add further circles, making it infeasible again).
       for (auto &callback : node_callbacks) {
         callback->add_lazy_constraints(context);
-        if(!node->is_feasible()){
-          break;  // Stop after the solution became infeasible to keep the
-          // number of added constraints low. High risk of redundant constraints.
+        if (!node->is_feasible()) {
+          break; // Stop after the solution became infeasible to keep the
+          // number of added constraints low. High risk of redundant
+          // constraints.
         }
       }
     }
