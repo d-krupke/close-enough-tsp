@@ -94,6 +94,29 @@ public:
   explicit ChFarthestCircle(bool simplify = true);
 };
 
+class ConvexHullRule : public SequenceRule {
+public:
+  virtual void setup(const Instance *instance_, std::shared_ptr<Node> &root,
+                     SolutionPool *solution_pool);
+
+  static bool
+  is_path_sequence_possible(const std::vector<int> &sequence, unsigned int n,
+                            const std::vector<bool> &is_in_ch,
+                            const std::vector<double> &order_values);
+  virtual bool is_ok(const std::vector<int> &seq);
+
+private:
+  const Instance *instance = nullptr;
+  std::vector<double> order_values;
+  std::vector<bool> is_ordered;
+
+  bool ConvexHullRule::sequence_is_ch_ordered(const std::vector<int> &sequence);
+  std::vector<Point>
+  ConvexHullRule::get_circle_centers(const Instance &instance) const;
+  void ConvexHullRule::compute_weights(const Instance *instance,
+                                       std::shared_ptr<Node> &root);
+};
+
 TEST_CASE("Branching Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
@@ -122,7 +145,8 @@ TEST_CASE("Path Convex Hull Strategy true") {
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
 
-  //CHECK(ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+  CHECK(ConvexHullRule::is_path_sequence_possible(sequence, n, is_in_ch,
+                                                  order_values));
 }
 
 TEST_CASE("Path Convex Hull Strategy false") {
@@ -136,7 +160,8 @@ TEST_CASE("Path Convex Hull Strategy false") {
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
 
-  //CHECK(!ChFarthestCircle::is_path_sequence_possible(sequence, n, is_in_ch, order_values));
+  CHECK(!ConvexHullRule::is_path_sequence_possible(sequence, n, is_in_ch,
+                                                   order_values));
 }
 
 } // namespace cetsp
