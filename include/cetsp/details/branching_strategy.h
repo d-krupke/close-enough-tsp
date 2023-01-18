@@ -33,6 +33,7 @@ public:
   virtual void setup(const Instance *instance, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool) = 0;
   virtual bool is_ok(const std::vector<int> &seq) = 0;
+  virtual ~SequenceRule() = default;
 };
 
 class FarthestCircle : public BranchingStrategy {
@@ -116,7 +117,7 @@ TEST_CASE("Path Convex Hull Strategy true") {
   Instance instance(instance_);
   instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
 
-  std::vector<int> sequence = {1,0,5,2,3,4};
+  std::vector<int> sequence = {1, 0, 5, 2, 3, 4};
   unsigned int n = 6;
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
@@ -130,7 +131,7 @@ TEST_CASE("Path Convex Hull Strategy false") {
   Instance instance(instance_);
   instance.path = std::optional<std::pair<Point, Point>>({{0, 0}, {1, 1}});
 
-  std::vector<int> sequence = {1,0,3,2,5,4};
+  std::vector<int> sequence = {1, 0, 3, 2, 5, 4};
   unsigned int n = 6;
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};

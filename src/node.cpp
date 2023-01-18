@@ -4,6 +4,10 @@
 
 #include "cetsp/node.h"
 namespace cetsp {
+
+static bool is_segments_intersect(const Point &p11, const Point &p12,
+                                  const Point &p21, const Point &p22);
+
 void Node::add_lower_bound(const double lb) {
   if (get_lower_bound() < lb) {
     lazy_lower_bound_value = lb;
@@ -77,4 +81,56 @@ void Node::reevaluate_children() {
     add_lower_bound(lb);
   }
 }
+
+std::vector<TrajectoryIntersection> Node::get_intersections() {
+  const auto &trajectory = get_relaxed_solution().get_trajectory();
+  /* currently only paths are supported */
+  assert(trajectory.points.front() == trajectory.points.back());
+  /* We assume each disc has a point in the trajectory */
+  assert(trajectory.points.size() - 1 == instance->size());
+
+  /* Collect all edges */
+  std::vector<
+      std::tuple<const Point &, const Point &, const Circle &, const Circle &>>
+      edges;
+  for (unsigned int i = 0; i < instance->size(); i++) {
+    unsigned int j = (i + 1) % instance->size();
+    const Point &p1 = trajectory.points[i];
+    const Point &p2 = trajectory.points[j];
+    const Circle &c1 = (*instance).at(i);
+    const Circle &c2 = (*instance).at(j);
+    edges.push_back(std::make_tuple(p1, p2, c1, c2));
+  }
+
+  /* Search for intersections */
+  std::vector<TrajectoryIntersection> intersections;
+  for (unsigned int i = 0; i < edges.size(); i++) {
+    for (unsigned int j = 0; j < edges.size(); j++) {
+      unsigned int i_prev = ((int)i - 1) % edges.size();
+      unsigned int i_next = (i + 1) % edges.size();
+      if (j == i_prev || j == i || j == i_next)
+        continue;
+      auto const &a = edges[i];
+      auto const &b = edges[j];
+      if (is_segments_intersect(std::get<0>(a), std::get<1>(a), std::get<0>(b),
+                                std::get<1>(b))) {
+        intersections.push_back(TrajectoryIntersection(
+            std::get<0>(a), std::get<1>(a), std::get<2>(a), std::get<3>(a),
+            std::get<0>(b), std::get<1>(b), std::get<2>(b), std::get<3>(b)));
+      }
+    }
+  }
+  return intersections;
+}
+
+static bool is_segments_intersect(const Point &p11, const Point &p12,
+                                  const Point &p21, const Point &p22) {
+  auto ccw = [](const Point &a, const Point &b, const Point &c) {
+    return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x);
+  };
+
+  return ccw(p11, p21, p22) != ccw(p12, p21, p22) &&
+         ccw(p11, p12, p21) != ccw(p11, p12, p22);
+}
+
 } // namespace cetsp
