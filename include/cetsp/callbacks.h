@@ -14,7 +14,7 @@ namespace cetsp {
 struct EventContext {
   /**
    * This class provides you the information within a callback.
-   * It also allows you to modifiy the behavior of the BnB.
+   * It also allows you to modify the behavior of the BnB.
    */
   std::shared_ptr<Node> current_node; // The node being investigated
   std::shared_ptr<Node> root_node;    // The root of the BnB tree
@@ -32,9 +32,7 @@ struct EventContext {
    * Add a feasible solution. This may help to prune a lot
    * of branches.
    */
-  void add_solution(Trajectory &trajectory) {
-    solution_pool->add_solution(trajectory);
-  }
+  void add_solution(Solution &sol) { solution_pool->add_solution(sol); }
 
   /**
    * Returns the global(!) lower bound. Use `current_node` to
@@ -49,15 +47,15 @@ struct EventContext {
 
   /**
    * Returns true if the currently considered node would be
-   * feasible accordinng to the currently added constraints.
+   * feasible according to the currently added constraints.
    * May be useful to query in combination with adding lazy
    * constraints.
    */
   bool is_feasible() const { return current_node->is_feasible(); }
 
   /**
-   * Returns the relaxed solutio of the currently investigated
-   * node. Use `node->get_lower_bound()` to query the  lowr bound
+   * Returns the relaxed solution of the currently investigated
+   * node. Use `node->get_lower_bound()` to query the  lower bound
    * and do not  trigger_lazy_computation the length of the relaxed solution.
    */
   const auto &get_relaxed_solution() const {
@@ -68,7 +66,7 @@ struct EventContext {
    * Returns the currently best known feasible solution,
    * if available.
    */
-  std::unique_ptr<Trajectory> get_best_solution() const {
+  std::unique_ptr<Solution> get_best_solution() const {
     return solution_pool->get_best_solution();
   }
 };

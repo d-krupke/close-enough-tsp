@@ -46,7 +46,7 @@ std::optional<double> ConvexHullOrder::operator()(const Circle &circle) {
   for (auto it = segments.begin(); it != closest_segment; ++it) {
     weight += std::sqrt(it->squared_length());
   }
-  // plus the distance travelled on the closest.
+  // plus the distance traveled on the closest.
   Ray_2 r1{
       closest_segment->source(),
       Direction_2{

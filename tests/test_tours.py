@@ -17,7 +17,7 @@ def test_single_circle():
 def test_two_circles():
     instance = Instance([Circle(Point(0, 0), 1), Circle(Point(10, 0), 1)])
     ub, lb = branch_and_bound(instance, lambda e: None)
-    assert ub.length() == pytest.approx(16)
+    assert ub.get_trajectory().length() == pytest.approx(16)
     assert lb == pytest.approx(16)
 
 
@@ -26,7 +26,7 @@ def test_three_circle():
         [Circle(Point(0, 0), 1), Circle(Point(10, 0), 1), Circle(Point(5, 0), 0.0)]
     )
     ub, lb = branch_and_bound(instance, lambda e: None)
-    assert ub.length() == pytest.approx(16)
+    assert ub.get_trajectory().length() == pytest.approx(16)
     assert lb == pytest.approx(16)
 
 
@@ -40,7 +40,7 @@ def test_square():
         ]
     )
     ub, lb = branch_and_bound(instance, lambda e: None)
-    assert ub.length() == pytest.approx(40)
+    assert ub.get_trajectory().length() == pytest.approx(40)
     assert lb == pytest.approx(40)
 
 
@@ -55,7 +55,7 @@ def test_square_with_middle():
         ]
     )
     ub, lb = branch_and_bound(instance, lambda e: None)
-    assert ub.length() == pytest.approx(44.14213093474119)
+    assert ub.get_trajectory().length() == pytest.approx(44.14213093474119)
     assert lb == pytest.approx(44.14213093474119)
 
 
@@ -73,7 +73,7 @@ def test_square_with_square_middle():
         ]
     )
     ub, lb = branch_and_bound(instance, lambda e: None)
-    assert ub.length() == pytest.approx(45.7279208391827)
+    assert ub.get_trajectory().length() == pytest.approx(45.7279208391827)
     assert lb <= 45.7279208391827
 
 
@@ -82,7 +82,7 @@ def test_4x4():
         [Circle(Point(x, y), 0) for x in range(0, 4) for y in range(0, 4)]
     )
     ub, lb = branch_and_bound(instance, lambda e: None)
-    assert ub.length() == pytest.approx(16)
+    assert ub.get_trajectory().length() == pytest.approx(16)
     assert lb <= 16
 
 
@@ -91,5 +91,5 @@ def test_4x5():
         [Circle(Point(x, y), 0) for x in range(0, 4) for y in range(0, 5)]
     )
     ub, lb = branch_and_bound(instance, lambda e: None)
-    assert ub.length() == pytest.approx(20, rel=0.001)
+    assert ub.get_trajectory().length() == pytest.approx(20, rel=0.001)
     assert lb <= 20

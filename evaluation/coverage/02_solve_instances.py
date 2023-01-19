@@ -61,7 +61,7 @@ def run_for_instance(instance_name, timelimit):
             )
             m["configuration"] = configuration
             m["instance"] = instance_name
-            m["ub"] = ub.length()
+            m["ub"] = ub.get_trajectory().length()
             m["lb"] = lb
             # m["n"] = len(instance)
             m["timelimit"] = timelimit

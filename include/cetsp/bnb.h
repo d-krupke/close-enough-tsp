@@ -41,10 +41,10 @@ public:
    * all lazy constraints. This can speed up the algorithm as it can allow BnB
    * to prune a lot of suboptimal branches. You can add as many solutions as
    * you want as only the best is used.
-   * @param trajectory The feasible solution.
+   * @param solution The feasible solution.
    */
-  void add_upper_bound(const Trajectory &trajectory) {
-    solution_pool.add_solution(trajectory);
+  void add_upper_bound(const Solution &solution) {
+    solution_pool.add_solution(solution);
   }
 
   /**
@@ -70,7 +70,7 @@ public:
    * Returns the currently best solution, if one exists.
    * @return A feasible solution trajectory.
    */
-  std::unique_ptr<Trajectory> get_solution() {
+  std::unique_ptr<Solution> get_solution() {
     return solution_pool.get_best_solution();
   }
 
@@ -230,7 +230,7 @@ private:
 
   void process_feasible_node(std::shared_ptr<Node> &node,
                              EventContext &context) {
-    solution_pool.add_solution(node->get_relaxed_solution().get_trajectory());
+    solution_pool.add_solution(node->get_relaxed_solution());
     search_strategy.notify_of_feasible(*(context.current_node));
   }
 
@@ -270,7 +270,7 @@ TEST_CASE("Branch and Bound  2") {
                               branching_strategy, search_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
-  CHECK(bnb.get_solution()->length() == doctest::Approx(20));
+  CHECK(bnb.get_solution()->get_trajectory().length() == doctest::Approx(20));
   CHECK(bnb.get_upper_bound() == doctest::Approx(20));
 }
 
@@ -308,7 +308,8 @@ TEST_CASE("Branch and Bound Path") {
                               branching_strategy, search_strategy);
   bnb.optimize(30);
   CHECK(bnb.get_solution());
-  CHECK(bnb.get_solution()->covers(instance.begin(), instance.end(), 0.001));
+  CHECK(bnb.get_solution()->get_trajectory().covers(instance.begin(),
+                                                    instance.end(), 0.001));
   CHECK(bnb.get_upper_bound() == doctest::Approx(42.0747));
 }
 } // namespace cetsp

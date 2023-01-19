@@ -143,14 +143,12 @@ public:
     auto n = points.size() - 1;
     auto i = begin;
     if (is_tour()) {
-      while (i > end) {
+      for (; i > end; i = (i + 1) % n) {
         path.push_back(points[i]);
-        i = (i + 1) % n;
       }
     }
-    while (i <= end) {
+    for (; i <= end; ++i) {
       path.push_back(points[i]);
-      ++i;
     }
     return Trajectory{path};
   }

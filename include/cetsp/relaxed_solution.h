@@ -98,14 +98,42 @@ public:
    */
   void simplify();
 
+protected:
+  details::LazyTrajectoryComputation spanning_trajectory;
+
 private:
   const Instance *instance;
-  details::LazyTrajectoryComputation spanning_trajectory;
   mutable std::optional<bool> _feasible;
   bool simplified = false;
   mutable int feasible_below = 0;
   double FEASIBILITY_TOL;
   mutable details::DistanceCache distances;
+};
+
+class Solution : public PartialSequenceSolution {
+public:
+  Solution(const Instance *instance, std::vector<int> sequence_,
+           double feasibility_tol = 0.001)
+      : PartialSequenceSolution(instance, sequence_, feasibility_tol) {
+    assert(is_feasible());
+  }
+
+  Solution(const Instance *instance, std::vector<int> sequence_,
+           Trajectory traj, std::vector<bool> &spanning_info,
+           double feasibility_tol = 0.001)
+      : PartialSequenceSolution(instance, sequence_, feasibility_tol) {
+    spanning_trajectory.update(traj, spanning_info);
+    assert(is_feasible());
+  }
+
+  Solution(const PartialSequenceSolution &sol) : PartialSequenceSolution(sol) {
+    assert(is_feasible());
+  }
+
+  Solution(PartialSequenceSolution &&sol)
+      : PartialSequenceSolution(std::move(sol)) {
+    assert(is_feasible());
+  }
 };
 
 TEST_CASE("PartialSequentialSolution") {
