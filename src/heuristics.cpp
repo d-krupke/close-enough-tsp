@@ -26,7 +26,7 @@ bool swap_improves(std::vector<std::pair<Circle, int>> &circles, int i, int j) {
   return new_dist < 0.999 * prev_dist;
 }
 
-PartialSequenceSolution compute_tour_by_2opt(Instance &instance) {
+Solution compute_tour_by_2opt(Instance &instance) {
   auto rd = std::random_device{};
   auto rng = std::default_random_engine{rd()};
   std::vector<std::pair<Circle, int>> circles;
@@ -55,7 +55,7 @@ PartialSequenceSolution compute_tour_by_2opt(Instance &instance) {
   for (const auto &c : circles) {
     sequence.push_back(c.second);
   }
-  PartialSequenceSolution sol(&instance, sequence);
+  Solution sol(&instance, sequence);
   sol.simplify();
   return sol;
 }

@@ -24,6 +24,6 @@ int main() {
   BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),
                                *branching_strategy, *search_strategy);
   auto initial_solution = compute_tour_by_2opt(instance);
-  baba.add_upper_bound(initial_solution.get_trajectory());
+  baba.add_upper_bound(initial_solution);
   baba.optimize(timelimit);
 }

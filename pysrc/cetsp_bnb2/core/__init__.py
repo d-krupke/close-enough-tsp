@@ -29,7 +29,8 @@ def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):
     ax.add_patch(patch)
 
 
-def plot_solution(ax: plt.Axes, instance, trajectory, highlight=None):
+def plot_solution(ax: plt.Axes, instance, solution, highlight=None):
+    trajectory = solution.get_trajectory()
     for i, c in enumerate(instance.circles()):
         if highlight and i in highlight:
             plot_circle(ax, c, facecolor="white", zorder=1, ec="green", fill=False)

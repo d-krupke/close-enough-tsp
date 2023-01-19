@@ -44,10 +44,10 @@ private:
  * @param timelimit Timelimit in seconds for the BnB algorithm.
  * @return Best solution found within timelimit or nullptr.
  */
-std::tuple<std::unique_ptr<Trajectory>, double>
+std::tuple<std::unique_ptr<Solution>, double>
 branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
-                 Trajectory *initial_solution, int timelimit,
+                 Solution *initial_solution, int timelimit,
                  std::string branching, std::string search, std::string root) {
 
   std::unique_ptr<RootNodeStrategy> rns;
@@ -197,6 +197,8 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
       .def("get_cost", &TripleMap::get_cost);
   py::class_<PartialSequenceSolution>(m, "PartialSequenceSolution")
       .def("get_trajectory", &PartialSequenceSolution::get_trajectory);
+  py::class_<Solution>(m, "Solution")
+      .def("get_trajectory", &Solution::get_trajectory);
 
   // functions
   m.def("compute_tour_by_2opt", &compute_tour_by_2opt,
@@ -210,5 +212,4 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         py::arg("timelimit") = 300,
         py::arg("branching") = "ChFarthestCircleSimplifying",
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull");
-  m.def("optimize_tour_by_lns", &optimize_tour_by_lns);
 }

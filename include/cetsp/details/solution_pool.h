@@ -6,24 +6,27 @@
 
 #ifndef CETSP_SOLUTION_POOL_H
 #define CETSP_SOLUTION_POOL_H
+
 #include "cetsp/common.h"
+#include "cetsp/relaxed_solution.h"
+
 namespace cetsp {
 class SolutionPool {
 public:
-  void add_solution(const Trajectory &solution) {
-    if (solution.length() < ub) {
-
+  void add_solution(const Solution &solution) {
+    auto solution_length = solution.get_trajectory().length();
+    if (solution_length < ub) {
       solutions.push_back(solution);
-      ub = solution.length();
+      ub = solution_length;
     }
   }
   double get_upper_bound() { return ub; }
 
-  std::unique_ptr<Trajectory> get_best_solution() {
+  std::unique_ptr<Solution> get_best_solution() {
     if (solutions.empty()) {
       return nullptr;
     }
-    return std::make_unique<Trajectory>(
+    return std::make_unique<Solution>(
         solutions.back()); // best solution is always at the end
   }
 
@@ -31,7 +34,7 @@ public:
 
 private:
   double ub = std::numeric_limits<double>::infinity();
-  std::vector<Trajectory> solutions;
+  std::vector<Solution> solutions;
 };
 } // namespace cetsp
 #endif // CETSP_SOLUTION_POOL_H
