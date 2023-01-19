@@ -7,10 +7,10 @@
 #ifndef CETSP_BNB_H
 #define CETSP_BNB_H
 #include "cetsp/callbacks.h"
-#include "cetsp/details/branching_strategy.h"
-#include "cetsp/details/root_node_strategy.h"
-#include "cetsp/details/search_strategy.h"
 #include "cetsp/details/solution_pool.h"
+#include "cetsp/strategies/branching_strategy.h"
+#include "cetsp/strategies/root_node_strategy.h"
+#include "cetsp/strategies/search_strategy.h"
 #include "cetsp/utils/timer.h"
 #include "node.h"
 #include <chrono>

@@ -10,10 +10,10 @@
 #ifndef CETSP_BRANCHING_STRATEGY_H
 #define CETSP_BRANCHING_STRATEGY_H
 #include "cetsp/common.h"
+#include "cetsp/details/convex_hull_order.h"
 #include "cetsp/details/solution_pool.h"
 #include "cetsp/details/triple_map.h"
 #include "cetsp/node.h"
-#include "convex_hull_order.h"
 #include <CGAL/Convex_hull_traits_adapter_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/convex_hull_2.h>

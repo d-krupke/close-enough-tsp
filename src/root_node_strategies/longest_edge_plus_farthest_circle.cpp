@@ -1,4 +1,4 @@
-#include "cetsp/details/root_node_strategy.h"
+#include "cetsp/strategies/root_node_strategy.h"
 
 namespace cetsp {
 std::pair<int, int> find_max_pair(const std::vector<Circle> &instance) {

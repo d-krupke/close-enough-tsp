@@ -5,10 +5,10 @@
 
 #ifndef CETSP_CALLBACKS_H
 #define CETSP_CALLBACKS_H
-#include "cetsp/details/branching_strategy.h"
-#include "cetsp/details/root_node_strategy.h"
-#include "cetsp/details/search_strategy.h"
 #include "cetsp/details/solution_pool.h"
+#include "cetsp/strategies/branching_strategy.h"
+#include "cetsp/strategies/root_node_strategy.h"
+#include "cetsp/strategies/search_strategy.h"
 namespace cetsp {
 
 struct EventContext {

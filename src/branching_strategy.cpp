@@ -1,7 +1,7 @@
 //
 // Created by Dominik Krupke on 21.12.22.
 //
-#include "cetsp/details/branching_strategy.h"
+#include "cetsp/strategies/branching_strategy.h"
 #include <boost/thread/thread.hpp>
 // #include <execution>
 namespace cetsp {

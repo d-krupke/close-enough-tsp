@@ -26,7 +26,7 @@ There are three primary strategies:
 
 ### Root Node Strategy
 
-[include/cetsp/details/root_node_strategy.h](include/cetsp/details/root_node_strategy.h)
+[include/cetsp/details/root_node_strategy.h](include/cetsp/strategies/root_node_strategy.h)
 
 The root node strategy decides the initial relaxed solution.
 It should allow to build an optimal solution. We currently have two different
@@ -39,7 +39,7 @@ ones
 
 ### Branching Strategies
 
-[include/cetsp/details/branching_strategy.h](include/cetsp/details/branching_strategy.h)
+[include/cetsp/details/branching_strategy.h](include/cetsp/strategies/branching_strategy.h)
 
 The branching strategies potentially also contain early pruning ideas that
 can work already on the sequence and don't need the trajectory computed (expensive).
@@ -56,7 +56,7 @@ Further rules on the sequence can easily be added.
 
 ### Search Strategy
 
-[include/cetsp/details/search_strategy.h](include/cetsp/details/search_strategy.h)
+[include/cetsp/details/search_strategy.h](include/cetsp/strategies/search_strategy.h)
 
 Which leaf of the branch and bound tree should be investigated next?
 

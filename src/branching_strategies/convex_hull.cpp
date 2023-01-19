@@ -1,7 +1,7 @@
 //
 // Created by Dominik Krupke on 17.01.23.
 //
-#include "cetsp/details/branching_strategy.h"
+#include "cetsp/strategies/branching_strategy.h"
 
 namespace cetsp {
 void ConvexHullRule::setup(const Instance *instance_,
