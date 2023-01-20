@@ -22,9 +22,9 @@ add_library(
   ../include/cetsp/details/lazy_trajectory.h
   geometry.cpp
   root_node_strategies/longest_edge_plus_farthest_circle.cpp
-  branching_strategies/convex_hull.cpp
+  branching_strategies/global_convex_hull.cpp
   ../include/cetsp/strategies/rule.h
-  ../include/cetsp/strategies/rules/convex_hull_rule.h)
+  ../include/cetsp/strategies/rules/global_convex_hull_rule.h)
 target_sources(
   cetsp
   PUBLIC ../include/cetsp/common.h ../include/cetsp/details/cgal_kernel.h

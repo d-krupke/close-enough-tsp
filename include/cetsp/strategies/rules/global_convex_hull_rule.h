@@ -2,17 +2,17 @@
 // Created by Dominik Krupke on 19.01.23.
 //
 
-#ifndef CETSP_CONVEX_HULL_RULE_H
-#define CETSP_CONVEX_HULL_RULE_H
+#ifndef CETSP_GLOBAL_CONVEX_HULL_RULE_H
+#define CETSP_GLOBAL_CONVEX_HULL_RULE_H
 #include "cetsp/common.h"
 #include "cetsp/details/solution_pool.h"
 #include "cetsp/node.h"
 #include "cetsp/strategies/rule.h"
 namespace cetsp {
 
-class ConvexHullRule : public SequenceRule {
+class GlobalConvexHullRule : public SequenceRule {
 public:
-  virtual void setup(const Instance *instance_, std::shared_ptr<Node> &root,
+  virtual void setup(const Instance *instance, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool);
 
   static bool
@@ -42,8 +42,8 @@ TEST_CASE("Path Convex Hull Strategy true") {
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
 
-  CHECK(ConvexHullRule::is_path_sequence_possible(sequence, n, is_in_ch,
-                                                  order_values));
+  CHECK(GlobalConvexHullRule::is_path_sequence_possible(sequence, n, is_in_ch,
+                                                        order_values));
 }
 
 TEST_CASE("Path Convex Hull Strategy false") {
@@ -57,8 +57,8 @@ TEST_CASE("Path Convex Hull Strategy false") {
   std::vector<bool> is_in_ch = {true, true, true, true, true, true};
   std::vector<double> order_values = {0, 1, 2, 3, 4, 5};
 
-  CHECK(!ConvexHullRule::is_path_sequence_possible(sequence, n, is_in_ch,
-                                                   order_values));
+  CHECK(!GlobalConvexHullRule::is_path_sequence_possible(sequence, n, is_in_ch,
+                                                         order_values));
 }
 } // namespace cetsp
-#endif // CETSP_CONVEX_HULL_RULE_H
+#endif // CETSP_GLOBAL_CONVEX_HULL_RULE_H
