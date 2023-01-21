@@ -3,6 +3,7 @@
 //
 #include "cetsp/strategies/branching_strategy.h"
 #include "cetsp/strategies/rules/global_convex_hull_rule.h"
+#include "cetsp/strategies/rules/layered_convex_hull_rule.h"
 
 namespace cetsp {
 void GlobalConvexHullRule::setup(const Instance *instance_,

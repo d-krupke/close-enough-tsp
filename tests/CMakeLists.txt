@@ -25,6 +25,7 @@ add_executable(
   ../include/cetsp/details/lazy_trajectory.h
   ../src/root_node_strategies/longest_edge_plus_farthest_circle.cpp
   ../src/branching_strategies/global_convex_hull.cpp
+  ../src/branching_strategies/layered_convex_hull_rule.cpp
   ../include/cetsp/strategies/rule.h
   ../include/cetsp/strategies/rules/global_convex_hull_rule.h
   lazy_callback_tests.h)

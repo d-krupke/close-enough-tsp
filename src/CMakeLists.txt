@@ -23,6 +23,7 @@ add_library(
   geometry.cpp
   root_node_strategies/longest_edge_plus_farthest_circle.cpp
   branching_strategies/global_convex_hull.cpp
+  branching_strategies/layered_convex_hull_rule.cpp
   ../include/cetsp/strategies/rule.h
   ../include/cetsp/strategies/rules/global_convex_hull_rule.h)
 target_sources(
