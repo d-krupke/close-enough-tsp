@@ -64,7 +64,7 @@ bool CircleBranching::branch(Node &node) {
   }
   std::vector<std::shared_ptr<Node>> children;
   std::vector<int> seq;
-  seq = node.get_spanning_sequence();
+  seq = node.get_fixed_sequence();
   seq.push_back(*c);
   if (instance->is_path()) {
     // for path, this position may not be symmetric and has to be added.
