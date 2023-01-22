@@ -59,12 +59,13 @@ branch_and_bound(Instance instance,
     throw std::invalid_argument("Invalid root node strategy");
   }
   std::unique_ptr<BranchingStrategy> branching_strategy;
+  size_t num_threads = 8;
   if (branching == "FarthestCircle") {
-    branching_strategy = std::make_unique<FarthestCircle>(false);
+    branching_strategy = std::make_unique<FarthestCircle>(false, num_threads);
   } else if (branching == "ChFarthestCircle") {
-    branching_strategy = std::make_unique<ChFarthestCircle>(false);
+    branching_strategy = std::make_unique<ChFarthestCircle>(false, num_threads);
   } else if (branching == "ChFarthestCircleSimplifying") {
-    branching_strategy = std::make_unique<ChFarthestCircle>(true);
+    branching_strategy = std::make_unique<ChFarthestCircle>(true, num_threads);
   } else {
     throw std::invalid_argument("Invalid branching strategy.");
   }

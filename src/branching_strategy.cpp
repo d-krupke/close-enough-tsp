@@ -36,14 +36,15 @@ get_index_of_most_distanced_circle(const PartialSequenceSolution &solution,
 }
 
 void distributed_child_evaluation(std::vector<std::shared_ptr<Node>> &children,
-                                  bool simplify) {
-  // TODO: this  is rather brutal right now. Try  to limit the threads.
+                                  const bool simplify, const size_t num_threads) {
   boost::thread_group tg;
-  for (auto &child : children) {
-    tg.create_thread([=, &child]() {
-      child->trigger_lazy_evaluation();
-      if (simplify) {
-        child->simplify();
+  for(unsigned int offset =0; offset <std::min(num_threads, children.size()); ++offset) {
+    tg.create_thread([=, &children](){
+      for(auto i = offset; i <children.size(); i +=num_threads) {
+       children[i]->trigger_lazy_evaluation();
+       if(simplify) {
+         children[i]->simplify();
+       }
       }
     });
   }
@@ -77,7 +78,7 @@ bool FarthestCircle::branch(Node &node) {
       children.push_back(std::make_shared<Node>(seq, instance, &node));
     }
   }
-  distributed_child_evaluation(children, simplify);
+  distributed_child_evaluation(children, simplify,  num_threads);
 
   // for_each(std::execution::par, children.begin(), children.end(), [](auto&
   // child){child.trigger_lazy_evaluation();});
