@@ -112,7 +112,7 @@ class RandomCircle : public CircleBranching {
 public:
   explicit RandomCircle(bool simplify = false, size_t num_threads = 1)
       : CircleBranching{simplify, num_threads} {
-    std::cout<< "Branching on random circle"<<std::endl;
+    std::cout << "Branching on random circle" << std::endl;
   }
 
 protected:
@@ -136,10 +136,8 @@ protected:
 TEST_CASE("Branching Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
-  std::vector<Circle> instance_ = {{{0, 0}, 1},
-                                   {{3, 0}, 1},
-                                   {{6, 0}, 1},
-                                   {{3, 6}, 1}};
+  std::vector<Circle> instance_ = {
+      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
   Instance instance(instance_);
   FarthestCircle bs(false);
   auto root = std::make_shared<Node>(std::vector<int>{0, 1, 2, 3}, &instance);

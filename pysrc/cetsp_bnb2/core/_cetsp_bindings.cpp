@@ -66,8 +66,8 @@ branch_and_bound(Instance instance,
     branching_strategy = std::make_unique<ChFarthestCircle>(false, num_threads);
   } else if (branching == "ChFarthestCircleSimplifying") {
     branching_strategy = std::make_unique<ChFarthestCircle>(true, num_threads);
-  } else if(branching == "Random") {
-    branching_strategy == std::make_unique<RandomCircle>(true, num_threads);
+  } else if (branching == "Random") {
+    branching_strategy = std::make_unique<RandomCircle>(true, num_threads);
   } else {
     throw std::invalid_argument("Invalid branching strategy.");
   }
@@ -78,6 +78,8 @@ branch_and_bound(Instance instance,
     search_strategy = std::make_unique<CheapestChildDepthFirst>();
   } else if (search == "CheapestBreadthFirst") {
     search_strategy = std::make_unique<CheapestBreadthFirst>();
+  } else if (search == "Random") {
+    search_strategy = std::make_unique<RandomNextNode>();
   } else {
     throw std::invalid_argument("Invalid search strategy.");
   }

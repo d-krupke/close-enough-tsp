@@ -81,7 +81,8 @@ def test_4x4():
     instance = Instance(
         [Circle(Point(x, y), 0) for x in range(0, 4) for y in range(0, 4)]
     )
-    ub, lb = branch_and_bound(instance, lambda e: None)
+    null_cb = lambda e: None
+    ub, lb = branch_and_bound(instance, null_cb, branching="Random", search="Random")
     assert ub.get_trajectory().length() == pytest.approx(16)
     assert lb <= 16
 
