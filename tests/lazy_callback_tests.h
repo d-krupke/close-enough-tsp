@@ -42,7 +42,7 @@ TEST_CASE("Lazy Callback") {
   }
   cetsp::Instance instance(cetsp::Instance(
       {{{0, 0}, 1}, {{10, 0}, 1}, {{10, 10}, 1}, {{0, 10}, 1}}));
-  cetsp::ConvexHull root_node_strategy{};
+  cetsp::ConvexHullRoot root_node_strategy{};
   cetsp::ChFarthestCircle branching_strategy{true, 8};
   cetsp::DfsBfs search_strategy;
   cetsp::BranchAndBoundAlgorithm bnb(&instance,

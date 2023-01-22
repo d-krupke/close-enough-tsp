@@ -10,7 +10,7 @@
 #include <CGAL/convex_hull_2.h>
 #include <CGAL/property_map.h>
 namespace cetsp {
-std::shared_ptr<Node> ConvexHull::get_root_node(Instance &instance) {
+std::shared_ptr<Node> ConvexHullRoot::get_root_node(Instance &instance) {
   if (instance.is_path()) {
     throw std::invalid_argument("ConvexHull Strategy only feasible for tours.");
   }

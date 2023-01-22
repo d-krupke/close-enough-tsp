@@ -50,7 +50,7 @@ public:
  * This approach  IS NOT compatible with paths.
  * This approach IS compatible with the convex hull order pruning.
  */
-class ConvexHull : public RootNodeStrategy {
+class ConvexHullRoot : public RootNodeStrategy {
 public:
   std::shared_ptr<Node> get_root_node(Instance &instance) override;
 };

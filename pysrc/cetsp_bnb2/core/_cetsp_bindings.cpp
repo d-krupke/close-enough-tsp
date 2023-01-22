@@ -54,7 +54,7 @@ branch_and_bound(Instance instance,
 
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
-    rns = std::make_unique<ConvexHull>();
+    rns = std::make_unique<ConvexHullRoot>();
   } else if (root == "LongestEdgePlusFurthestCircle") {
     rns = std::make_unique<LongestEdgePlusFurthestCircle>();
   } else {

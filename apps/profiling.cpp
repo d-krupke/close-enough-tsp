@@ -16,7 +16,7 @@ int main() {
   }
   Instance instance{circles};
   std::unique_ptr<RootNodeStrategy> rns;
-  rns = std::make_unique<ConvexHull>();
+  rns = std::make_unique<ConvexHullRoot>();
   std::unique_ptr<BranchingStrategy> branching_strategy;
   branching_strategy = std::make_unique<ChFarthestCircle>(true, 4);
   std::unique_ptr<SearchStrategy> search_strategy;
