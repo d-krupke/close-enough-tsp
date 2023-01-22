@@ -100,8 +100,8 @@ std::optional<int> RandomCircle::get_branching_circle(Node &node) {
     return {};
   }
   std::default_random_engine generator;
-  std::uniform_int_distribution<int> distribution(
-      0, uncovered_circles.size() - 1);
+  std::uniform_int_distribution<int> distribution(0,
+                                                  uncovered_circles.size() - 1);
   return {uncovered_circles[distribution(generator)]};
 }
 } // namespace cetsp

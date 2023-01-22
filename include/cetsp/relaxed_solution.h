@@ -24,7 +24,7 @@ class PartialSequenceSolution {
 public:
   PartialSequenceSolution(const Instance *instance, std::vector<int> sequence_,
                           double feasibility_tol = 0.001)
-      : instance{instance}, spanning_trajectory(instance, std::move(sequence_)),
+      : spanning_trajectory(instance, std::move(sequence_)), instance{instance},
         FEASIBILITY_TOL{feasibility_tol}, distances{instance} {
     const auto &sequence = spanning_trajectory.sequence;
     if (sequence.empty() && !instance->is_path()) {

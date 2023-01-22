@@ -1,4 +1,5 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "./lazy_callback_tests.h"
 #include "cetsp/bnb.h"
 #include "cetsp/common.h"
 #include "cetsp/details/convex_hull_order.h"

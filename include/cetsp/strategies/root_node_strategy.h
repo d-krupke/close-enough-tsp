@@ -16,6 +16,7 @@
 #include "cetsp/common.h"
 #include "cetsp/node.h"
 #include "doctest/doctest.h"
+#include <random>
 #include <vector>
 namespace cetsp {
 
@@ -52,6 +53,36 @@ public:
 class ConvexHull : public RootNodeStrategy {
 public:
   std::shared_ptr<Node> get_root_node(Instance &instance) override;
+};
+
+class RandomRoot : public RootNodeStrategy {
+public:
+  std::shared_ptr<Node> get_root_node(Instance &instance) override {
+    if (instance.is_path()) {
+      if (instance.empty()) {
+        return std::make_shared<Node>(std::vector<int>{}, &instance);
+      }
+      std::vector<int> seq;
+      std::default_random_engine generator;
+      std::uniform_int_distribution<int> distribution(0, instance.size() - 1);
+      seq.push_back(static_cast<int>(distribution(generator)));
+      return std::make_shared<Node>(seq, &instance);
+    } else {
+      if (instance.size() <= 3) { // trivial case
+        std::vector<int> seq;
+        for (int i = 0; i < static_cast<int>(instance.size()); ++i) {
+          seq.push_back(i);
+        }
+        return std::make_shared<Node>(seq, &instance);
+      }
+      std::vector<int> seq(instance.size());
+      std::iota(seq.begin(), seq.end(), 0);
+      std::shuffle(seq.begin(), seq.end(),
+                   std::mt19937{std::random_device{}()});
+      seq.resize(3);
+      return std::make_shared<Node>(seq, &instance);
+    }
+  }
 };
 
 TEST_CASE("Root Node Selection") {
