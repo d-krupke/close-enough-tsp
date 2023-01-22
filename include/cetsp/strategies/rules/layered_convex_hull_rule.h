@@ -14,7 +14,7 @@ namespace cetsp {
 
 class ConvexHullLayer {
 public:
-  std::vector<int> global_to_hull_map;
+  std::vector<std::optional<unsigned int>> global_to_hull_map;
   std::vector<unsigned int> hull_to_global_map;
 };
 

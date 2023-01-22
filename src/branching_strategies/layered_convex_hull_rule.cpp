@@ -7,9 +7,6 @@
 
 namespace cetsp {
 
-/* TODO remove this, use optional<unsigned int> instead */
-static const int CH_IDX_NONE = -1;
-
 static std::vector<ConvexHullLayer> calc_ch_layers(const Instance &instance) {
   std::vector<ConvexHullLayer> layers;
   // handled[circle_idx] = the circle is included in the already created layers
@@ -21,22 +18,20 @@ static std::vector<ConvexHullLayer> calc_ch_layers(const Instance &instance) {
       break;
 
     /* ConvexHullOrder is operating on a continues range of indices, so we need
-     * to map from the global indices to a smaller range [0, # of unhandled) */
-    std::vector<int> global_to_unhandled_map(instance.size(), -1);
-    std::vector<int> unhandled_to_global_map(unhandled_num, -1);
-    std::vector<unsigned int> unhandled(unhandled_num);
+     * to map from the global indices to a smaller range [0, # of unhandled).
+     * unhandled[unhandled_idx] = global_idx */
+    std::vector<unsigned int> unhandled;
+    unhandled.reserve(unhandled_num);
     for (unsigned int global_idx = 0; global_idx < instance.size();
          global_idx++) {
       if (!handled[global_idx]) {
-        unsigned int unhandled_idx = unhandled.size();
-        global_to_unhandled_map[global_idx] = unhandled_idx;
-        unhandled_to_global_map.push_back(global_idx);
         unhandled.push_back(global_idx);
       }
     }
 
     /* Calculate the convex hull of all unhandled circles */
-    std::vector<Point> unhandled_points(unhandled.size());
+    std::vector<Point> unhandled_points;
+    unhandled_points.reserve(unhandled.size());
     for (unsigned int i : unhandled) {
       unhandled_points.push_back(instance[i].center);
     }
@@ -57,11 +52,13 @@ static std::vector<ConvexHullLayer> calc_ch_layers(const Instance &instance) {
               [](const auto &a, const auto &b) { return a.second < b.second; });
 
     ConvexHullLayer layer;
-    layer.global_to_hull_map = std::vector<int>(instance.size(), CH_IDX_NONE);
-    layer.hull_to_global_map = std::vector<unsigned int>(layer_hull.size());
+    layer.global_to_hull_map =
+        std::vector<std::optional<unsigned int>>(instance.size());
+    layer.hull_to_global_map = std::vector<unsigned int>();
+    layer.hull_to_global_map.reserve(layer_hull.size());
     for (unsigned int hull_idx = 0; hull_idx < layer_hull.size(); hull_idx++) {
       unsigned int unhandled_idx = layer_hull[hull_idx].first;
-      unsigned int global_idx = unhandled_to_global_map[unhandled_idx];
+      unsigned int global_idx = unhandled[unhandled_idx];
       layer.global_to_hull_map[global_idx] = hull_idx;
       layer.hull_to_global_map.push_back(global_idx);
       handled[global_idx] = true;
@@ -93,14 +90,15 @@ bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq,
   const auto &layer = layers[layer_idx];
   unsigned int hull_size = get_hull_size(layer_idx);
   /* Compute the order the CH vertices are visited by the sequence */
-  std::vector<int> hull_visits_full(hull_size, CH_IDX_NONE);
-  std::vector<int> hull_vertex_to_seq_idx_map(hull_size, CH_IDX_NONE);
+  std::vector<std::optional<unsigned int>> hull_visits_full(hull_size);
+  std::vector<std::optional<unsigned int>> hull_vertex_to_seq_idx_map(
+      hull_size);
   unsigned int visit_num = 0;
-  for (auto i : seq) {
-    int hull_idx = layer.global_to_hull_map[i];
-    if (hull_idx != CH_IDX_NONE) {
-      hull_visits_full[hull_idx] = visit_num++;
-      hull_vertex_to_seq_idx_map[hull_idx] = i;
+  for (unsigned int seq_idx = 0; seq_idx < seq.size(); seq_idx++) {
+    auto hull_idx = layer.global_to_hull_map[seq[seq_idx]];
+    if (hull_idx) {
+      hull_visits_full[*hull_idx] = visit_num++;
+      hull_vertex_to_seq_idx_map[*hull_idx] = seq_idx;
     }
   }
   if (visit_num <= 2)
@@ -109,10 +107,10 @@ bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq,
   hull_visits.reserve(visit_num);
   std::vector<unsigned int> visit_to_hull_idx_map(hull_visits.size());
   for (unsigned int hull_idx = 0; hull_idx < hull_size; hull_idx++) {
-    unsigned int visit_num = hull_visits_full[hull_idx];
-    if (visit_num != CH_IDX_NONE) {
-      hull_visits.push_back(visit_num);
-      visit_to_hull_idx_map[visit_num] = hull_idx;
+    auto visit_idx = hull_visits_full[hull_idx];
+    if (visit_idx) {
+      hull_visits.push_back(*visit_idx);
+      visit_to_hull_idx_map[*visit_idx] = hull_idx;
     }
   }
 
@@ -170,9 +168,10 @@ bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq,
        * We check that the subpath between them visit the lower layer convex
        * hull in a valid sequence. */
       if (are_consecutive) {
-        int sub_begin = hull_vertex_to_seq_idx_map[a];
-        int sub_end = hull_vertex_to_seq_idx_map[b];
-        assert(sub_begin != CH_IDX_NONE && sub_end != CH_IDX_NONE);
+        auto sub_begin_opt = hull_vertex_to_seq_idx_map[a];
+        auto sub_end_opt = hull_vertex_to_seq_idx_map[b];
+        assert(sub_begin_opt && sub_end_opt);
+        unsigned int sub_begin = *sub_begin_opt, sub_end = *sub_end_opt;
         if (is_reversed) {
           std::swap(sub_begin, sub_end);
         }
