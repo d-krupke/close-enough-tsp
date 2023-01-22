@@ -83,8 +83,10 @@ bool cetsp::PartialSequenceSolution::is_feasible() const {
   if (_feasible && !*_feasible) {
     return false;
   }
-  if (!_feasible) {
+  if (!_feasible || *_feasible) {
     _feasible = true;
+    // will be cached if the instance hasn't changed. Otherwise, only the
+    // unchecked instances will be checked.
     int n = static_cast<int>(instance->size());
     for (; feasible_below < n; ++feasible_below) {
       if (!covers(feasible_below)) {
