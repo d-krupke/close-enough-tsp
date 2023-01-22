@@ -197,7 +197,10 @@ private:
 TEST_CASE("Search Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
-  Instance instance({{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}});
+  Instance instance({{{0, 0}, 1},
+                     {{3, 0}, 1},
+                     {{6, 0}, 1},
+                     {{3, 6}, 1}});
   FarthestCircle bs;
   auto root = std::make_shared<Node>(std::vector<int>{0, 1, 2, 3}, &instance);
   bs.setup(&instance, root, nullptr);

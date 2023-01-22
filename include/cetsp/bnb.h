@@ -292,6 +292,24 @@ TEST_CASE("Branch and Bound  3") {
   CHECK(bnb.get_upper_bound() <= 41);
 }
 
+TEST_CASE("Branch and Bound Random") {
+  Instance instance;
+  for (double x = 0; x <= 10; x += 2.0) {
+    for (double y = 0; y <= 10; y += 2.0) {
+      instance.push_back({{x, y}, 1});
+    }
+  }
+  LongestEdgePlusFurthestCircle root_node_strategy{};
+  RandomCircle branching_strategy{true, 8};
+  CheapestChildDepthFirst search_strategy;
+  BranchAndBoundAlgorithm bnb(&instance,
+                              root_node_strategy.get_root_node(instance),
+                              branching_strategy, search_strategy);
+  bnb.optimize(30);
+  CHECK(bnb.get_solution());
+  CHECK(bnb.get_upper_bound() <= 41);
+}
+
 TEST_CASE("Branch and Bound Path") {
   Instance instance;
   for (double x = 0; x <= 10; x += 2.0) {

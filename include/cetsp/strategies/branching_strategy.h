@@ -19,6 +19,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/convex_hull_2.h>
 #include <CGAL/property_map.h>
+#include <random>
 #include <vector>
 namespace cetsp {
 
@@ -30,13 +31,9 @@ public:
   virtual ~BranchingStrategy() = default;
 };
 
-class FarthestCircle : public BranchingStrategy {
-  /**
-   * This strategy tries to branch on the circle that is most distanced
-   * to the relaxed solution.
-   */
+class CircleBranching : public BranchingStrategy {
 public:
-  explicit FarthestCircle(bool simplify = false, size_t num_threads = 1)
+  explicit CircleBranching(bool simplify = false, size_t num_threads = 1)
       : simplify{simplify}, num_threads{num_threads} {
     if (simplify) {
       std::cout << "Using node simplification." << std::endl;
@@ -44,8 +41,8 @@ public:
     std::cout << "Exploring on " << num_threads << " threads" << std::endl;
   }
 
-  virtual void setup(Instance *instance_, std::shared_ptr<Node> &root,
-                     SolutionPool *solution_pool) override {
+  void setup(Instance *instance_, std::shared_ptr<Node> &root,
+             SolutionPool *solution_pool) override {
     instance = instance_;
     for (auto &rule : rules) {
       rule->setup(instance, root, solution_pool);
@@ -69,10 +66,28 @@ protected:
       return rule->is_ok(sequence);
     });
   }
+
+  virtual std::optional<int> get_branching_circle(Node &node) = 0;
+
   Instance *instance = nullptr;
   bool simplify;
   size_t num_threads;
   std::vector<std::unique_ptr<SequenceRule>> rules;
+};
+
+class FarthestCircle : public CircleBranching {
+  /**
+   * This strategy tries to branch on the circle that is most distanced
+   * to the relaxed solution.
+   */
+public:
+  explicit FarthestCircle(bool simplify = false, size_t num_threads = 1)
+      : CircleBranching{simplify, num_threads} {
+    std::cout << "Branching on farthest circle." << std::endl;
+  }
+
+protected:
+  std::optional<int> get_branching_circle(Node &node) override;
 };
 
 class ChFarthestCircle : public FarthestCircle {
@@ -89,18 +104,48 @@ public:
   explicit ChFarthestCircle(bool simplify = true, size_t num_threads = 1);
 };
 
+class RandomCircle : public CircleBranching {
+  /**
+   * Just a random branching  strategy as comparison. It will branch on a random
+   * not yet covered circle.
+   */
+public:
+  explicit RandomCircle(bool simplify = false, size_t num_threads = 1)
+      : CircleBranching{simplify, num_threads} {
+    std::cout<< "Branching on random circle"<<std::endl;
+  }
+
+protected:
+  std::optional<int> get_branching_circle(Node &node) override {
+    std::vector<int> uncovered_circles;
+    for (unsigned i = 0; i < instance->size(); ++i) {
+      if (!node.get_relaxed_solution().covers(i)) {
+        uncovered_circles.push_back(i);
+      }
+    }
+    if (uncovered_circles.empty()) {
+      return {};
+    }
+    std::default_random_engine generator;
+    std::uniform_int_distribution<int> distribution(
+        0, uncovered_circles.size() - 1);
+    return {uncovered_circles[distribution(generator)]};
+  }
+};
+
 TEST_CASE("Branching Strategy") {
   // The strategy should choose the triangle and implicitly cover the
   // second circle.
-  std::vector<Circle> instance_ = {
-      {{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}, {{3, 6}, 1}};
+  std::vector<Circle> instance_ = {{{0, 0}, 1},
+                                   {{3, 0}, 1},
+                                   {{6, 0}, 1},
+                                   {{3, 6}, 1}};
   Instance instance(instance_);
-  FarthestCircle bs;
+  FarthestCircle bs(false);
   auto root = std::make_shared<Node>(std::vector<int>{0, 1, 2, 3}, &instance);
   bs.setup(&instance, root, nullptr);
   CHECK(bs.branch(*root) == false);
 
-  std::vector<Circle> seq = {{{0, 0}, 1}, {{3, 0}, 1}, {{6, 0}, 1}};
   Node root2({0, 1, 2}, &instance);
   CHECK(bs.branch(root2) == true);
   CHECK(root2.get_children().size() == 3);
