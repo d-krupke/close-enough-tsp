@@ -161,9 +161,9 @@ public:
           points[0].dist(circle.center); // CGAL::squared_distance(tp, p);
     }
     for (unsigned i = 0; i < points.size() - 1; i++) {
-      auto dist = utils::distance_to_segment({points[i].x, points[i].y},
-                                             {points[i + 1].x, points[i + 1].y},
-                                             {circle.center.x, circle.center.y});
+      auto dist = utils::distance_to_segment(
+          {points[i].x, points[i].y}, {points[i + 1].x, points[i + 1].y},
+          {circle.center.x, circle.center.y});
       if (dist < min_dist) {
         min_dist = dist;
       }

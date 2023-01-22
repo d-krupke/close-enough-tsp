@@ -43,7 +43,7 @@ def run_for_instance(instance_name, timelimit):
         "search": "DfsBfs",
         # "search": "CheapestChildDepthFirst",
         # "search" : "CheapestBreadthFirst"
-        "num_threads": 4
+        "num_threads": 4,
     }
     # This callback currently does nothing. However, you can use the context
     # object as described in pysrc/cetsp_bnb2/core/_cetsp_bindings.cpp
