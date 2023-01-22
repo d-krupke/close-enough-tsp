@@ -72,7 +72,7 @@ bool FarthestCircle::branch(Node &node) {
   }
   seq.push_back(*c);
   if (instance->is_path()) {
-    // for path, this position may not be symmetric.
+    // for path, this position may not be symmetric and has to be added.
     if (is_sequence_ok(seq)) {
       children.push_back(std::make_shared<Node>(seq, instance, &node));
     }
@@ -85,9 +85,6 @@ bool FarthestCircle::branch(Node &node) {
     }
   }
   distributed_child_evaluation(children, simplify, num_threads);
-
-  // for_each(std::execution::par, children.begin(), children.end(), [](auto&
-  // child){child.trigger_lazy_evaluation();});
   node.branch(children);
   return true;
 }
