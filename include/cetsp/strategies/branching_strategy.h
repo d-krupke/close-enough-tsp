@@ -36,11 +36,12 @@ class FarthestCircle : public BranchingStrategy {
    * to the relaxed solution.
    */
 public:
-  explicit FarthestCircle(bool simplify = false, size_t num_threads=1) : simplify{simplify}, num_threads{num_threads} {
+  explicit FarthestCircle(bool simplify = false, size_t num_threads = 1)
+      : simplify{simplify}, num_threads{num_threads} {
     if (simplify) {
       std::cout << "Using node simplification." << std::endl;
     }
-    std::cout << "Exploring on "<<num_threads<<" threads"<<std::endl;
+    std::cout << "Exploring on " << num_threads << " threads" << std::endl;
   }
 
   virtual void setup(Instance *instance_, std::shared_ptr<Node> &root,
@@ -85,7 +86,7 @@ class ChFarthestCircle : public FarthestCircle {
    * the convex hull).
    */
 public:
-  explicit ChFarthestCircle(bool simplify = true, size_t num_threads=1);
+  explicit ChFarthestCircle(bool simplify = true, size_t num_threads = 1);
 };
 
 TEST_CASE("Branching Strategy") {

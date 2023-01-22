@@ -8,7 +8,7 @@
 #include "cetsp/soc.h"
 #include "cetsp/strategies/branching_strategy.h"
 #include "cetsp/strategies/root_node_strategy.h"
+#include "cetsp/strategies/rules/convex_hull_rule.h"
 #include "cetsp/strategies/search_strategy.h"
 #include "cetsp/utils/geometry.h"
-#include "cetsp/strategies/rules/convex_hull_rule.h"
 #include "doctest/doctest.h"

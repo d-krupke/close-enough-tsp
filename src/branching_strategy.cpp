@@ -36,19 +36,25 @@ get_index_of_most_distanced_circle(const PartialSequenceSolution &solution,
 }
 
 void distributed_child_evaluation(std::vector<std::shared_ptr<Node>> &children,
-                                  const bool simplify, const size_t num_threads) {
+                                  const bool simplify,
+                                  const size_t num_threads) {
+  // Parallelize the computation of the relaxed solutions for the children
+  // using a simple modulo on the number of threads. This is fine as we write
+  // on separate heap memory for all children.
   boost::thread_group tg;
-  for(unsigned int offset =0; offset <std::min(num_threads, children.size()); ++offset) {
-    tg.create_thread([=, &children](){
-      for(auto i = offset; i <children.size(); i +=num_threads) {
-       children[i]->trigger_lazy_evaluation();
-       if(simplify) {
-         children[i]->simplify();
-       }
+  for (unsigned int offset = 0; offset < std::min(num_threads, children.size());
+       ++offset) {
+    tg.create_thread([=, &children]() {
+      for (auto i = offset; i < children.size(); i += num_threads) {
+        children[i]->trigger_lazy_evaluation();
+        if (simplify) {
+          children[i]->simplify();
+        }
       }
     });
   }
-  tg.join_all();
+  tg.join_all(); // Wait for all threads to finish, so we are in a consistent
+                 // state.
 }
 
 bool FarthestCircle::branch(Node &node) {
@@ -78,7 +84,7 @@ bool FarthestCircle::branch(Node &node) {
       children.push_back(std::make_shared<Node>(seq, instance, &node));
     }
   }
-  distributed_child_evaluation(children, simplify,  num_threads);
+  distributed_child_evaluation(children, simplify, num_threads);
 
   // for_each(std::execution::par, children.begin(), children.end(), [](auto&
   // child){child.trigger_lazy_evaluation();});

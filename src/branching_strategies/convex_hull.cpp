@@ -129,7 +129,8 @@ void ConvexHullRule::compute_weights(const Instance *instance,
   }
 }
 
-ChFarthestCircle::ChFarthestCircle(bool simplify, size_t num_threads) : FarthestCircle(simplify, num_threads) {
+ChFarthestCircle::ChFarthestCircle(bool simplify, size_t num_threads)
+    : FarthestCircle(simplify, num_threads) {
   std::cout << "Using ChFarthestCircle-Branching" << std::endl;
   add_rule(std::make_unique<ConvexHullRule>());
 }
