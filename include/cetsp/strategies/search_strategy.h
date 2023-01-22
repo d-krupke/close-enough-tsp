@@ -57,7 +57,7 @@ class DfsBfs : public SearchStrategy {
 public:
   void init(std::shared_ptr<Node> &root) override {
     std::cout << "Using DfsBfs search" << std::endl;
-    queue.push_back(root);
+    queue.emplace_back(root, root->get_lower_bound(), root->get_relaxed_solution().obj());
   }
 
   void notify_of_branch(Node &node) override {
@@ -72,8 +72,8 @@ public:
                 }
                 return a->get_lower_bound() > b->get_lower_bound();
               });
-    for (auto child : children) {
-      queue.push_back(child);
+    for (auto& child : children) {
+      queue.emplace_back(child, child->get_lower_bound(), child->get_relaxed_solution().obj());
     }
   }
 
@@ -89,11 +89,11 @@ public:
     }
     auto n = queue.back();
     queue.pop_back();
-    return n;
+    return std::get<0>(n);
   }
   bool has_next() override {
     // remove all pruned entries  from  the back
-    while (!queue.empty() && queue.back()->is_pruned()) {
+    while (!queue.empty() && std::get<0>(queue.back())->is_pruned()) {
       queue.pop_back();
     }
     return !queue.empty();
@@ -102,18 +102,17 @@ public:
 private:
   void sort_to_priotize_lowest_value() {
     std::sort(queue.begin(), queue.end(),
-              [](std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
-                const auto lb_a = a->get_lower_bound();
-                const auto lb_b = b->get_lower_bound();
+              [](auto &a, auto &b) {
+                const auto lb_a = std::get<1>(a);
+                const auto lb_b = std::get<1>(b);
                 if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
-                  return a->get_relaxed_solution().obj() >
-                         b->get_relaxed_solution().obj();
+                  return std::get<2>(a) > std::get<2>(b);
                 }
                 return lb_a > lb_b;
               });
   }
 
-  std::vector<std::shared_ptr<Node>> queue;
+  std::vector<std::tuple<std::shared_ptr<Node>, double, double>> queue;
 };
 class CheapestChildDepthFirst : public SearchStrategy {
 public:

@@ -23,11 +23,11 @@ public:
   double x;
   double y;
 
-  double dist(const Point &point) const {
+  [[nodiscard]] double dist(const Point &point) const {
     return std::sqrt(squared_dist(point));
   }
 
-  double squared_dist(const Point &point) const {
+  [[nodiscard]] double squared_dist(const Point &point) const {
     return (point.x - x) * (point.x - x) + (point.y - y) * (point.y - y);
   }
 
@@ -155,7 +155,6 @@ public:
 
   double distance(const Circle &circle) const {
     double min_dist = std::numeric_limits<double>::infinity();
-    details::cgPoint p(circle.center.x, circle.center.y);
     if (points.size() == 1) {
       details::cgPoint tp(points[0].x, points[0].y);
       min_dist =
@@ -164,10 +163,7 @@ public:
     for (unsigned i = 0; i < points.size() - 1; i++) {
       auto dist = utils::distance_to_segment({points[i].x, points[i].y},
                                              {points[i + 1].x, points[i + 1].y},
-                                             {p.x(), p.y()});
-      // details::cgSegment segment({points[i].x, points[i].y},
-      //                            {points[i + 1].x, points[i + 1].y});
-      // double dist = CGAL::squared_distance(segment, p);
+                                             {circle.center.x, circle.center.y});
       if (dist < min_dist) {
         min_dist = dist;
       }

@@ -2,6 +2,9 @@
  * In this test, we want to check the lazy callback capability of our approach.
  * Note that the lazy constraints should only add circles within the convex
  * hull. Otherwise, the result may be wrong.
+ *
+ * Note that it is best to start with a feasible solution, which of course
+ * has to satisfy all lazy constraints.
  */
 
 #ifndef CETSP_LAZY_CALLBACK_TESTS_H

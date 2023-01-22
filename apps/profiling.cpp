@@ -18,7 +18,7 @@ int main() {
   std::unique_ptr<RootNodeStrategy> rns;
   rns = std::make_unique<ConvexHull>();
   std::unique_ptr<BranchingStrategy> branching_strategy;
-  branching_strategy = std::make_unique<ChFarthestCircle>(true);
+  branching_strategy = std::make_unique<ChFarthestCircle>(true, 4);
   std::unique_ptr<SearchStrategy> search_strategy;
   search_strategy = std::make_unique<DfsBfs>();
   BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),
