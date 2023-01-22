@@ -116,21 +116,7 @@ public:
   }
 
 protected:
-  std::optional<int> get_branching_circle(Node &node) override {
-    std::vector<int> uncovered_circles;
-    for (unsigned i = 0; i < instance->size(); ++i) {
-      if (!node.get_relaxed_solution().covers(i)) {
-        uncovered_circles.push_back(i);
-      }
-    }
-    if (uncovered_circles.empty()) {
-      return {};
-    }
-    std::default_random_engine generator;
-    std::uniform_int_distribution<int> distribution(
-        0, uncovered_circles.size() - 1);
-    return {uncovered_circles[distribution(generator)]};
-  }
+  std::optional<int> get_branching_circle(Node &node) override;
 };
 
 TEST_CASE("Branching Strategy") {
