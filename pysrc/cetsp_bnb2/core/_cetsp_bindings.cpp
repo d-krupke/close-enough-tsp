@@ -44,11 +44,10 @@ private:
  * @param timelimit Timelimit in seconds for the BnB algorithm.
  * @return Best solution found within timelimit or nullptr.
  */
-std::tuple<std::unique_ptr<Solution>, double>
-branch_and_bound(Instance instance,
-                 std::function<void(EventContext)> *py_callback,
-                 Solution *initial_solution, int timelimit,
-                 std::string branching, std::string search, std::string root) {
+std::tuple<std::unique_ptr<Solution>, double> branch_and_bound(
+    Instance instance, std::function<void(EventContext)> *py_callback,
+    Solution *initial_solution, int timelimit, std::string branching,
+    std::string search, std::string root, size_t num_threads) {
 
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
@@ -59,7 +58,6 @@ branch_and_bound(Instance instance,
     throw std::invalid_argument("Invalid root node strategy");
   }
   std::unique_ptr<BranchingStrategy> branching_strategy;
-  size_t num_threads = 8;
   if (branching == "FarthestCircle") {
     branching_strategy = std::make_unique<FarthestCircle>(false, num_threads);
   } else if (branching == "ChFarthestCircle") {
@@ -216,5 +214,6 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         py::arg("callback"), py::arg("initial_solution") = nullptr,
         py::arg("timelimit") = 300,
         py::arg("branching") = "ChFarthestCircleSimplifying",
-        py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull");
+        py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull",
+        py::arg("num_threads") = 8);
 }
