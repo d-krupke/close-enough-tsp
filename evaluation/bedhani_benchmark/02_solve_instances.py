@@ -43,6 +43,7 @@ def run_for_instance(instance_name, timelimit):
         "search": "DfsBfs",
         # "search": "CheapestChildDepthFirst",
         # "search" : "CheapestBreadthFirst"
+        "num_threads": 4
     }
     # This callback currently does nothing. However, you can use the context
     # object as described in pysrc/cetsp_bnb2/core/_cetsp_bindings.cpp
@@ -61,8 +62,8 @@ def run_for_instance(instance_name, timelimit):
             )
             with ms.measurement() as m:
                 print(instance_name, radius)
-                initial_solution = compute_tour_by_2opt(instance).get_trajectory()
-                ub, lb = branch_and_bound(
+                initial_solution = compute_tour_by_2opt(instance)
+                ub, lb, stats = branch_and_bound(
                     instance, callback, initial_solution, timelimit, **configuration
                 )
                 m["configuration"] = configuration
@@ -72,6 +73,7 @@ def run_for_instance(instance_name, timelimit):
                 m["radius"] = radius
                 m["n"] = len(instance)
                 m["timelimit"] = timelimit
+                m["stats"] = stats
                 m.save_metadata()
                 m.save_seconds()
                 print(ub.get_trajectory().length(), lb)

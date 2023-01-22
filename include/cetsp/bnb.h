@@ -101,8 +101,16 @@ public:
     print_final_stats(verbose);
   }
 
+  std::unordered_map<std::string, std::string> get_statistics() const {
+    std::unordered_map<std::string, std::string> stats;
+    stats["num_iterations"] = std::to_string(num_iterations);
+    stats["num_branches"] = std::to_string(num_branches);
+    stats["num_explored"] = std::to_string(num_explored);
+    return stats;
+  }
+
 private:
-  void print_timeout(bool verbose) {
+  void print_timeout(bool verbose) const {
     if (verbose) {
       std::cout << "Timeout." << std::endl;
     }
@@ -117,7 +125,7 @@ private:
   }
 
   void print_iteration_stats(bool verbose, double lb, double ub,
-                             double time_used) {
+                             double time_used) const {
     if (verbose) {
       if (num_iterations <= 10 ||
           (num_iterations < 100 && num_iterations % 10 == 0) ||

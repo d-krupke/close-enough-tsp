@@ -44,7 +44,7 @@ private:
  * @param timelimit Timelimit in seconds for the BnB algorithm.
  * @return Best solution found within timelimit or nullptr.
  */
-std::tuple<std::unique_ptr<Solution>, double> branch_and_bound(
+std::tuple<std::unique_ptr<Solution>, double, std::unordered_map<std::string, std::string>> branch_and_bound(
     Instance instance, std::function<void(EventContext)> *py_callback,
     Solution *initial_solution, int timelimit, std::string branching,
     std::string search, std::string root, size_t num_threads) {
@@ -91,7 +91,7 @@ std::tuple<std::unique_ptr<Solution>, double> branch_and_bound(
     baba.add_upper_bound(*initial_solution);
   }
   baba.optimize(timelimit);
-  return {baba.get_solution(), baba.get_lower_bound()};
+  return {baba.get_solution(), baba.get_lower_bound(), baba.get_statistics()};
 }
 
 PYBIND11_MODULE(_cetsp_bindings, m) {
