@@ -42,16 +42,25 @@ void distributed_child_evaluation(std::vector<std::shared_ptr<Node>> &children,
   // using a simple modulo on the number of threads. This is fine as we write
   // on separate heap memory for all children.
   boost::thread_group tg;
-  for (unsigned int offset = 0; offset < std::min(num_threads, children.size());
-       ++offset) {
-    tg.create_thread([=, &children]() {
-      for (auto i = offset; i < children.size(); i += num_threads) {
-        children[i]->trigger_lazy_evaluation();
-        if (simplify) {
-          children[i]->simplify();
-        }
+  if (num_threads <= 1) { // Without threading overhead.
+    for (auto i = 0; i < children.size(); i += 1) {
+      children[i]->trigger_lazy_evaluation();
+      if (simplify) {
+        children[i]->simplify();
       }
-    });
+    }
+  } else {
+    for (unsigned int offset = 0;
+         offset < std::min(num_threads, children.size()); ++offset) {
+      tg.create_thread([=, &children]() {
+        for (auto i = offset; i < children.size(); i += num_threads) {
+          children[i]->trigger_lazy_evaluation();
+          if (simplify) {
+            children[i]->simplify();
+          }
+        }
+      });
+    }
   }
   tg.join_all(); // Wait for all threads to finish, so we are in a consistent
                  // state.
