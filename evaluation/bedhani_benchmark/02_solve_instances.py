@@ -12,6 +12,7 @@ from cetsp_bnb2 import (
 import os
 from pathlib import Path
 import socket
+
 # hack for gurobi licence on alg workstations. TODO: Find a nicer way
 os.environ["GRB_LICENSE_FILE"] = os.path.join(
     Path.home(), ".gurobi", socket.gethostname(), "gurobi.lic"
