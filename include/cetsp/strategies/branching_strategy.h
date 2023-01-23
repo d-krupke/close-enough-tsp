@@ -31,10 +31,26 @@
 #include <vector>
 namespace cetsp {
 
+/**
+ * The branching strategy decides how to split the solution space further.
+ */
 class BranchingStrategy {
 public:
+  /**
+   * Allows you to setup some things for the rule at the beginning
+   * of the branch and bound algorithm. For example change the mode
+   * for tours or paths.
+   * @param instance The instance to be solved.
+   * @param root The root of the branch and bound tree.
+   * @param solution_pool A pool of all solutions that will be found during BnB.
+   */
   virtual void setup(Instance *instance, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool) {}
+  /**
+   * Branches the solution space of a node
+   * @param node The node to be branched.
+   * @return True iff the node has children.
+   */
   virtual bool branch(Node &node) = 0;
   virtual ~BranchingStrategy() = default;
 };
@@ -88,6 +104,12 @@ protected:
                        });
   }
 
+  /**
+   * Return the cirlce to branch on. This allows to easily create different
+   * strategies.
+   * @param node The node to  be  branched.
+   * @return Index to the circle, or None if no option for branchinng.
+   */
   virtual std::optional<int> get_branching_circle(Node &node) = 0;
 
   Instance *instance = nullptr;
