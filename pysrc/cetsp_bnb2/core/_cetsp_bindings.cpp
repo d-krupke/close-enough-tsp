@@ -57,6 +57,8 @@ branch_and_bound(Instance instance,
     rns = std::make_unique<ConvexHullRoot>();
   } else if (root == "LongestEdgePlusFurthestCircle") {
     rns = std::make_unique<LongestEdgePlusFurthestCircle>();
+  } else if (root == "Random") {
+    rns = std::make_unique<RandomRoot>();
   } else {
     throw std::invalid_argument("Invalid root node strategy");
   }
