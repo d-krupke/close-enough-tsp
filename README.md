@@ -47,7 +47,7 @@ and rounding it up or down, essentially splitting the solution space into two
 parts. For our problem, the branching is easier on selecting what to branch (
 try to include the farthest circle in some position as this drives up to
 lower bound the most), but the split is much larger as we have to consider
-inserting a missing circle anywhere in the sequence. As a lot of the resulting
+inserting a missing circle anywhere in the sequence. A lot of the resulting
 sequences allow arguments why they cannot lead to an optimal solution, and thus
 can be pruned, without doing the costly trajectory computation. We allow the
 addition of `rules` to improve the performance of the branching.
