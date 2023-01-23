@@ -94,22 +94,26 @@ def run_for_instance(instance_name, timelimit):
     # object as described in pysrc/cetsp_bnb2/core/_cetsp_bindings.cpp
     # to access the current node, trajectory, sequence, solutions, etc.
     callback = lambda context: None
+
+    instances0 = []
+    for radius in [0.25, 0.5]:
+        instance = Instance(
+            [
+                Circle(
+                    Point(float(d["x"]), float(d["y"])),
+                    0.0 if i == 0 else radius,
+                )
+                for i, d in enumerate(instances[instance_name]["circles"])
+            ]
+        )
+        initial_solution = compute_tour_by_2opt(instance)
+        instances0.append((radius, instance, initial_solution))
+
     with MeasurementSeries(result_folder) as ms:
         for configuration in configurations:
-            for radius in [0.25, 0.5]:
-                n_ = len(instances[instance_name]["circles"])
-                instance = Instance(
-                    [
-                        Circle(
-                            Point(float(d["x"]), float(d["y"])),
-                            0.0 if i == 0 else radius,
-                        )
-                        for i, d in enumerate(instances[instance_name]["circles"])
-                    ]
-                )
+            for (radius, instance, initial_solution) in instances0:
                 with ms.measurement() as m:
                     print(instance_name, radius)
-                    initial_solution = compute_tour_by_2opt(instance)
                     ub, lb, stats = branch_and_bound(
                         instance, callback, initial_solution, timelimit, **configuration
                     )
