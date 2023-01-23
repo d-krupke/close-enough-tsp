@@ -11,7 +11,12 @@ from cetsp_bnb2 import (
 )
 
 # your supervisor will tell you the necessary configuration.
-slurminade.update_default_configuration(partition="alg", constraint="alggen03")
+slurminade.update_default_configuration(
+    partition="alg",
+    constraint="alggen03",
+    mail_user="krupke@ibr.cs.tu-bs.de",
+    mail_type="ALL",
+)
 slurminade.set_dispatch_limit(200)
 
 # Parameter
