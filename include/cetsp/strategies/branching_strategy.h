@@ -61,10 +61,12 @@ protected:
    * @param sequence Sequence to be checked for a potential branch.
    * @return True if branch should be created.
    */
-  virtual bool is_sequence_ok(const std::vector<int> &sequence) {
-    return std::all_of(rules.begin(), rules.end(), [&sequence](auto &rule) {
-      return rule->is_ok(sequence);
-    });
+  virtual bool is_sequence_ok(const std::vector<int> &sequence,
+                              const Node &parent) {
+    return std::all_of(rules.begin(), rules.end(),
+                       [&sequence, &parent](auto &rule) {
+                         return rule->is_ok(sequence, parent);
+                       });
   }
 
   virtual std::optional<int> get_branching_circle(Node &node) = 0;

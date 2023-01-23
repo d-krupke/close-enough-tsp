@@ -12,7 +12,7 @@ class SequenceRule {
 public:
   virtual void setup(const Instance *instance, std::shared_ptr<Node> &root,
                      SolutionPool *solution_pool) = 0;
-  virtual bool is_ok(const std::vector<int> &seq) = 0;
+  virtual bool is_ok(const std::vector<int> &seq, const Node &parent) = 0;
   virtual ~SequenceRule() = default;
 };
 

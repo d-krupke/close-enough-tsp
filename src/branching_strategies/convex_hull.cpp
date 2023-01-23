@@ -22,7 +22,7 @@ void ConvexHullRule::setup(const Instance *instance_,
   }
 }
 
-bool ConvexHullRule::is_ok(const std::vector<int> &seq) {
+bool ConvexHullRule::is_ok(const std::vector<int> &seq, const Node &parent) {
   auto is_ok = sequence_is_ch_ordered(seq);
   return is_ok;
 }

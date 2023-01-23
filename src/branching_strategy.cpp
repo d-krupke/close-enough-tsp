@@ -68,14 +68,14 @@ bool CircleBranching::branch(Node &node) {
   seq.push_back(*c);
   if (instance->is_path()) {
     // for path, this position may not be symmetric and has to be added.
-    if (is_sequence_ok(seq)) {
+    if (is_sequence_ok(seq, node)) {
       children.push_back(std::make_shared<Node>(seq, instance, &node));
     }
   }
   for (int i = seq.size() - 1; i > 0; --i) {
     seq[i] = seq[i - 1];
     seq[i - 1] = *c;
-    if (is_sequence_ok(seq)) {
+    if (is_sequence_ok(seq, node)) {
       children.push_back(std::make_shared<Node>(seq, instance, &node));
     }
   }

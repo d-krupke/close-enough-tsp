@@ -19,7 +19,7 @@ public:
   is_path_sequence_possible(const std::vector<int> &sequence, unsigned int n,
                             const std::vector<bool> &is_in_ch,
                             const std::vector<double> &order_values);
-  virtual bool is_ok(const std::vector<int> &seq);
+  virtual bool is_ok(const std::vector<int> &seq, const Node &parent);
 
 private:
   const Instance *instance = nullptr;
