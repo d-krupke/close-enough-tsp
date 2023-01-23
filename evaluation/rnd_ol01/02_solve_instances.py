@@ -9,6 +9,14 @@ from cetsp_bnb2 import (
     plot_solution,
     compute_tour_from_sequence,
 )
+import os
+from pathlib import Path
+import socket
+# hack for gurobi licence on alg workstations. TODO: Find a nicer way
+os.environ["GRB_LICENSE_FILE"] = os.path.join(
+    Path.home(), ".gurobi", socket.gethostname(), "gurobi.lic"
+)
+
 
 # your supervisor will tell you the necessary configuration.
 slurminade.update_default_configuration(
