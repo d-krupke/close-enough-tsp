@@ -23,7 +23,8 @@ void GlobalConvexHullRule::setup(const Instance *instance_,
   }
 }
 
-bool GlobalConvexHullRule::is_ok(const std::vector<int> &seq, const Node &parent) {
+bool GlobalConvexHullRule::is_ok(const std::vector<int> &seq,
+                                 const Node &parent) {
   auto is_ok = sequence_is_ch_ordered(seq);
   return is_ok;
 }
@@ -132,9 +133,6 @@ void GlobalConvexHullRule::compute_weights(const Instance *instance,
 }
 
 ChFarthestCircle::ChFarthestCircle(bool simplify, size_t num_threads)
-    : FarthestCircle(simplify, num_threads) {
-  std::cout << "Using ChFarthestCircle-Branching" << std::endl;
-  add_rule(std::make_unique<GlobalConvexHullRule>());
-}
+    : FarthestCircle(simplify, num_threads) {}
 
 } // namespace cetsp
