@@ -7,7 +7,8 @@
 
 namespace cetsp {
 
-static std::vector<ConvexHullLayer> calc_ch_layers(const Instance &instance) {
+std::vector<ConvexHullLayer>
+ConvexHullLayer::calc_ch_layers(const Instance &instance) {
   std::vector<ConvexHullLayer> layers;
   // handled[circle_idx] = the circle is included in the already created layers
   std::vector<bool> handled(instance.size(), false);
@@ -72,7 +73,7 @@ void LayeredConvexHullRule::setup(const Instance *instance_,
                                   std::shared_ptr<Node> &root,
                                   SolutionPool *solution_pool) {
   instance = instance_;
-  layers = calc_ch_layers(*instance);
+  layers = ConvexHullLayer::calc_ch_layers(*instance);
 
   if (!is_ok(root->get_fixed_sequence(), 0)) {
     throw std::invalid_argument("Root does not obey the layered convex hull.");
@@ -82,8 +83,8 @@ void LayeredConvexHullRule::setup(const Instance *instance_,
 class HullVisitor {
 public:
   HullVisitor(const ConvexHullLayer &layer, const std::vector<int> &seq) {
-    unsigned int hull_size = layer.hull_to_global_map.size();
     /* Compute the order the CH vertices are visited by the sequence */
+    unsigned int hull_size = layer.hull_to_global_map.size();
     std::vector<std::optional<unsigned int>> hull_visits_full(hull_size);
     hull_vertex_to_seq_idx_map =
         std::vector<std::optional<unsigned int>>(hull_size);
@@ -95,10 +96,10 @@ public:
         hull_vertex_to_seq_idx_map[*hull_idx] = seq_idx;
       }
     }
-    if (visit_num <= 2)
+    if (visit_num <= 1)
       return;
     hull_visits.reserve(visit_num);
-    visit_to_hull_idx_map = std::vector<unsigned int>(hull_visits.size());
+    visit_to_hull_idx_map = std::vector<unsigned int>(visit_num);
     for (unsigned int hull_idx = 0; hull_idx < hull_size; hull_idx++) {
       auto visit_idx = hull_visits_full[hull_idx];
       if (visit_idx) {
@@ -111,8 +112,8 @@ public:
     std::rotate(hull_visits.begin(),
                 std::find(hull_visits.begin(), hull_visits.end(), 0),
                 hull_visits.end());
-    is_hull_visits_reversed = hull_visits[1] != 1;
-    if (is_hull_visits_reversed) {
+    bool is_reversed = hull_visits[hull_visits.size() - 1] == 1;
+    if (is_reversed) {
       std::reverse(hull_visits.begin(), hull_visits.end());
       std::rotate(hull_visits.begin(), hull_visits.end() - 1,
                   hull_visits.end());
@@ -170,13 +171,18 @@ public:
     return i == visits_num - 1;
   }
 
-  bool is_hull_visits_reversed;
-
 private:
   /* Following the given sequence, the visitor will assign a visit index
-   * 0,1,2,... to each CH vertex it encounters. Than, the visitor will iterate
-   * over the CH vertices in counter-clockwise order starting from the CH vertex
-   * assigned visit index 0 and will fill the hull_visits array. */
+   * 0,1,2,... to each CH vertex it encounters. The vertices assigned 0 and 1
+   * must be visited one after another, otherwise there is an intersection. The
+   * visitor will iterate over the CH vertices starting from the CH vertex
+   * assigned visit index 0 in order in the direction from 0 to 1, and will fill
+   * the hull_visits array with the visits indices it encounters.
+   *
+   * If the input sequence is a tour, hull_visits must be a single increase
+   * monotone sequence. If the input sequence is a path, hull_visits must be
+   * composed of an increasing and than decreasing monotone sequences.
+   */
   std::vector<unsigned int> hull_visits;
   /* Map from visit_idx to hull_idx */
   std::vector<unsigned int> visit_to_hull_idx_map;
@@ -192,11 +198,11 @@ bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq,
 
 bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq,
                                   unsigned int layer_idx) const {
-  if (layer_idx >= layers.size()) {
+  if (layer_idx >= layers.size())
     return true;
-  }
-  unsigned int hull_size = layers[layer_idx].hull_to_global_map.size();
-  HullVisitor visitor(layers[layer_idx], seq);
+  const auto &layer = layers[layer_idx];
+  unsigned int hull_size = layer.hull_to_global_map.size();
+  HullVisitor visitor(layer, seq);
   unsigned int visits_num = visitor.get_visits_num();
   if (visits_num <= 2)
     return true;
@@ -217,34 +223,56 @@ bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq,
 
     /* Check lower layers */
     for (unsigned int i = 0; i < visits_num; i++) {
-      auto v1 = visitor.get_hull_visit(i),
-           v2 = visitor.get_hull_visit((i + 1) % visits_num);
-      unsigned int a = visitor.map_visit_to_hull_idx(v1),
-                   b = visitor.map_visit_to_hull_idx(v2);
-      bool are_consecutive = ((b - a) % hull_size) == 1;
+      auto are_mod_consecutive = [](int a, int b, unsigned m) {
+        int abs = std::abs(a - b);
+        return abs == 1 || abs == m - 1;
+      };
+
+      int v1 = visitor.get_hull_visit(i),
+          v2 = visitor.get_hull_visit((i + 1) % visits_num);
+      bool are_visit_indices_consecutive =
+          are_mod_consecutive(v1, v2, visits_num);
+      if (!are_visit_indices_consecutive) {
+        continue;
+      }
+
+      int a = visitor.map_visit_to_hull_idx(v1),
+          b = visitor.map_visit_to_hull_idx(v2);
+      bool are_hull_indices_consecutive = are_mod_consecutive(a, b, hull_size);
+      if (!are_hull_indices_consecutive) {
+        continue;
+      }
+
       /* If the sequence visit two consecutive vertices of the convex hull, we
        * know it is not allowed to visit any other hull vertex between them.
        * We check that the subpath between them visit the lower layer convex
        * hull in a valid sequence. */
-      if (are_consecutive) {
-        auto sub_begin_opt = visitor.map_hull_vertex_to_seq_idx(a);
-        auto sub_end_opt = visitor.map_hull_vertex_to_seq_idx(b);
-        assert(sub_begin_opt && sub_end_opt);
-        unsigned int sub_begin = *sub_begin_opt, sub_end = *sub_end_opt;
-        if (visitor.is_hull_visits_reversed) {
-          std::swap(sub_begin, sub_end);
-        }
-        std::vector<int> sub_seq;
-        unsigned int i = sub_begin;
-        for (; i > sub_end; i = (i + 1) % seq.size()) {
-          sub_seq.push_back(seq[i]);
-        }
-        for (; i <= sub_end; ++i) {
-          sub_seq.push_back(seq[i]);
-        }
-        if (!is_ok(sub_seq, layer_idx + 1)) {
-          return false;
-        }
+      auto sub_begin_ = visitor.map_hull_vertex_to_seq_idx(a);
+      auto sub_end_ = visitor.map_hull_vertex_to_seq_idx(b);
+      assert(sub_begin_ && sub_end_);
+      unsigned int sub_begin = *sub_begin_, sub_end = *sub_end_;
+      if (sub_begin > sub_end)
+        std::swap(sub_begin, sub_end);
+
+      auto sub_begin_it = seq.begin() + sub_begin,
+           sub_end_it = seq.begin() + sub_end + 1;
+      bool need_swap =
+          std::find_if(sub_begin_it, sub_end_it, [&](const auto &global_idx) {
+            return layer.is_in_hull(global_idx);
+          }) != sub_end_it;
+      if (need_swap)
+        std::swap(sub_begin, sub_end);
+
+      std::vector<int> sub_seq;
+      unsigned int j = sub_begin;
+      for (; j > sub_end; j = (j + 1) % seq.size()) {
+        sub_seq.push_back(seq[j]);
+      }
+      for (; j <= sub_end; ++j) {
+        sub_seq.push_back(seq[j]);
+      }
+      if (!is_ok(sub_seq, layer_idx + 1)) {
+        return false;
       }
     }
   }
