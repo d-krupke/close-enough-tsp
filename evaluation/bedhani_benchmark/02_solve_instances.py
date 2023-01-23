@@ -124,6 +124,6 @@ if __name__ == "__main__":
     # Read data
     instances = load_instances()
     # run_for_instance.distribute("bedhani/CETSP-25-10", timelimit)
-    with slurminade.Batch(10) as batch:
+    with slurminade.Batch(20) as batch:
         for instance in instances.keys():
             run_for_instance.distribute(instance, timelimit)
