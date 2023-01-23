@@ -72,6 +72,8 @@ ConvexHullLayer::calc_ch_layers(const Instance &instance) {
 void LayeredConvexHullRule::setup(const Instance *instance_,
                                   std::shared_ptr<Node> &root,
                                   SolutionPool *solution_pool) {
+  std::cout << "Using LayeredConvexHullRule" << std::endl;
+
   instance = instance_;
   layers = ConvexHullLayer::calc_ch_layers(*instance);
 

@@ -9,6 +9,8 @@ namespace cetsp {
 void GlobalConvexHullRule::setup(const Instance *instance_,
                                  std::shared_ptr<Node> &root,
                                  SolutionPool *solution_pool) {
+  std::cout << "Using GlobalConvexHullRule" << std::endl;
+
   instance = instance_;
   order_values.resize(instance->size());
   is_ordered.resize(instance->size(), false);

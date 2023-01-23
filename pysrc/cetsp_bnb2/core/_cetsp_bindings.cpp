@@ -92,10 +92,8 @@ branch_and_bound(Instance instance,
   std::unordered_set<std::string> rules_(rules.begin(), rules.end());
   for (const auto &rule_name : rules_) {
     if (rule_name == "GlobalConvexHullRule") {
-      std::cout << "Using GlobalConvexHullRule" << std::endl;
       branching_strategy->add_rule(std::make_unique<GlobalConvexHullRule>());
     } else if (rule_name == "LayeredConvexHullRule") {
-      std::cout << "Using LayeredConvexHullRule" << std::endl;
       branching_strategy->add_rule(std::make_unique<LayeredConvexHullRule>());
     } else {
       throw std::invalid_argument("Invalid rule.");
