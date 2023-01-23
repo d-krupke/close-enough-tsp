@@ -1,11 +1,19 @@
 /**
- * This file implements branching stratgies for the branch and bound algorithm,
+ * This file implements branching strategies for the branch and bound algorithm,
  * i.e., deciding how to split  the solution space. The primary decision here
  * is to decide for the circle to integrate next. However, we can also do
  * some filtering here and only create branches  that are promising.
  *
- * The simplest branching strategy is to use always the furthest circle to
+ * The simplest branching strategy is to use always the farthest circle to
  * the current relaxed solution.
+ *
+ * If you want to improve the behaviour, the easiest way is probably to add
+ * a rule, as for example done in ChFarhestCircle. A rule defines which
+ * sequences are promising without actually evaluating them. If you need
+ * to argue on the actual trajectory, use a callback directly added to the
+ * branch and bound algorithm.
+ *
+ * 2023, Dominik Krupke, Tel Aviv
  */
 #ifndef CETSP_BRANCHING_STRATEGY_H
 #define CETSP_BRANCHING_STRATEGY_H
@@ -31,6 +39,17 @@ public:
   virtual ~BranchingStrategy() = default;
 };
 
+/**
+ * The idea of Circle Branching is to add an still uncovered circle to the
+ * sequence. This should be the most sensible branching strategy for most
+ * cases, but it is not the only one. For example in case of intersections,
+ * we know that the intersection has to be resolved and we could branch on
+ * all ways to add a circle to the two edges in the .intersection.
+ *
+ * This is an abstract class and you need to specify how to choose the circle.
+ * The most sensible approach should be to add the circle most distanced to
+ * the current trajectory.
+ */
 class CircleBranching : public BranchingStrategy {
 public:
   explicit CircleBranching(bool simplify = false, size_t num_threads = 1)
@@ -77,11 +96,11 @@ protected:
   std::vector<std::unique_ptr<SequenceRule>> rules;
 };
 
+/**
+ * This strategy tries to branch on the circle that is most distanced
+ * to the relaxed solution.
+ */
 class FarthestCircle : public CircleBranching {
-  /**
-   * This strategy tries to branch on the circle that is most distanced
-   * to the relaxed solution.
-   */
 public:
   explicit FarthestCircle(bool simplify = false, size_t num_threads = 1)
       : CircleBranching{simplify, num_threads} {
@@ -92,25 +111,27 @@ protected:
   std::optional<int> get_branching_circle(Node &node) override;
 };
 
+/**
+ * This strategy will only create branches that satisfy the CCW order of the
+ * convex hull. A dependency is that the root is also obeying this rule.
+ * We can proof that any optimal solution has follow the order of circles
+ * intersecting the convex hull on the circle centers.
+ *
+ * This does not allow lazy constraints! (or only those that do not change
+ * the convex hull).
+ */
 class ChFarthestCircle : public FarthestCircle {
-  /**
-   * This strategy will only create branches that satisfy the CCW order of the
-   * convex hull. A dependency is that the root is also obeying this rule.
-   * We can proof that any optimal solution has follow the order of circles
-   * intersecting the convex hull on the circle centers.
-   *
-   * This does not allow lazy constraints! (or only those that do not change
-   * the convex hull).
-   */
+
 public:
   explicit ChFarthestCircle(bool simplify = true, size_t num_threads = 1);
 };
 
+/**
+ * Just a random branching  strategy as comparison. It will branch on a random
+ * not yet covered circle.
+ */
 class RandomCircle : public CircleBranching {
-  /**
-   * Just a random branching  strategy as comparison. It will branch on a random
-   * not yet covered circle.
-   */
+
 public:
   explicit RandomCircle(bool simplify = false, size_t num_threads = 1)
       : CircleBranching{simplify, num_threads} {

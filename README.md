@@ -39,20 +39,47 @@ ones
 
 ### Branching Strategies
 
-[include/cetsp/details/branching_strategy.h](include/cetsp/strategies/branching_strategy.h)
+[include/cetsp/strategies/branching_strategy.h](include/cetsp/strategies/branching_strategy.h)
 
-The branching strategies potentially also contain early pruning ideas that
-can work already on the sequence and don't need the trajectory computed (expensive).
-Pruning ideas that require the trajectory should be added via callbacks.
+The branching strategy decides how to split the solution space of a node further.
+For classical MIP-solver, this usually requires to select a fractional variable
+and rounding it up or down, essentially splitting the solution space into two
+parts. For our problem, the branching is easier on selecting what to branch (
+try to include the farthest circle in some position as this drives up to
+lower bound the most), but the split is much larger as we have to consider
+inserting a missing circle anywhere in the sequence. As a lot of the resulting
+sequences allow arguments why they cannot lead to an optimal solution, and thus
+can be pruned, without doing the costly trajectory computation. We allow the
+addition of `rules` to improve the performance of the branching.
 
-- _Farthest Circle_: Try to branch on the farthest circle.
-- _ConvexHull_: Try to integrate the farthest circle to the tour (trying to increase the LB as much as possible while
-  also increasing the coverage) but directly throw away all branches that do not follow the order of the convex hull.
-  Checking this can be done without computing the relaxed solution.
+The branching also triggers the computation of the newly generated children
+in parallel to utilize the CPU better. This is not the perfect place for
+parallelization but the easiest, as it can easily be synchronized while still
+having big impact for the more complicated instances.
+
+A further point here is simplification: We can shorten the sequence and thus
+the potential number of branches by only keeping the spanning circles in the
+sequence. Removing implicitly covered circles does not lower the costs.
+
+We have the following branching strategies:
+
+- _FarthestCircle_: Just tries to branch on the farthest circle. Allows the addition of further rules.
+- _ChFarthestCircle_: Extension of the previous strategy by a rule that makes sure each sequence follows the convex hull, which can be proved to be optimal.
+- _RandomCircle_: Just tries to branch on a random (uncovered) circle.
+
+Further ideas:
+
+- Add a rule that directly excludes all sequences that can be lower bounded above the current best solution, without computing the trajectory. We can take the parent's trajectory, remove the maximal cost of the edge on which we want to add a further circle, and then add the minimal cost of traveling to this circle. If it is already higher, we do not have to compute its trajectory.
+- The convex hull idea can probably be extended recursively.
 
 #### Sequence Rules
 
-Further rules on the sequence can easily be added.
+[include/cetsp/strategies/rule.h](include/cetsp/strategies/rule.h)
+
+You can easily define a new rule to directly exclude any suboptimal branches,
+if you can find an argument that does not require computing the trajectory.
+If you need the trajectory, use a callback and then prune in it. This way,
+the trajectory will be cached.
 
 ### Search Strategy
 
