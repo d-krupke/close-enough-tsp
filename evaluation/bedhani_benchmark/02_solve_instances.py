@@ -25,7 +25,7 @@ slurminade.update_default_configuration(
     mail_user="krupke@ibr.cs.tu-bs.de",
     mail_type="ALL",
 )
-slurminade.set_dispatch_limit(200)
+slurminade.set_dispatch_limit(50)
 
 # Parameter
 timelimit = 300
