@@ -89,7 +89,7 @@ branch_and_bound(Instance instance,
 
   BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),
                                *branching_strategy, *search_strategy);
-  baba.add_node_callback(std::make_unique<CrossLowerBoundCallback>());
+  //baba.add_node_callback(std::make_unique<CrossLowerBoundCallback>());
   baba.add_node_callback(std::make_unique<PythonCallback>(py_callback));
 
   if (initial_solution != nullptr) {

@@ -25,7 +25,7 @@ slurminade.update_default_configuration(
     mail_user="krupke@ibr.cs.tu-bs.de",
     mail_type="ALL",
 )
-slurminade.set_dispatch_limit(200)
+slurminade.set_dispatch_limit(50)
 
 # Parameter
 timelimit = 300
@@ -90,21 +90,21 @@ def run_for_instance(instance_name, timelimit):
     # to access the current node, trajectory, sequence, solutions, etc.
     callback = lambda context: None
     with MeasurementSeries(result_folder) as ms:
-        for configuration in configurations:
-            for radius in [0.25, 0.5]:
-                n_ = len(instances[instance_name]["circles"])
-                instance = Instance(
-                    [
-                        Circle(
-                            Point(float(d["x"]), float(d["y"])),
-                            0.0 if i == 0 else radius,
-                        )
-                        for i, d in enumerate(instances[instance_name]["circles"])
-                    ]
-                )
+        for radius in [0.25, 0.5]:
+            instance = Instance(
+                [
+                    Circle(
+                        Point(float(d["x"]), float(d["y"])),
+                        0.0 if i == 0 else radius,
+                    )
+                    for i, d in enumerate(instances[instance_name]["circles"])
+                ]
+            )
+            initial_solution = compute_tour_by_2opt(instance)
+            n_ = len(instances[instance_name]["circles"])
+            for configuration in configurations:
                 with ms.measurement() as m:
                     print(instance_name, radius)
-                    initial_solution = compute_tour_by_2opt(instance)
                     ub, lb, stats = branch_and_bound(
                         instance, callback, initial_solution, timelimit, **configuration
                     )
