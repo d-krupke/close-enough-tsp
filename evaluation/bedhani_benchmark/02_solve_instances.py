@@ -54,7 +54,7 @@ def run_for_instance(instance_name, timelimit):
             # "root": "LongestEdgePlusFurthestCircle",
             # "branching":    "FarthestCircle",
             # "branching": "ChFarthestCircle",
-            "branching": "ChFarthestCircle",
+            "branching": "ChFarthestCircleSimplifying",
             "search": "DfsBfs",
             # "search": "CheapestChildDepthFirst",
             # "search" : "CheapestBreadthFirst"
@@ -62,13 +62,13 @@ def run_for_instance(instance_name, timelimit):
         },
                 {
             "root": "ConvexHull",
-            "branching": "ChFarthestCircle",
+            "branching": "ChFarthestCircleSimplifying",
             "search": "CheapestChildDepthFirst",
             "num_threads": 8,
         },
         {
             "root": "ConvexHull",
-            "branching": "ChFarthestCircle",
+            "branching": "ChFarthestCircleSimplifying",
             "search": "CheapestBreadthFirst",
             "num_threads": 8,
         },
