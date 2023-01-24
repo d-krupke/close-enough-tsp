@@ -34,6 +34,7 @@ def load_instances():
     instances = {instance["instance"]: instance for instance in data}
     return instances
 
+
 @slurminade.slurmify()
 def run_for_instance(instance_name, timelimit):
     instances = load_instances()

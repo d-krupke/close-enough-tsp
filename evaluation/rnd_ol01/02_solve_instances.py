@@ -1,3 +1,6 @@
+import json
+
+import aemeasure
 from aemeasure import MeasurementSeries, read_as_pandas_table, Database
 import slurminade
 from cetsp_bnb2 import (
@@ -53,48 +56,8 @@ def run_for_instance(instance_name, timelimit):
     # This configuration allows you to change the basic behaviour of the
     # branch and bound algorithm. You can do further improvements, such
     # as improving the lower bound or adding solutions using the callback.
-    configurations = [
-        {
-            "root": "ConvexHull",
-            # "root": "LongestEdgePlusFurthestCircle",
-            # "branching":    "FarthestCircle",
-            # "branching": "ChFarthestCircle",
-            "branching": "ChFarthestCircleSimplifying",
-            "search": "DfsBfs",
-            # "search": "CheapestChildDepthFirst",
-            # "search" : "CheapestBreadthFirst"
-            "rules": ["GlobalConvexHullRule"],
-            "num_threads": 8,
-        },
-        {
-            "root": "Random",
-            "branching": "Random",
-            "search": "Random",
-            "rules": [],
-            "num_threads": 8,
-        },
-        {
-            "root": "LongestEdgePlusFurthestCircle",
-            "branching": "FarthestCircle",
-            "search": "CheapestBreadthFirst",
-            "rules": ["GlobalConvexHullRule"],
-            "num_threads": 8,
-        },
-        {
-            "root": "ConvexHull",
-            "branching": "ChFarthestCircleSimplifying",
-            "search": "CheapestChildDepthFirst",
-            "rules": ["GlobalConvexHullRule"],
-            "num_threads": 8,
-        },
-        {
-            "root": "ConvexHull",
-            "branching": "ChFarthestCircleSimplifying",
-            "search": "CheapestBreadthFirst",
-            "rules": ["GlobalConvexHullRule"],
-            "num_threads": 8,
-        },
-    ]
+    with open("./configurations.json") as f:
+        configurations = json.load(f)
     # This callback currently does nothing. However, you can use the context
     # object as described in pysrc/cetsp_bnb2/core/_cetsp_bindings.cpp
     # to access the current node, trajectory, sequence, solutions, etc.
@@ -107,6 +70,7 @@ def run_for_instance(instance_name, timelimit):
                     instance, callback, initial_solution, timelimit, **configuration
                 )
                 m["configuration"] = configuration
+                m["solver"] = str(configuration)
                 m["instance"] = instance_name
                 m["ub"] = ub.get_trajectory().length()
                 m["lb"] = lb
@@ -118,10 +82,16 @@ def run_for_instance(instance_name, timelimit):
                 print(ub.get_trajectory().length(), lb)
 
 
+@slurminade.slurmify()
+def commpress():
+    aemeasure.Database(result_folder).compress()
+
+
 if __name__ == "__main__":
     # Read data
     instances = load_instances()
     # run_for_instance.distribute("bedhani/CETSP-25-10", timelimit)
-    with slurminade.Batch(5) as batch:
+    with slurminade.Batch(20) as batch:
         for instance in instances.keys():
             run_for_instance.distribute(instance, timelimit)
+        commpress.wait_for(batch.flush()).distribute()
