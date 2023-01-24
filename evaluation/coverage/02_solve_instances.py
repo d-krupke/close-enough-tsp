@@ -46,6 +46,7 @@ def run_for_instance(instance_name, timelimit):
         # "branching": "ChFarthestCircle",
         "branching": "ChFarthestCircleSimplifying",
         "search": "DfsBfs",
+        "rules": ["GlobalConvexHullRule"],
         # "search": "CheapestChildDepthFirst",
         # "search" : "CheapestBreadthFirst"
     }

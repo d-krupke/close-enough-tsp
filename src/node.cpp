@@ -81,22 +81,21 @@ void Node::reevaluate_children() {
 }
 
 std::vector<TrajectoryIntersection> Node::get_intersections() {
-  const auto &trajectory = get_relaxed_solution().get_trajectory();
-  /* currently only paths are supported */
-  assert(trajectory.points.front() == trajectory.points.back());
-  /* We assume each disc has a point in the trajectory */
-  assert(trajectory.points.size() - 1 == instance->size());
+  /* currently only tours are supported */
+  assert(!instance->is_path());
+  const auto &solution = get_relaxed_solution();
+  const auto &seq = solution.get_sequence();
 
   /* Collect all edges */
   std::vector<
       std::tuple<const Point &, const Point &, const Circle &, const Circle &>>
       edges;
-  for (unsigned int i = 0; i < instance->size(); i++) {
-    unsigned int j = (i + 1) % instance->size();
-    const Point &p1 = trajectory.points[i];
-    const Point &p2 = trajectory.points[j];
-    const Circle &c1 = (*instance).at(i);
-    const Circle &c2 = (*instance).at(j);
+  for (unsigned int i = 0; i < seq.size(); i++) {
+    unsigned int j = (i + 1) % seq.size();
+    const Circle &c1 = (*instance).at(seq[i]);
+    const Circle &c2 = (*instance).at(seq[j]);
+    const Point &p1 = solution.get_sequence_hitting_point(i);
+    const Point &p2 = solution.get_sequence_hitting_point(j);
     edges.push_back(std::make_tuple(p1, p2, c1, c2));
   }
 

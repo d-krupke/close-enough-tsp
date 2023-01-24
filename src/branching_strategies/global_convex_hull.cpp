@@ -2,12 +2,15 @@
 // Created by Dominik Krupke on 17.01.23.
 //
 #include "cetsp/strategies/branching_strategy.h"
-#include "cetsp/strategies/rules/convex_hull_rule.h"
+#include "cetsp/strategies/rules/global_convex_hull_rule.h"
+#include "cetsp/strategies/rules/layered_convex_hull_rule.h"
 
 namespace cetsp {
-void ConvexHullRule::setup(const Instance *instance_,
-                           std::shared_ptr<Node> &root,
-                           SolutionPool *solution_pool) {
+void GlobalConvexHullRule::setup(const Instance *instance_,
+                                 std::shared_ptr<Node> &root,
+                                 SolutionPool *solution_pool) {
+  std::cout << "Using GlobalConvexHullRule" << std::endl;
+
   instance = instance_;
   order_values.resize(instance->size());
   is_ordered.resize(instance->size(), false);
@@ -22,12 +25,13 @@ void ConvexHullRule::setup(const Instance *instance_,
   }
 }
 
-bool ConvexHullRule::is_ok(const std::vector<int> &seq, const Node &parent) {
+bool GlobalConvexHullRule::is_ok(const std::vector<int> &seq,
+                                 const Node &parent) {
   auto is_ok = sequence_is_ch_ordered(seq);
   return is_ok;
 }
 
-bool ConvexHullRule::is_path_sequence_possible(
+bool GlobalConvexHullRule::is_path_sequence_possible(
     const std::vector<int> &sequence, unsigned int n,
     const std::vector<bool> &is_in_ch,
     const std::vector<double> &order_values) {
@@ -81,7 +85,8 @@ bool ConvexHullRule::is_path_sequence_possible(
   return i == ch_order.size() - 1;
 }
 
-bool ConvexHullRule::sequence_is_ch_ordered(const std::vector<int> &sequence) {
+bool GlobalConvexHullRule::sequence_is_ch_ordered(
+    const std::vector<int> &sequence) {
   if (instance->is_path()) {
     return is_path_sequence_possible(sequence, instance->size(), is_ordered,
                                      order_values);
@@ -103,7 +108,7 @@ bool ConvexHullRule::sequence_is_ch_ordered(const std::vector<int> &sequence) {
 }
 
 std::vector<Point>
-ConvexHullRule::get_circle_centers(const Instance &instance) const {
+GlobalConvexHullRule::get_circle_centers(const Instance &instance) const {
   std::vector<Point> points;
   points.reserve(instance.size());
   for (const auto &c : instance) {
@@ -112,8 +117,8 @@ ConvexHullRule::get_circle_centers(const Instance &instance) const {
   return points;
 }
 
-void ConvexHullRule::compute_weights(const Instance *instance,
-                                     std::shared_ptr<Node> &root) {
+void GlobalConvexHullRule::compute_weights(const Instance *instance,
+                                           std::shared_ptr<Node> &root) {
   // Compute the weights used to check if the partial solution
   // obeys the convex hull.
   auto points = get_circle_centers(*instance);
@@ -130,9 +135,6 @@ void ConvexHullRule::compute_weights(const Instance *instance,
 }
 
 ChFarthestCircle::ChFarthestCircle(bool simplify, size_t num_threads)
-    : FarthestCircle(simplify, num_threads) {
-  std::cout << "Using ChFarthestCircle-Branching" << std::endl;
-  add_rule(std::make_unique<ConvexHullRule>());
-}
+    : FarthestCircle(simplify, num_threads) {}
 
 } // namespace cetsp

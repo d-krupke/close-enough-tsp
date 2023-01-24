@@ -7,6 +7,8 @@
 #include "cetsp/details/triple_map.h"
 #include "cetsp/heuristics.h"
 #include "cetsp/node.h"
+#include "cetsp/strategies/rules/global_convex_hull_rule.h"
+#include "cetsp/strategies/rules/layered_convex_hull_rule.h"
 #include <fmt/core.h>
 #include <pybind11/functional.h>
 #include <pybind11/operators.h> // to define operator overloading
@@ -50,7 +52,7 @@ branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
                  Solution *initial_solution, int timelimit,
                  std::string branching, std::string search, std::string root,
-                 size_t num_threads) {
+                 std::vector<std::string> rules, size_t num_threads) {
 
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
@@ -62,7 +64,7 @@ branch_and_bound(Instance instance,
   } else {
     throw std::invalid_argument("Invalid root node strategy");
   }
-  std::unique_ptr<BranchingStrategy> branching_strategy;
+  std::unique_ptr<CircleBranching> branching_strategy;
   if (branching == "FarthestCircle") {
     branching_strategy = std::make_unique<FarthestCircle>(false, num_threads);
   } else if (branching == "ChFarthestCircle") {
@@ -87,8 +89,20 @@ branch_and_bound(Instance instance,
     throw std::invalid_argument("Invalid search strategy.");
   }
 
+  std::unordered_set<std::string> rules_(rules.begin(), rules.end());
+  for (const auto &rule_name : rules_) {
+    if (rule_name == "GlobalConvexHullRule") {
+      branching_strategy->add_rule(std::make_unique<GlobalConvexHullRule>());
+    } else if (rule_name == "LayeredConvexHullRule") {
+      branching_strategy->add_rule(std::make_unique<LayeredConvexHullRule>());
+    } else {
+      throw std::invalid_argument("Invalid rule.");
+    }
+  }
+
   BranchAndBoundAlgorithm baba(&instance, rns->get_root_node(instance),
                                *branching_strategy, *search_strategy);
+  /* TODO add CrossLowerBoundCallback according to some config */
   //baba.add_node_callback(std::make_unique<CrossLowerBoundCallback>());
   baba.add_node_callback(std::make_unique<PythonCallback>(py_callback));
 
@@ -220,5 +234,6 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         py::arg("timelimit") = 300,
         py::arg("branching") = "ChFarthestCircleSimplifying",
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull",
+        py::arg("rules") = std::vector<std::string>{"GlobalConvexHullRule"},
         py::arg("num_threads") = 8);
 }

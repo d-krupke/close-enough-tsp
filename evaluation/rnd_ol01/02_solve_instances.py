@@ -63,30 +63,35 @@ def run_for_instance(instance_name, timelimit):
             "search": "DfsBfs",
             # "search": "CheapestChildDepthFirst",
             # "search" : "CheapestBreadthFirst"
+            "rules": ["GlobalConvexHullRule"],
             "num_threads": 8,
         },
         {
             "root": "Random",
             "branching": "Random",
             "search": "Random",
+            "rules": [],
             "num_threads": 8,
         },
         {
             "root": "LongestEdgePlusFurthestCircle",
             "branching": "FarthestCircle",
             "search": "CheapestBreadthFirst",
+            "rules": ["GlobalConvexHullRule"],
             "num_threads": 8,
         },
         {
             "root": "ConvexHull",
             "branching": "ChFarthestCircleSimplifying",
             "search": "CheapestChildDepthFirst",
+            "rules": ["GlobalConvexHullRule"],
             "num_threads": 8,
         },
         {
             "root": "ConvexHull",
             "branching": "ChFarthestCircleSimplifying",
             "search": "CheapestBreadthFirst",
+            "rules": ["GlobalConvexHullRule"],
             "num_threads": 8,
         },
     ]

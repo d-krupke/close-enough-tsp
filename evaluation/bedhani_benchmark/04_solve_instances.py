@@ -13,11 +13,6 @@ import os
 from pathlib import Path
 import socket
 
-# hack for gurobi licence on alg workstations. TODO: Find a nicer way
-os.environ["GRB_LICENSE_FILE"] = os.path.join(
-    Path.home(), ".gurobi", socket.gethostname(), "gurobi.lic"
-)
-
 # your supervisor will tell you the necessary configuration.
 slurminade.update_default_configuration(
     partition="alg",
@@ -25,11 +20,11 @@ slurminade.update_default_configuration(
     mail_user="krupke@ibr.cs.tu-bs.de",
     mail_type="ALL",
 )
-slurminade.set_dispatch_limit(50)
+slurminade.set_dispatch_limit(200)
 
 # Parameter
 timelimit = 300
-result_folder = "./results"
+result_folder = "./results_04"
 instances_path = "./instance_db"
 
 
@@ -38,7 +33,6 @@ def load_instances():
     data = db_.load()
     instances = {instance["instance"]: instance for instance in data}
     return instances
-
 
 @slurminade.slurmify()
 def run_for_instance(instance_name, timelimit):
@@ -51,42 +45,16 @@ def run_for_instance(instance_name, timelimit):
     configurations = [
         {
             "root": "ConvexHull",
-            # "root": "LongestEdgePlusFurthestCircle",
-            # "branching":    "FarthestCircle",
-            # "branching": "ChFarthestCircle",
             "branching": "ChFarthestCircleSimplifying",
             "search": "DfsBfs",
-            # "search": "CheapestChildDepthFirst",
-            # "search" : "CheapestBreadthFirst"
-            "rules": ["GlobalConvexHullRule"],
-            "num_threads": 8,
-        },
-        {
-            "root": "Random",
-            "branching": "Random",
-            "search": "Random",
-            "rules": [],
-            "num_threads": 8,
-        },
-        {
-            "root": "LongestEdgePlusFurthestCircle",
-            "branching": "FarthestCircle",
-            "search": "CheapestBreadthFirst",
             "rules": ["GlobalConvexHullRule"],
             "num_threads": 8,
         },
         {
             "root": "ConvexHull",
             "branching": "ChFarthestCircleSimplifying",
-            "search": "CheapestChildDepthFirst",
-            "rules": ["GlobalConvexHullRule"],
-            "num_threads": 8,
-        },
-        {
-            "root": "ConvexHull",
-            "branching": "ChFarthestCircleSimplifying",
-            "search": "CheapestBreadthFirst",
-            "rules": ["GlobalConvexHullRule"],
+            "search": "DfsBfs",
+            "rules": ["LayeredConvexHullRule"],
             "num_threads": 8,
         },
     ]
@@ -111,7 +79,7 @@ def run_for_instance(instance_name, timelimit):
 
     with MeasurementSeries(result_folder) as ms:
         for configuration in configurations:
-            for (radius, instance, initial_solution) in instances0:
+            for radius, instance, initial_solution in instances0:
                 with ms.measurement() as m:
                     print(instance_name, radius)
                     ub, lb, stats = branch_and_bound(
