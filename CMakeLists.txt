@@ -12,6 +12,7 @@ set(CMAKE_CXX_STANDARD 17) # Using C++-17 (most features with good support at
                            # 2022)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # The code needs to be compiled as PIC
                                         # to build the shared lib for python.
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 include(./cmake/CCache.cmake) # Magic to speed up compiling by caching.
 
 # ~~~
