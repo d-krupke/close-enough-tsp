@@ -195,6 +195,10 @@ private:
 
 bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq,
                                   const Node &parent) {
+  return is_ok(seq);
+}
+
+bool LayeredConvexHullRule::is_ok(const std::vector<int> &seq) const {
   return is_ok(seq, /* layer = */ 0);
 }
 

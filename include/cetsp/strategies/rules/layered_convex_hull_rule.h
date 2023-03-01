@@ -47,6 +47,7 @@ public:
              SolutionPool *solution_pool) override;
 
   bool is_ok(const std::vector<int> &seq, const Node &parent) override;
+  bool is_ok(const std::vector<int> &seq) const;
 
   const ConvexHullLayer &get_layer(unsigned int layer_idx) const {
     assert(layer_idx < layers.size());
@@ -62,13 +63,14 @@ private:
   std::vector<ConvexHullLayer> layers;
 };
 
-TEST_CASE("LayeredConvexHull_layers_calc") {
+TEST_CASE("LayeredConvexHull_calc_ch_layers") {
+  /* Test that the layers are calculated correctly in an 'onion' fashion */
   std::vector<Circle> instance_ = {
-      {{-12, -12}, 1}, {{-12, 12}, 1}, {{12, -12}, 1}, {{12, 12}, 1},
-      {{-9, -9}, 1},   {{-9, 9}, 1},   {{9, -9}, 1},   {{9, 9}, 1},
-      {{-6, -6}, 1},   {{-6, 6}, 1},   {{6, -6}, 1},   {{6, 6}, 1},
-      {{-3, -3}, 1},   {{-3, 3}, 1},   {{3, -3}, 1},   {{3, 3}, 1},
-      {{0, 0}, 1},
+      {{-12, -12}, 1}, {{-12, 12}, 1}, {{12, -12}, 1}, {{12, 12}, 1}, // layer 0
+      {{-9, -9}, 1},   {{-9, 9}, 1},   {{9, -9}, 1},   {{9, 9}, 1},   // layer 1
+      {{-6, -6}, 1},   {{-6, 6}, 1},   {{6, -6}, 1},   {{6, 6}, 1},   // layer 2
+      {{-3, -3}, 1},   {{-3, 3}, 1},   {{3, -3}, 1},   {{3, 3}, 1},   // layer 3
+      {{0, 0}, 1},                                                    // layer 4
   };
   Instance instance(instance_);
   auto layers = ConvexHullLayer::calc_ch_layers(instance);
@@ -91,6 +93,68 @@ TEST_CASE("LayeredConvexHull_layers_calc") {
   CHECK(is_layer_eq(2, {8, 9, 10, 11}));
   CHECK(is_layer_eq(3, {12, 13, 14, 15}));
   CHECK(is_layer_eq(4, {16}));
+}
+
+TEST_CASE("LayeredConvexHull_is_ok") {
+  /*
+   *  3                            0
+   *     7          8  9 10 11  4
+   *       15      16 17 18 12
+   *          ...
+   *       14               13
+   *     6                      5
+   *  2                            1
+   */
+  std::vector<Circle> instance_ = {
+      {{99, 99}, 1}, {{99, -99}, 1}, {{-99, -99}, 1}, {{-99, 99}, 1},
+      {{90, 90}, 1}, {{90, -90}, 1}, {{-90, -90}, 1}, {{-90, 90}, 1},
+      {{50, 90}, 1}, {{60, 90}, 1},  {{70, 90}, 1},   {{80, 90}, 1},
+      {{80, 80}, 1}, {{80, -80}, 1}, {{-80, -80}, 1}, {{-80, 80}, 1},
+      {{40, 80}, 1}, {{50, 80}, 1},  {{60, 80}, 1},   {{70, 80}, 1},
+  };
+  Instance instance(instance_);
+  std::vector<int> init_seq = {0};
+  auto root = std::make_shared<Node>(init_seq, &instance);
+  LayeredConvexHullRule rule;
+  rule.setup(&instance, root, nullptr);
+
+  /* check layer 0 */
+  CHECK(rule.is_ok({0, 1, 2, 3}));
+  CHECK(rule.is_ok({3, 2, 1, 0}));
+  CHECK(rule.is_ok({2, 3, 0, 1}));
+  CHECK(!rule.is_ok({0, 1, 3, 2}));
+  CHECK(!rule.is_ok({0, 2, 3, 1}));
+  CHECK(!rule.is_ok({2, 3, 1, 0}));
+  CHECK(!rule.is_ok({3, 2, 0, 1}));
+
+  /* check layer 1 */
+  const unsigned int l0_size = 4;
+  for (unsigned int l0_idx = 0; l0_idx < l0_size; l0_idx++) {
+    unsigned int l0_idx_next = (l0_idx + 1) % l0_size;
+    std::vector<std::vector<unsigned int>> seqs0{
+        {l0_idx, 4, 5, 7, 9, l0_idx_next},
+        {l0_idx, 4, 5, 11, 6, 10, 7, 9, 8, l0_idx_next},
+        {l0_idx, 4, 5, 6, 10, 9, 8, l0_idx_next},
+    };
+    /* convert vector<unsigned int> to vector<int> */
+    std::vector<std::vector<int>> seqs;
+    for (const auto& seq0 : seqs0)
+      seqs.push_back(std::vector<int>(seq0.begin(), seq0.end()));
+
+    for (const auto &seq_ : seqs) {
+      for (unsigned int begin = 0; begin < seq_.size(); begin++) {
+        for (bool reverse : {false, true}) {
+          std::vector<int> seq(seq_.begin(), seq_.end());
+          std::rotate(seq.begin(), seq.begin() + begin, seq.end());
+          if (reverse)
+            std::reverse(seq.begin(), seq.end());
+          CHECK(rule.is_ok(seq));
+        }
+      }
+    }
+  }
+
+  /* TODO check layer 2 once implemented */
 }
 
 } // namespace cetsp
