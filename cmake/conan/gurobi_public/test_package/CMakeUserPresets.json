@@ -1,0 +1,9 @@
+{
+    "version": 4,
+    "vendor": {
+        "conan": {}
+    },
+    "include": [
+        "/home/krupke/Repositories/close-enough-tsp/cmake/conan/gurobi_public/test_package/build/gcc-12-x86_64-gnu17-release/generators/CMakePresets.json"
+    ]
+}
