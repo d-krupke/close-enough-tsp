@@ -1,6 +1,6 @@
 [build-system]
 requires = [
-    "conan~=1.56.0",
+    "conan>=2.0.0",
     "setuptools",
     "scikit-build>=0.17.3",
     "cmake>=3.23",

@@ -1,5 +1,7 @@
 # CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver
 
+*Developed by [Dominik Krupke](https://www.ibr.cs.tu-bs.de/users/krupke/) and Barak Ugav at Tel Aviv University. Further development at TU Braunschweig with Michael Perk.*
+
 The *Close-Enough Traveling Salesman Problem* asks for the shortest tour that visits a given set of circles.
 It is related to the classical [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
 but more challenging as the distances between two successive cities are not constant.
@@ -19,12 +21,15 @@ Primary differences are:
 - New pruning rules based on geometric insights that can give significant speed-ups.
 - Branching degree reduction giving further exponential speed-ups in some cases.
 
+*Cite as "CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver" by D. Krupke, M. Perk, B. Ugav.*
 
 ## Installation
 
 You need a properly installed Gurobi-license for this modul, as we use its SOCP-solver.
 You can easily get a free license for academic purposes.
 The free non-academic license is probably not sufficient and will lead to errors.
+
+(CGAL does not require you to install a license, but you would need to buy one for commercial usage)
 
 ### Python
 

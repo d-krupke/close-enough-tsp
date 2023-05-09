@@ -18,7 +18,7 @@ pybind11_add_module(
 # link your C++-library to the API.
 target_link_libraries(_cetsp_bindings PRIVATE cetsp)
 # link other dependencies
-target_link_libraries(_cetsp_bindings PRIVATE fmt::fmt CGAL::CGAL
+target_link_libraries(_cetsp_bindings PRIVATE fmt::fmt cgal::cgal
                                               doctest::doctest)
 # enable compilation warnings
 target_compile_options(
