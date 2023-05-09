@@ -199,3 +199,4 @@ cmake/conan/*
 **/cmake-build*
 
 .vscode
+.idea

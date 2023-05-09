@@ -1,8 +1,44 @@
-# A modular implementation of a Branch and Bound algorithm for the Close-Enough Traveling Salesman Problem
+# CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver
 
-This implementation shall allow to easily experiment with new lower and upper
-bound ideas. If you have no idea of how a branch and bound algorithm works,
-check out [this video](https://youtu.be/KMlyhggSqYw).
+The *Close-Enough Traveling Salesman Problem* asks for the shortest tour that visits a given set of circles.
+It is related to the classical [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
+but more challenging as the distances between two successive cities are not constant.
+The problem is NP-hard, and thus, very challenging to solve to optimality.
+We provide an algorithm implementation that is capable of solving reasonably sized instances to provable optimality
+within seconds to minutes.
+Depending on the character of the instance, the solvable instance size is between 20 to multiple hundred circles.
+
+The implementation is a [Branch and Bound algorithm](https://youtu.be/KMlyhggSqYw) making use of a Second Order Cone Program, building on
+the work of [Coutinho et al.](https://optimization-online.org/2014/02/4248/).
+
+Primary differences are:
+- A highly modular implementation and availability of many search and branching strategies.
+- Warm starts with initial solutions provided by heuristics.
+- Callbacks allowing to lazy constraints, custom heuristics, and generally heavily influencing the search.
+- Parallelization of the search.
+- New pruning rules based on geometric insights that can give significant speed-ups.
+- Branching degree reduction giving further exponential speed-ups in some cases.
+
+
+## Installation
+
+You need a properly installed Gurobi-license for this modul, as we use its SOCP-solver.
+You can easily get a free license for academic purposes.
+The free non-academic license is probably not sufficient and will lead to errors.
+
+### Python
+
+TODO: Create an automatic Gurobi installation.
+
+### C++
+
+* Copy code into subfolder.
+* Install conan dependencies.
+* Add subfolder via `add_subdirectory` to your CMakeList.txt
+
+#### Conan
+
+TODO: Write a conan setup file to allow easy installation via conan.
 
 ## Related Work
 

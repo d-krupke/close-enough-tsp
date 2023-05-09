@@ -1,7 +1,7 @@
 # This is the root file for CMake, which is used to define the native part of
 # the project. It is completely independent of the Python-part and can actually
 # be used just to build a C++-library.
-cmake_minimum_required(VERSION 3.17) # 3.17 has been released March 2020
+cmake_minimum_required(VERSION 3.23)
 option(CXX "enable C++ compilation" ON)
 
 if(CXX)

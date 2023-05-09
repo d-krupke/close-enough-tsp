@@ -2,8 +2,8 @@
 requires = [
     "conan~=1.56.0",
     "setuptools",
-    "scikit-build>=0.13",
-    "cmake>=3.17",
+    "scikit-build>=0.17.3",
+    "cmake>=3.23",
     "ninja",
 ]
 build-backend = "setuptools.build_meta"
