@@ -14,14 +14,10 @@ the native modules and move them into your source folder.
 The setup options are documented here:
 https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
 """
-import json
 import os
-import subprocess
-
 from setuptools import find_packages
 from skbuild import setup
-import sys
-
+from _conan import ConanHelper
 
 def check_gurobi_license():
     """
@@ -39,69 +35,16 @@ def check_gurobi_license():
         )
 
 
-def conan_to_json(args):
-    """
-    Runs conan with the args and parses the output as json.
-    """
-    args = [sys.executable, "-m", "conans.conan"] + args
-    return json.loads(subprocess.check_output(args).decode())
-
-
-def install_conan_packages_from_paths(paths):
-    """
-    Installs all the conanfiles to local cache. Will automatically skip if the package
-    is already available. Currently only works on name and version, not user or
-    similar.
-    """
-    for path in paths:
-        package_info = conan_to_json(["inspect", "-f", "json", path])
-        conan_list = conan_to_json(["list", "-c", "-f", "json", package_info["name"]])
-        package_id = f"{package_info['name']}/{package_info['version']}"
-        if package_id in conan_list["Local Cache"].keys():
-            print(package_info["name"], "already available.")
-            continue
-        cmd = (
-            f"-m conans.conan create {path} -pr:b default -pr:h default"
-            f" -s build_type=Release --build=missing"
-        )
-        subprocess.run([sys.executable, *cmd.split(" ")], check=True)
-
-
-def create_conan_profile():
-    # check if profile exists or create a default one automatically.
-    if "default" in conan_to_json(["profile", "list", "-f", "json"]):
-        return  # Profile already exists
-    cmd = f"-m conans.conan profile detect"
-    subprocess.run([sys.executable, *cmd.split(" ")], check=False, stderr=None)
-
-
-def run_conan():
-    """
-    Running conan to get C++ dependencies
-    """
-    create_conan_profile()
-    install_conan_packages_from_paths(["./cmake/conan/gurobi_public/", "./cmake/conan/cgal_custom"])
-    from sys import platform
-    if platform == "linux":
-        print("Using workaround and setting \"compiler.libcxx=libstdc++11\"")
-        settings = {"compiler.libcxx": "libstdc++11"}
-    else:
-        settings = {}
-    cmd = f"-m conans.conan install ."
-    for key, val in settings.items():
-        cmd += f" -s {key}={val}"
-    cmd += " --build=missing"
-    cmd += " --output-folder=.conan"
-    subprocess.run([sys.executable, *cmd.split(" ")], check=True)
-
-
 def readme():
     # Simply return the README.md as string
     with open("README.md") as file:
         return file.read()
 
 
-run_conan()  # automatically running conan. Ugly workaround, but does its job.
+
+conan_helper = ConanHelper(local_conans=["./cmake/conan/gurobi_public/",
+                                         "./cmake/conan/cgal_custom"])
+conan_helper.install()  # automatically running conan. Ugly workaround, but does its job.
 setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # ~~~~~~~~~ BASIC INFORMATION ~~~~~~~~~~~
     name="cetsp-bnb2",
@@ -145,8 +88,6 @@ setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     #
     # Some CMake-projects allow you to configure it using parameters. You
     # can specify them for this Python-package using the following line.
-    cmake_args=[
-        f"-DCMAKE_TOOLCHAIN_FILE={os.path.abspath('./.conan/conan_toolchain.cmake')}",
-    ]
+    cmake_args=[] + conan_helper.cmake_args()
     # There are further options, but you should be fine with these above.
 )
