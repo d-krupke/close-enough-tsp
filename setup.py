@@ -82,7 +82,12 @@ def run_conan():
     """
     create_conan_profile()
     install_conan_packages_from_paths(["./cmake/conan/gurobi_public/", "./cmake/conan/cgal_custom"])
-    settings = {"compiler.libcxx": "libstdc++11"}
+    from sys import platform
+    if platform == "linux":
+        print("Using workaround and setting \"compiler.libcxx=libstdc++11\"")
+        settings = {"compiler.libcxx": "libstdc++11"}
+    else:
+        settings = {}
     cmd = f"-m conans.conan install ."
     for key, val in settings.items():
         cmd += f" -s {key}={val}"

@@ -42,13 +42,13 @@ cpmaddpackage("gh:doctest/doctest@2.4.9")
 # run `conan install .. --build=missing` in `./cmake/conan`.
 #list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 #list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/conan)
-
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}")
 # Also need to be defined in `./conanfile.txt`.
 find_package(nlohmann_json REQUIRED)
 find_package(CGAL REQUIRED)
 find_package(gurobi REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
-find_package(Boost REQUIRED COMPONENTS thread system)
+#find_package(Boost REQUIRED COMPONENTS thread system)
 
 # ~~~
 # System dependencies ~~~~~~~~~~~~~~~~~~~~~~
