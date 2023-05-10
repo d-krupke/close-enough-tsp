@@ -56,7 +56,6 @@ def install_conan_packages_from_paths(paths):
     for path in paths:
         package_info = conan_to_json(["inspect", "-f", "json", path])
         conan_list = conan_to_json(["list", "-c", "-f", "json", package_info["name"]])
-        print(conan_list)
         package_id = f"{package_info['name']}/{package_info['version']}"
         if package_id in conan_list["Local Cache"].keys():
             print(package_info["name"], "already available.")
@@ -92,6 +91,7 @@ def run_conan():
     for key, val in settings.items():
         cmd += f" -s {key}={val}"
     cmd += " --build=missing"
+    cmd += " --output-folder=.conan"
     subprocess.run([sys.executable, *cmd.split(" ")], check=True)
 
 
@@ -146,7 +146,7 @@ setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # Some CMake-projects allow you to configure it using parameters. You
     # can specify them for this Python-package using the following line.
     cmake_args=[
-        f"-DCMAKE_TOOLCHAIN_FILE={os.path.abspath('./conan_toolchain.cmake')}",
+        f"-DCMAKE_TOOLCHAIN_FILE={os.path.abspath('./.conan/conan_toolchain.cmake')}",
     ]
     # There are further options, but you should be fine with these above.
 )

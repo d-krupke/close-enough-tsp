@@ -200,3 +200,4 @@ _skbuild/
 .vscode
 .idea
 _deps
+.conan

@@ -39,10 +39,8 @@ cpmaddpackage("gh:doctest/doctest@2.4.9")
 # PRO: Simple option that is compatible with scikit-build. Can work without conan.
 # CON: Difficult if you want to use changing conan settings.
 
-# run `conan install .. --build=missing` in `./cmake/conan`.
-#list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-#list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/conan)
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}")
+# run `conan install .. --build=missing` in `.conan`.
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/.conan")
 # Also need to be defined in `./conanfile.txt`.
 find_package(nlohmann_json REQUIRED)
 find_package(CGAL REQUIRED)
