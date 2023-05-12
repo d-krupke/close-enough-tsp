@@ -1,4 +1,4 @@
-# CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver
+# (Work in Progress) CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver
 
 *Developed by [Dominik Krupke](https://www.ibr.cs.tu-bs.de/users/krupke/) and Barak Ugav at Tel Aviv University. Further development at TU Braunschweig with Michael Perk.*
 
