@@ -61,8 +61,7 @@ class CgalConan(ConanFile):
         cmake.build()
 
     def package(self):
-        #self.copy("LICENSE*", dst="licenses", src=self._source_subfolder)
-        print("Warning: Not copying license right now!")
+        files.copy(self, "LICENSE*", self.recipe_folder, self.export_sources_folder)
         cmake = self._configure_cmake()
         cmake.install()
         files.rmdir(self, os.path.join(self.package_folder, "share"))
