@@ -33,7 +33,17 @@ The free non-academic license is probably not sufficient and will lead to errors
 
 ### Python
 
-TODO: Create an automatic Gurobi installation.
+You can just check out this repository and run
+
+```shell
+pip install .
+```
+
+Afterward, test the installation with
+
+```shell
+pytest -s tests
+```
 
 ### C++
 
@@ -44,6 +54,58 @@ TODO: Create an automatic Gurobi installation.
 #### Conan
 
 TODO: Write a conan setup file to allow easy installation via conan.
+
+## Usage
+
+### Python
+
+A simple usage could look like this
+
+```python
+from cetsp_bnb2 import Circle, Instance, branch_and_bound, Point
+
+# create some instance
+instance = Instance(
+    [Circle(Point(x, y), 0) for x in range(0, 4) for y in range(0, 5)]
+)
+
+# solve instance
+tour, lb, stats = branch_and_bound(instance, lambda e: None)
+
+# access and plot solution
+import matplotlib.pyplot as plt
+
+def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):
+    patch = plt.Circle(
+        (circle.center.x, circle.center.y), radius=circle.radius, **kwargs
+    )
+    ax.add_patch(patch)
+
+
+def plot_solution(ax: plt.Axes, instance, solution, highlight=None):
+    trajectory = solution.get_trajectory()
+    for i, c in enumerate(instance.circles()):
+        if highlight and i in highlight:
+            plot_circle(ax, c, facecolor="white", zorder=1, ec="green", fill=False)
+        elif trajectory and trajectory.distance(c) <= 0.01 * c.radius:
+            plot_circle(ax, c, facecolor="white", zorder=1, ec="black", fill=False)
+        else:
+            plot_circle(ax, c, facecolor="white", zorder=1, ec="red", fill=False)
+
+    tour = [trajectory[i] for i in range(len(trajectory))]
+    plt.plot([p.x for p in tour], [p.y for p in tour], "o-")
+    ax.set_aspect("equal", "box")
+
+plt.figure()
+plot_solution(plt.gca(), instance, tour)
+```
+
+### C++
+
+You can also access the solver directly via C++.
+
+TBD
+
 
 ## Related Work
 

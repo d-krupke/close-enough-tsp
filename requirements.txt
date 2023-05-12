@@ -1,6 +1,6 @@
 aemeasure
 chardet>=4.0.0
-conan~=1.56.0
+conan>=2.0.0
 matplotlib>=3.6.2
 networkx>=2.5.1
 pytest>=7.1.2

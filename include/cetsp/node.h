@@ -7,7 +7,9 @@
 #include "cetsp/soc.h"
 #include "doctest/doctest.h"
 #include "relaxed_solution.h"
+#include <memory>
 #include <numeric>
+#include <optional>
 namespace cetsp {
 
 /**
@@ -49,7 +51,7 @@ public:
 
   void branch(std::vector<std::shared_ptr<Node>> &children_);
 
-  const std::vector<std::shared_ptr<Node>> &get_children() const {
+  [[nodiscard]] const std::vector<std::shared_ptr<Node>> &get_children() const {
     return children;
   }
   [[nodiscard]] std::vector<std::shared_ptr<Node>> &get_children() {
@@ -106,7 +108,7 @@ private:
   void reevaluate_children();
 
   PartialSequenceSolution _relaxed_solution;
-  std::optional<double> lazy_lower_bound_value;
+  std::optional<double> lazy_lower_bound_value{};
   std::vector<std::shared_ptr<Node>> children;
   Node *parent;
 

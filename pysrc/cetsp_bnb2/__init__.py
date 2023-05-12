@@ -6,7 +6,7 @@ def check_gurobi_license():
     Check if a Gurobi license is installed on the system.
     """
     from pathlib import Path
-
+    import os
     gurobi_lic = os.environ.get(
         "GRB_LICENSE_FILE", os.path.join(Path.home(), "gurobi.lic")
     )

@@ -10,10 +10,11 @@
 #include "cetsp/strategies/rules/global_convex_hull_rule.h"
 #include "cetsp/strategies/rules/layered_convex_hull_rule.h"
 #include <fmt/core.h>
+#include <iostream>
 #include <pybind11/functional.h>
 #include <pybind11/operators.h> // to define operator overloading
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h> // automatic conversion of vectors
+#include <pybind11/stl.h>       // automatic conversion of vectors
 namespace py = pybind11;
 using namespace cetsp;
 using namespace cetsp::details;
@@ -28,6 +29,9 @@ public:
       : callback(callback) {}
 
   void on_entering_node(EventContext &e) {
+    if(callback == nullptr){
+      return;
+    }
     EventContext e_ = e; // making sure, the callback will get a copy and
                          // there won't be any accidental ownership problems.
     assert(callback != nullptr);
@@ -104,7 +108,10 @@ branch_and_bound(Instance instance,
                                *branching_strategy, *search_strategy);
   /* TODO add CrossLowerBoundCallback according to some config */
   // baba.add_node_callback(std::make_unique<CrossLowerBoundCallback>());
-  baba.add_node_callback(std::make_unique<PythonCallback>(py_callback));
+  if(py_callback) {
+    std::cout << "py_callback "<<py_callback <<std::endl;
+    baba.add_node_callback(std::make_unique<PythonCallback>(py_callback));
+  }
 
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
@@ -228,9 +235,11 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   m.def("compute_tour_from_sequence",
         py::overload_cast<const std::vector<Circle> &, bool>(&compute_tour),
         "Computes a close-enough tour based on a given circle sequence.");
+
   m.def("branch_and_bound", &branch_and_bound,
         "Computes an optimal solution based on BnB.", py::arg("instance"),
-        py::arg("callback"), py::arg("initial_solution") = nullptr,
+        py::arg("callback"),
+        py::arg("initial_solution") = nullptr,
         py::arg("timelimit") = 300,
         py::arg("branching") = "ChFarthestCircleSimplifying",
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull",
