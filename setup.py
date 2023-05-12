@@ -16,35 +16,13 @@ https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
 """
 import os
 from setuptools import find_packages
-from skbuild import setup
-from _conan import ConanHelper
-
-def check_gurobi_license():
-    """
-    Check if a Gurobi license is installed on the system.
-    """
-    from pathlib import Path
-
-    gurobi_lic = os.environ.get(
-        "GRB_LICENSE_FILE", os.path.join(Path.home(), "gurobi.lic")
-    )
-    if not os.path.exists(gurobi_lic):
-        raise RuntimeError(
-            f"No Gurobi license found!"
-            " Please install a license first. Looked in '{gurobi_lic}'."
-        )
-
+from skbuild_conan import setup
 
 def readme():
     # Simply return the README.md as string
     with open("README.md") as file:
         return file.read()
 
-
-
-conan_helper = ConanHelper(local_conans=["./cmake/conan/gurobi_public/",
-                                         "./cmake/conan/cgal_custom"])
-conan_helper.install()  # automatically running conan. Ugly workaround, but does its job.
 setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # ~~~~~~~~~ BASIC INFORMATION ~~~~~~~~~~~
     name="cetsp-bnb2",
@@ -88,6 +66,9 @@ setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     #
     # Some CMake-projects allow you to configure it using parameters. You
     # can specify them for this Python-package using the following line.
-    cmake_args=[] + conan_helper.cmake_args()
+    #cmake_args=[]
     # There are further options, but you should be fine with these above.
+    # ~~~~~~~~ Conan ~~~~~~~~~~~~~
+    conan_recipes=["./cmake/conan/gurobi_public/",
+                   "./cmake/conan/cgal_custom"],
 )
