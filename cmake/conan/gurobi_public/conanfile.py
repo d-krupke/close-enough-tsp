@@ -1,94 +1,15 @@
-
 # conan v2
 from conan import ConanFile
 from conan.tools.files import download, copy
 from conan.tools.cmake import CMake, CMakeToolchain
 from conan.errors import ConanInvalidConfiguration
 
-
 import sys, os, subprocess, json, tempfile, shutil, gzip
 
 
-def _get_data():
-    content = r"""
-{
-	"name": "gurobi",
-	"current_version": "10.0.0",
-	"version_info": {
-		"10.0.0": {
-			"Linux": {
-				"x86_64": {
-					"download_url": "https://packages.gurobi.com/10.0/gurobi10.0.0_linux64.tar.gz",
-					"download_type": "tar.gz",
-					"cpp_build_cmakelists": "unix10/CMakeLists.txt",
-					"cpp_source_dirs": [
-						{"path": "gurobi1000/linux64/include", "extract_to": "include"},
-						{"path": "gurobi1000/linux64/src/cpp", "extract_to": "src"},
-						{"path": "gurobi1000/linux64/bin", "extract_to": "bin"}
-					],
-					"binary_paths": ["gurobi1000/linux64/lib/libgurobi100.so"],
-					"library_names": ["gurobi_c++", "gurobi100"]
-				}
-			},
-			"Macos": {
-				"x86_64": {
-					"download_url": "https://packages.gurobi.com/10.0/gurobi10.0.0_macos_universal2.pkg",
-					"download_type": "pkg",
-					"cpp_build_cmakelists": "unix10/CMakeLists.txt",
-					"cpp_source_dirs": [
-						{"path": "Library/gurobi1000/macos_universal2/include", "extract_to": "include"},
-						{"path": "Library/gurobi1000/macos_universal2/src/cpp", "extract_to": "src"},
-						{"path": "Library/gurobi1000/macos_universal2/bin", "extract_to": "bin"}
-					],
-					"binary_paths": ["Library/gurobi1000/macos_universal2/lib/libgurobi100.dylib"],
-					"fix_binary_commands": [["install_name_tool", "-id", "@rpath/libgurobi100.dylib"],
-					                        ["codesign", "--remove-signature"],
-					                        ["codesign", "-s", "-"]],
-					"library_names": ["gurobi_c++", "gurobi100"]
-				},
-				"armv8": {
-					"download_url": "https://packages.gurobi.com/10.0/gurobi10.0.0_macos_universal2.pkg",
-					"download_type": "pkg",
-					"cpp_build_cmakelists": "unix10/CMakeLists.txt",
-					"cpp_source_dirs": [
-						{"path": "Library/gurobi1000/macos_universal2/include", "extract_to": "include"},
-						{"path": "Library/gurobi1000/macos_universal2/src/cpp", "extract_to": "src"},
-						{"path": "Library/gurobi1000/macos_universal2/bin", "extract_to": "bin"}
-					],
-					"binary_paths": ["Library/gurobi1000/macos_universal2/lib/libgurobi100.dylib"],
-					"fix_binary_commands": [["install_name_tool", "-id", "@rpath/libgurobi100.dylib"],
-					                        ["codesign", "--remove-signature"],
-					                        ["codesign", "-s", "-"]],
-					"library_names": ["gurobi_c++", "gurobi100"]
-				}
-			},
-			"Windows": {
-				"x86_64": {
-					"download_url": "https://packages.gurobi.com/10.0/Gurobi-10.0.0-win64.msi",
-					"download_type": "msi",
-					"cpp_build_cmakelists": "win10/CMakeLists.txt",
-					"cpp_source_dirs": [
-						{"path": "gurobi1000\\win64\\src\\cpp", "extract_to": "src"},
-						{"path": "gurobi1000\\win64\\include", "extract_to": "include"},
-						{"path": "gurobi1000\\win64\\bin", "extract_to": "bin"}
-					],
-					"binary_paths": ["gurobi1000\\win64\\bin\\gurobi100.dll", "gurobi1000\\win64\\lib\\gurobi100.lib"],
-					"library_names": ["gurobi_c++", "gurobi100"]
-				}
-			}
-		}
-	}
-}
-    """
-    return json.loads(content)
-
-
 class GurobiConan(ConanFile):
-    # get our json database data
-    jsdata = _get_data()
-
     # build the current version
-    version = jsdata["current_version"]
+    version = "10.0.0"
 
     # the name can be set in the data file as well
     name = "gurobi"
@@ -117,11 +38,9 @@ class GurobiConan(ConanFile):
         copy(self, 'unix10/*', self.recipe_folder, self.export_folder)
         copy(self, 'win10/*', self.recipe_folder, self.export_folder)
 
-
     def export_sources(self):
         copy(self, 'unix10/*', self.recipe_folder, self.export_sources_folder)
         copy(self, 'win10/*', self.recipe_folder, self.export_sources_folder)
-
 
     def requirements(self):
         pass
@@ -143,11 +62,10 @@ class GurobiConan(ConanFile):
     generators = "CMakeDeps", "VirtualBuildEnv", "VirtualRunEnv"
 
     def _get_config_entry(self):
-        config_data = GurobiConan.jsdata
         target_os = str(self.settings.os)
         target_arch = str(self.settings.arch)
-        target_version = config_data["current_version"]
-        cdata = config_data["version_info"]
+        target_version = self.version
+        cdata = self.conan_data["version_info"]
         if target_version not in cdata:
             raise ConanInvalidConfiguration(
                 f"Unknown or unsupported version {target_version}")
@@ -238,7 +156,6 @@ class GurobiConan(ConanFile):
             return results
 
     def _download_and_extract(self):
-        config_entry = self._get_config_entry()
         config_entry = self._get_config_entry()
         download_url = config_entry["download_url"]
         download_type = config_entry["download_type"]
