@@ -42,7 +42,7 @@ setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # ~~~~~~~~~~~ CRITICAL CMAKE SETUP ~~~~~~~~~~~~~~~~~~~~~
     # Especially LTS systems often have very old CMake version (or none at all).
     # Defining this will automatically install locally a working version.
-    cmake_minimum_required_version="3.17",
+    cmake_minimum_required_version="3.23",
     #
     # By default, the `install` target is built (automatically provided).
     # To compile a specific target, use the following line.
