@@ -19,6 +19,9 @@ class ConanHelper:
         self.settings = settings if settings else {}
         self._check_conan_version()
 
+    def _get_package_info(self, path):
+        return self._conan_to_json(["inspect", "-f", "json", path])
+
     def conan_version(self):
         args = [sys.executable, "-m", "conans.conan", "-v"]
         version = subprocess.check_output(args).decode().split(" ")[-1]
@@ -36,24 +39,31 @@ class ConanHelper:
         args = [sys.executable, "-m", "conans.conan"] + args
         return json.loads(subprocess.check_output(args).decode())
 
-    def install_from_paths(self, paths):
+    def create_from_path(self, path, force=False):
+        package_info = self._get_package_info(path)
+        conan_list = self._conan_to_json(["list", "-c", "-f", "json", package_info["name"]])
+        package_id = f"{package_info['name']}/{package_info['version']}"
+        if not force and package_id in conan_list["Local Cache"].keys():
+            print(package_info["name"], "already available.")
+            return package_id
+        cmd = (
+            f"-m conans.conan create {path} -pr:b default -pr:h default"
+            f" -s build_type=Release --build=missing"
+        )
+        subprocess.run([sys.executable, *cmd.split(" ")], check=True)
+        return package_id
+
+    def create_from_paths(self, paths, force=False):
         """
         Installs all the conanfiles to local cache. Will automatically skip if the package
         is already available. Currently only works on name and version, not user or
         similar.
         """
+        modules = []
         for path in paths:
-            package_info = self._conan_to_json(["inspect", "-f", "json", path])
-            conan_list = self._conan_to_json(["list", "-c", "-f", "json", package_info["name"]])
-            package_id = f"{package_info['name']}/{package_info['version']}"
-            if package_id in conan_list["Local Cache"].keys():
-                print(package_info["name"], "already available.")
-                continue
-            cmd = (
-                f"-m conans.conan create {path} -pr:b default -pr:h default"
-                f" -s build_type=Release --build=missing"
-            )
-            subprocess.run([sys.executable, *cmd.split(" ")], check=True)
+            package_id = self.create_from_path(path, force=force)
+            modules.append(package_id)
+        return modules
 
     def create_profile(self):
         # check if profile exists or create a default one automatically.
@@ -62,16 +72,16 @@ class ConanHelper:
         cmd = f"-m conans.conan profile detect"
         subprocess.run([sys.executable, *cmd.split(" ")], check=False, stderr=None)
 
-    def install(self):
+    def install(self, path="."):
         """
         Running conan to get C++ dependencies
         """
         self.create_profile()
-        self.install_from_paths(self.local_conans)
+        self.create_from_paths(self.local_conans)
         if sys.platform == "linux" and "compiler.libcxx" not in self.settings:
             print("Using workaround and setting \"compiler.libcxx=libstdc++11\"")
             self.settings.update({"compiler.libcxx": "libstdc++11"})
-        cmd = f"-m conans.conan install ."
+        cmd = f"-m conans.conan install {path}"
         for key, val in self.settings.items():
             cmd += f" -s {key}={val}"
         cmd += " --build=missing"
