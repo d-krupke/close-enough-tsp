@@ -1,0 +1,51 @@
+[
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "DfsBfs",
+    "rules": [],
+    "num_threads": 8
+  },
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircle",
+    "search": "DfsBfs",
+    "rules": [],
+    "num_threads": 8
+  },
+  {
+    "root": "LongestEdgePlusFurthestCircle",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "CheapestBreadthFirst",
+    "rules": [],
+    "num_threads": 8
+  },
+  {
+    "root": "LongestEdgePlusFurthestCircle",
+    "branching": "FarthestCircle",
+    "search": "CheapestBreadthFirst",
+    "rules": [],
+    "num_threads": 8
+  },
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "CheapestChildDepthFirst",
+    "rules": [],
+    "num_threads": 8
+  },
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "CheapestBreadthFirst",
+    "rules": [],
+    "num_threads": 8
+  },
+  {
+    "root": "Random",
+    "branching": "Random",
+    "search": "Random",
+    "rules": [],
+    "num_threads": 8
+  }
+]
