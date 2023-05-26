@@ -25,7 +25,7 @@ os.environ["GRB_LICENSE_FILE"] = os.path.join(
 # your supervisor will tell you the necessary configuration.
 slurminade.update_default_configuration(
     partition="alg",
-    constraint="alggen03",
+    constraint="alggen04",
     mail_user="krupke@ibr.cs.tu-bs.de",
     mail_type="ALL",
 )
