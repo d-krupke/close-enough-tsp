@@ -316,7 +316,7 @@ common guidelines. It uses
 
 Please report any further issues you encounter.
 
-## `RuntimeError: Caught an unknown exception!`
+### `RuntimeError: Caught an unknown exception!`
 
 Probably, you have a bad Gurobi-license. We currently do not have a good way of checking that.
 
