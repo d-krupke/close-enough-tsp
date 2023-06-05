@@ -312,6 +312,27 @@ common guidelines. It uses
   - Needs to be edited if: You are using further python packages.
 
 
+## Running Tests
+
+Just run `pytest` to run the Python tests, after you installed the package.
+
+For the C++-tests, you have to build the target `doctests`.
+If you run `python3 setup.py build`, the conan-dependencies are automatically installed (otherwise you have to run `conan install . --build=missing --output-folder=.conan -g CMakeDeps -g CmakeToolchain`).
+Now we can use CMake to build our project, but we need to add `-DCMAKE_TOOLCHAIN_FILE=.conan/conan_toolchain.cmake -DCMAKE_PREFIX_PATH=.conan` to include the conan dependencies.
+```sh
+mkdir build
+cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../.conan/conan_toolchain.cmake -DCMAKE_PREFIX_PATH=../.conan -DCMAKE_BUILD_TYPE=Debug
+cmake --build . --target doctests -- -j 12
+```
+
+
+
+```
+pytest
+```
+
+
 ## Common problems
 
 Please report any further issues you encounter.
