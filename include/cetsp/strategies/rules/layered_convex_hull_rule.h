@@ -138,7 +138,7 @@ TEST_CASE("LayeredConvexHull_is_ok") {
     };
     /* convert vector<unsigned int> to vector<int> */
     std::vector<std::vector<int>> seqs;
-    for (const auto& seq0 : seqs0)
+    for (const auto &seq0 : seqs0)
       seqs.push_back(std::vector<int>(seq0.begin(), seq0.end()));
 
     for (const auto &seq_ : seqs) {

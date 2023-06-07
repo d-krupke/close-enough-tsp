@@ -201,3 +201,5 @@ _skbuild/
 .idea
 _deps
 .conan/
+CMakeUserPresets.json
+CMakePresets.json

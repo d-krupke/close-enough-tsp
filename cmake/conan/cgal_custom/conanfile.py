@@ -3,18 +3,22 @@ from conan import ConanFile
 from conan.tools import files
 from conan.tools import scm
 from conan.tools.cmake import CMake, CMakeToolchain
+
 required_conan_version = ">=2.0.0"
+
 
 class CgalConan(ConanFile):
     name = "cgal"
     license = "GPL-3.0-or-later", "LGPL-3.0-or-later"
     url = "https://github.com/conan-io/conan-center-index"
     homepage = "https://github.com/CGAL/cgal"
-    description = "C++ library that provides easy access to efficient and reliable algorithms"\
-                  " in computational geometry."
+    description = (
+        "C++ library that provides easy access to efficient and reliable algorithms"
+        " in computational geometry."
+    )
     topics = ("cgal", "geometry", "algorithms")
     settings = "os", "compiler", "build_type", "arch"
-    generators = "CMakeDeps","CMakeToolchain"
+    generators = "CMakeDeps", "CMakeToolchain"
     exports_sources = "CMakeLists.txt"
     short_paths = True
     version = "5.5.1"
@@ -32,17 +36,27 @@ class CgalConan(ConanFile):
     def _configure_cmake(self):
         if not self._cmake:
             self._cmake = CMake(self)
-            #self._cmake.definitions["CGAL_HEADER_ONLY"] = "TRUE"
-            self._cmake.configure(variables={"CGAL_HEADER_ONLY": "TRUE"})#, build_folder=self._build_subfolder)
+            # self._cmake.definitions["CGAL_HEADER_ONLY"] = "TRUE"
+            self._cmake.configure(
+                variables={"CGAL_HEADER_ONLY": "TRUE"}
+            )  # , build_folder=self._build_subfolder)
         return self._cmake
 
     def _patch_sources(self):
         if scm.Version(self.version) < "5.3":
-            files.replace_in_file(self, os.path.join(self._source_subfolder, "CMakeLists.txt"),
-                                "CMAKE_SOURCE_DIR", "CMAKE_CURRENT_SOURCE_DIR")
+            files.replace_in_file(
+                self,
+                os.path.join(self._source_subfolder, "CMakeLists.txt"),
+                "CMAKE_SOURCE_DIR",
+                "CMAKE_CURRENT_SOURCE_DIR",
+            )
         else:
-            files.replace_in_file(self, os.path.join(self._source_subfolder, "CMakeLists.txt"),
-                                "if(NOT PROJECT_NAME)", "if(TRUE)")
+            files.replace_in_file(
+                self,
+                os.path.join(self._source_subfolder, "CMakeLists.txt"),
+                "if(NOT PROJECT_NAME)",
+                "if(TRUE)",
+            )
 
     def requirements(self):
         self.requires("boost/1.75.0")
@@ -53,7 +67,12 @@ class CgalConan(ConanFile):
         self.info.clear()
 
     def source(self):
-        files.get(self, **self.conan_data["sources"][self.version], destination=self._source_subfolder, strip_root=True)
+        files.get(
+            self,
+            **self.conan_data["sources"][self.version],
+            destination=self._source_subfolder,
+            strip_root=True
+        )
 
     def build(self):
         self._patch_sources()
