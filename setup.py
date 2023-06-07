@@ -14,14 +14,8 @@ the native modules and move them into your source folder.
 The setup options are documented here:
 https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
 """
-import os
 from setuptools import find_packages
 from skbuild_conan import setup
-
-def readme():
-    # Simply return the README.md as string
-    with open("README.md") as file:
-        return file.read()
 
 setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # ~~~~~~~~~ BASIC INFORMATION ~~~~~~~~~~~
@@ -66,9 +60,8 @@ setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     #
     # Some CMake-projects allow you to configure it using parameters. You
     # can specify them for this Python-package using the following line.
-    #cmake_args=[]
+    # cmake_args=[]
     # There are further options, but you should be fine with these above.
     # ~~~~~~~~ Conan ~~~~~~~~~~~~~
-    conan_recipes=["./cmake/conan/gurobi_public/",
-                   "./cmake/conan/cgal_custom"],
+    conan_recipes=["./cmake/conan/gurobi_public/", "./cmake/conan/cgal_custom"],
 )

@@ -1,8 +1,8 @@
 # (Work in Progress) CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver
 
-*Developed by [Dominik Krupke](https://www.ibr.cs.tu-bs.de/users/krupke/) and Barak Ugav at Tel Aviv University. Further development at TU Braunschweig with Michael Perk.*
+_Developed by [Dominik Krupke](https://www.ibr.cs.tu-bs.de/users/krupke/) and Barak Ugav at Tel Aviv University. Further development at TU Braunschweig with Michael Perk._
 
-The *Close-Enough Traveling Salesman Problem* asks for the shortest tour that visits a given set of circles.
+The _Close-Enough Traveling Salesman Problem_ asks for the shortest tour that visits a given set of circles.
 It is related to the classical [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
 but more challenging as the distances between two successive cities are not constant.
 The problem is NP-hard, and thus, very challenging to solve to optimality.
@@ -14,6 +14,7 @@ The implementation is a [Branch and Bound algorithm](https://youtu.be/KMlyhggSqY
 the work of [Coutinho et al.](https://optimization-online.org/2014/02/4248/).
 
 Primary differences are:
+
 - A highly modular implementation and availability of many search and branching strategies.
 - Warm starts with initial solutions provided by heuristics.
 - Callbacks allowing to lazy constraints, custom heuristics, and generally heavily influencing the search.
@@ -21,7 +22,7 @@ Primary differences are:
 - New pruning rules based on geometric insights that can give significant speed-ups.
 - Branching degree reduction giving further exponential speed-ups in some cases.
 
-*Cite as "CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver" by D. Krupke, M. Perk, B. Ugav.*
+_Cite as "CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver" by D. Krupke, M. Perk, B. Ugav._
 
 ## Installation
 
@@ -47,9 +48,9 @@ pytest -s tests
 
 ### C++
 
-* Copy code into subfolder.
-* Install conan dependencies.
-* Add subfolder via `add_subdirectory` to your CMakeList.txt
+- Copy code into subfolder.
+- Install conan dependencies.
+- Add subfolder via `add_subdirectory` to your CMakeList.txt
 
 #### Conan
 
@@ -65,15 +66,14 @@ A simple usage could look like this
 from cetsp_bnb2 import Circle, Instance, branch_and_bound, Point
 
 # create some instance
-instance = Instance(
-    [Circle(Point(x, y), 0) for x in range(0, 4) for y in range(0, 5)]
-)
+instance = Instance([Circle(Point(x, y), 0) for x in range(0, 4) for y in range(0, 5)])
 
 # solve instance
 tour, lb, stats = branch_and_bound(instance, lambda e: None)
 
 # access and plot solution
 import matplotlib.pyplot as plt
+
 
 def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):
     patch = plt.Circle(
@@ -96,6 +96,7 @@ def plot_solution(ax: plt.Axes, instance, solution, highlight=None):
     plt.plot([p.x for p in tour], [p.y for p in tour], "o-")
     ax.set_aspect("equal", "box")
 
+
 plt.figure()
 plot_solution(plt.gca(), instance, tour)
 ```
@@ -105,7 +106,6 @@ plot_solution(plt.gca(), instance, tour)
 You can also access the solver directly via C++.
 
 TBD
-
 
 ## Related Work
 
@@ -311,27 +311,26 @@ common guidelines. It uses
 - `requirements.txt` The recommended requirements for development on this package
   - Needs to be edited if: You are using further python packages.
 
-
 ## Running Tests
+
+We added a `run_tests.sh` to quickly build the project and run some tests.
+It should run on Linux and Mac OS without any further setup, but it will install the package into the current environment using pip.
+
+You can also run the tests manually.
 
 Just run `pytest` to run the Python tests, after you installed the package.
 
 For the C++-tests, you have to build the target `doctests`.
-If you run `python3 setup.py build`, the conan-dependencies are automatically installed (otherwise you have to run `conan install . --build=missing --output-folder=.conan -g CMakeDeps -g CmakeToolchain`).
+If you run `python3 setup.py build`, the conan-dependencies are automatically installed (otherwise you have to run `conan install . --build=missing --output-folder=.conan -g CMakeDeps -g CMakeToolchain`).
 Now we can use CMake to build our project, but we need to add `-DCMAKE_TOOLCHAIN_FILE=.conan/conan_toolchain.cmake -DCMAKE_PREFIX_PATH=.conan` to include the conan dependencies.
+
 ```sh
+conan install . --build=missing --output-folder=.conan -g CMakeDeps -g CMakeToolchain -s build_type=Debug
 mkdir build
-cd build
-cmake .. -DCMAKE_TOOLCHAIN_FILE=../.conan/conan_toolchain.cmake -DCMAKE_PREFIX_PATH=../.conan -DCMAKE_BUILD_TYPE=Debug
-cmake --build . --target doctests -- -j 12
+cmake . -DCMAKE_TOOLCHAIN_FILE=../.conan/conan_toolchain.cmake -DCMAKE_PREFIX_PATH=../.conan -DCMAKE_BUILD_TYPE=Debug -B build
+cmake --build build --target doctests -- -j 12
+./build/tests/doctests
 ```
-
-
-
-```
-pytest
-```
-
 
 ## Common problems
 
@@ -341,13 +340,16 @@ Please report any further issues you encounter.
 
 Probably, you have a bad Gurobi-license. We currently do not have a good way of checking that.
 
-### glibcxx problems: 
+### glibcxx problems:
 
-If you get an error such as 
+If you get an error such as
+
 ```
 ImportError: /home/krupke/anaconda3/envs/mo310/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.30' not found (required by /home/krupke/anaconda3/envs/mo310/lib/python3.10/site-packages/samplns/cds/_cds_bindings.cpython-310-x86_64-linux-gnu.so)
 ```
-you are probably using conda (good!) but need to update glibcxx. Install the latest version by 
+
+you are probably using conda (good!) but need to update glibcxx. Install the latest version by
+
 ```sh
 conda install -c conda-forge libstdcxx-ng
 ```
