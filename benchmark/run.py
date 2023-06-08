@@ -39,17 +39,15 @@ instances = pd.read_json("./instances.json.zip").to_dict()["circles"]
 def measure(instance_name, configuration, timelimit, _instance):
     initial_solution = compute_tour_by_2opt(_instance)
     ub, lb, stats = branch_and_bound(
-        _instance,
-        (lambda context: None), 
-        initial_solution, timelimit,
-        **configuration
+        _instance, (lambda context: None), initial_solution, timelimit, **configuration
     )
     return {
         "ub": ub.get_trajectory().length(),
         "lb": lb,
         "stats": stats,
-        "n": len(_instance)
+        "n": len(_instance),
     }
+
 
 @slurminade.slurmify()
 def run_for_instance(instance_name, timelimit):
@@ -64,13 +62,15 @@ def run_for_instance(instance_name, timelimit):
     # as improving the lower bound or adding solutions using the callback.
     with open("./configurations.json") as f:
         configurations = json.load(f)
-    
+
     for configuration in configurations:
-        benchmark.add(measure, 
-                      instance_name=instance_name,
-                       configuration=configuration,
-                         timelimit=timelimit,
-                           _instance=instance)
+        benchmark.add(
+            measure,
+            instance_name=instance_name,
+            configuration=configuration,
+            timelimit=timelimit,
+            _instance=instance,
+        )
 
 
 @slurminade.slurmify()

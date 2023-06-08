@@ -8,6 +8,27 @@
   },
   {
     "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "DfsBfs",
+    "rules": [],
+    "num_threads": 4
+  },
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "DfsBfs",
+    "rules": [],
+    "num_threads": 2
+  },
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "DfsBfs",
+    "rules": [],
+    "num_threads": 1
+  },
+  {
+    "root": "ConvexHull",
     "branching": "ChFarthestCircle",
     "search": "DfsBfs",
     "rules": [],
