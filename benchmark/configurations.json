@@ -10,6 +10,20 @@
     "root": "ConvexHull",
     "branching": "ChFarthestCircleSimplifying",
     "search": "DfsBfs",
+    "rules": ["GlobalConvexHullRule"],
+    "num_threads": 8
+  },
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "DfsBfs",
+    "rules": ["LayeredConvexHullRule"],
+    "num_threads": 8
+  },
+  {
+    "root": "ConvexHull",
+    "branching": "ChFarthestCircleSimplifying",
+    "search": "DfsBfs",
     "rules": [],
     "num_threads": 4
   },
