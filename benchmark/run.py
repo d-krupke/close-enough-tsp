@@ -2,13 +2,7 @@ import json
 
 import pandas as pd
 import slurminade
-from cetsp_bnb2 import (
-    Circle,
-    Instance,
-    compute_tour_by_2opt,
-    branch_and_bound,
-    Point,
-)
+
 import os
 from pathlib import Path
 import socket
@@ -18,7 +12,13 @@ from algbench import Benchmark
 os.environ["GRB_LICENSE_FILE"] = os.path.join(
     Path.home(), ".gurobi", socket.gethostname(), "gurobi.lic"
 )
-
+from cetsp_bnb2 import (
+    Circle,
+    Instance,
+    compute_tour_by_2opt,
+    branch_and_bound,
+    Point,
+)
 
 # your supervisor will tell you the necessary configuration.
 slurminade.update_default_configuration(
