@@ -28,7 +28,6 @@ Primary differences are:
 - New pruning rules based on geometric insights that can give significant speed-ups.
 - Branching degree reduction giving further exponential speed-ups in some cases.
 
-_Cite as "CE-TSP BnB2: An exact and modular Close-Enough Traveling Salesman Problem Solver" by D. Krupke, M. Perk, B. Ugav._
 
 ## Installation
 
