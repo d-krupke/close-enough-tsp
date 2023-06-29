@@ -1,3 +1,14 @@
+"""
+This script runs the benchmark.
+It is set up for distributed execution using Slurm.
+If your system does not support Slurm, it will run the benchmark locally,
+and ignore the Slurm configuration.
+
+You can rerun the benchmark at any time, and it will only run the instances
+and configurations that have not been completed yet. This way,
+you can iteratively improve your algorithm and rerun the benchmark.
+"""
+
 import json
 
 import pandas as pd
@@ -36,7 +47,10 @@ benchmark = Benchmark("results")
 instances = pd.read_json("./instances.json.zip").to_dict()["circles"]
 
 
-def measure(instance_name, configuration, timelimit, _instance):
+def measure(instance_name, configuration, timelimit, _instance):  # noqa: ARG001
+    """
+    This function is called by the benchmark for each instance and configuration.
+    """
     initial_solution = compute_tour_by_2opt(_instance)
     ub, lb, stats = branch_and_bound(
         _instance, (lambda context: None), initial_solution, timelimit, **configuration
@@ -64,6 +78,9 @@ def run_for_instance(instance_name, timelimit):
         configurations = json.load(f)
 
     for configuration in configurations:
+        # run the benchmark for this instance and configuration
+        # if the instance and configuration are still missing
+        # from the benchmark. Otherwise, the call returns immediately.
         benchmark.add(
             measure,
             instance_name=instance_name,
@@ -80,6 +97,6 @@ def commpress():
 
 if __name__ == "__main__":
     with slurminade.Batch(20) as batch:
-        for instance in instances.keys():
+        for instance in instances:
             run_for_instance.distribute(instance, timelimit)
         commpress.wait_for(batch.flush()).distribute()
