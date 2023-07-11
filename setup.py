@@ -20,7 +20,7 @@ from skbuild_conan import setup
 setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
     # ~~~~~~~~~ BASIC INFORMATION ~~~~~~~~~~~
     name="cetsp-bnb2",
-    version="0.1.0",  # TODO: Use better approach for managing version number.
+    version="0.2.0",  # TODO: Use better approach for managing version number.
     # ~~~~~~~~~~~~ CRITICAL PYTHON SETUP ~~~~~~~~~~~~~~~~~~~
     # This project structures defines the python packages in a subfolder.
     # Thus, we have to collect this subfolder and define it as root.
@@ -32,6 +32,7 @@ setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
         "chardet>=4.0.0",
         "networkx>=2.5.1",
         "requests>=2.25.1",
+        "pyconcorde>=0.1.0",
     ],
     # ~~~~~~~~~~~ CRITICAL CMAKE SETUP ~~~~~~~~~~~~~~~~~~~~~
     # Especially LTS systems often have very old CMake version (or none at all).
