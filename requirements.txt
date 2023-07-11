@@ -1,4 +1,5 @@
 aemeasure
+algbench
 chardet>=4.0.0
 conan>=2.0.0
 matplotlib>=3.6.2
@@ -10,4 +11,3 @@ scikit-build>=0.15.0
 setuptools>=61.2.0
 shapely>=2.0.0
 slurminade
-algbench

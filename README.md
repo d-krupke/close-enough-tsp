@@ -28,7 +28,6 @@ Primary differences are:
 - New pruning rules based on geometric insights that can give significant speed-ups.
 - Branching degree reduction giving further exponential speed-ups in some cases.
 
-
 ## Installation
 
 You need a properly installed Gurobi-license for this modul, as we use its SOCP-solver.

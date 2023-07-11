@@ -244,4 +244,16 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull",
         py::arg("rules") = std::vector<std::string>{"GlobalConvexHullRule"},
         py::arg("num_threads") = 8);
+
+  // gurobi exception
+  static py::exception<GRBException> exc(m, "GRBException");
+  py::register_exception_translator([](std::exception_ptr p) {
+    try {
+      if (p)
+        std::rethrow_exception(p);
+    } catch (const GRBException &e) {
+      auto msg = e.getMessage();
+      exc(msg.c_str());
+    }
+  });
 }
