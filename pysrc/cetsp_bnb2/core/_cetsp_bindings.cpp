@@ -15,6 +15,7 @@
 #include <pybind11/operators.h> // to define operator overloading
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h> // automatic conversion of vectors
+#include <gurobi_c++.h>
 namespace py = pybind11;
 using namespace cetsp;
 using namespace cetsp::details;

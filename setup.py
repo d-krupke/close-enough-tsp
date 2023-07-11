@@ -32,7 +32,7 @@ setup(  # https://scikit-build.readthedocs.io/en/latest/usage.html#setup-options
         "chardet>=4.0.0",
         "networkx>=2.5.1",
         "requests>=2.25.1",
-        "pyconcorde>=0.1.0",
+        "pyconcorde",  # this package is problematic and you may need to install it manually
     ],
     # ~~~~~~~~~~~ CRITICAL CMAKE SETUP ~~~~~~~~~~~~~~~~~~~~~
     # Especially LTS systems often have very old CMake version (or none at all).

@@ -35,7 +35,7 @@ target_include_directories(cetsp PUBLIC ../include)
 target_compile_options(
   cetsp PRIVATE "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>")
 set_target_properties(cetsp PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(cetsp PRIVATE gurobi::gurobi)
+target_link_libraries(cetsp PUBLIC gurobi::gurobi)
 target_link_libraries(cetsp PUBLIC cgal::cgal)
 target_link_libraries(cetsp PUBLIC doctest::doctest)
 target_link_libraries(cetsp PRIVATE ${Boost_LIBRARIES})
