@@ -42,12 +42,32 @@ def optimize(
     Solves the instance using the BnB-algorithm.
     """
     # compute initial solution
-    heuristic = AdaptiveTspHeuristic([c.center.x for c in instance], [c.center.y for c in instance], [c.radius for c in instance])
+    heuristic = AdaptiveTspHeuristic(
+        [c.center.x for c in instance],
+        [c.center.y for c in instance],
+        [c.radius for c in instance],
+    )
     tour = heuristic.optimize(10)
-    solution = Solution(instance, tour)
+    initial_solution = Solution(instance, tour)
 
+    # run BnB
+    def cb(context):
+        pass  # Nothing to do here, but we have to provide a callback
 
-    return branch_and_bound(instance, timelimit=timelimit)
+    return branch_and_bound(
+        instance=instance,
+        callback=cb,
+        initial_solution=initial_solution,
+        root_strategy=root_strategy,
+        branching_strategy=branching_strategy,
+        search_strategy=search_strategy,
+        num_threads=num_threads,
+        simplify=simplify,
+        rules=rules,
+        feasibility_gap=feasibility_gap,
+        optimality_gap=optimality_gap,
+        timelimit=timelimit,
+    )
 
 
 def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):

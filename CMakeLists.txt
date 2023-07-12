@@ -33,15 +33,6 @@ cpmaddpackage("gh:doctest/doctest@2.4.9")
 
 # ~~~
 # Conan dependencies ~~~~~~~~~~~~~~~~~~~~~
-# We are using the `cmake_find_package` generator to create `FindXXX`-files
-# in the `cmake`-folder. This is only necessary, if the packages are not
-# already installed. This approach is not without its problems:
-# PRO: Simple option that is compatible with scikit-build. Can work without conan.
-# CON: Difficult if you want to use changing conan settings.
-
-# run `conan install .. --build=missing` in `.conan`. list(APPEND
-# CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/.conan") Also need to be defined in
-# `./conanfile.txt`.
 find_package(nlohmann_json REQUIRED)
 find_package(CGAL REQUIRED)
 find_package(gurobi REQUIRED)

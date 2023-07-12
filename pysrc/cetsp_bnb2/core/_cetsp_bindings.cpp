@@ -10,12 +10,12 @@
 #include "cetsp/strategies/rules/global_convex_hull_rule.h"
 #include "cetsp/strategies/rules/layered_convex_hull_rule.h"
 #include <fmt/core.h>
+#include <gurobi_c++.h>
 #include <iostream>
 #include <pybind11/functional.h>
 #include <pybind11/operators.h> // to define operator overloading
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h> // automatic conversion of vectors
-#include <gurobi_c++.h>
+#include <pybind11/stl.h>       // automatic conversion of vectors
 namespace py = pybind11;
 using namespace cetsp;
 using namespace cetsp::details;
@@ -57,12 +57,16 @@ branch_and_bound(Instance instance,
                  std::function<void(EventContext)> *py_callback,
                  Solution *initial_solution, int timelimit,
                  std::string branching, std::string search, std::string root,
-                 std::vector<std::string> rules, size_t num_threads) {
-
+                 std::vector<std::string> rules, size_t num_threads,
+                 bool simplify,
+                 double feasibility_gap,
+                 double optimality_gap
+                 ) {
+  instance.eps = feasibility_gap;
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
     rns = std::make_unique<ConvexHullRoot>();
-  } else if (root == "LongestEdgePlusFurthestCircle") {
+  } else if (root == "LongestEdgePlusFarthestCircle") {
     rns = std::make_unique<LongestEdgePlusFurthestCircle>();
   } else if (root == "Random") {
     rns = std::make_unique<RandomRoot>();
@@ -71,11 +75,10 @@ branch_and_bound(Instance instance,
   }
   std::unique_ptr<CircleBranching> branching_strategy;
   if (branching == "FarthestCircle") {
-    branching_strategy = std::make_unique<FarthestCircle>(false, num_threads);
-  } else if (branching == "FarthestCircleSimplifying") {
-    branching_strategy = std::make_unique<FarthestCircle>(true, num_threads);
+    branching_strategy =
+        std::make_unique<FarthestCircle>(simplify, num_threads);
   } else if (branching == "Random") {
-    branching_strategy = std::make_unique<RandomCircle>(true, num_threads);
+    branching_strategy = std::make_unique<RandomCircle>(simplify, num_threads);
   } else {
     throw std::invalid_argument("Invalid branching strategy.");
   }
@@ -115,7 +118,7 @@ branch_and_bound(Instance instance,
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
   }
-  baba.optimize(timelimit);
+  baba.optimize(timelimit, /*gap=*/ optimality_gap);
   return {baba.get_solution(), baba.get_lower_bound(), baba.get_statistics()};
 }
 
@@ -239,11 +242,10 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   m.def("branch_and_bound", &branch_and_bound,
         "Computes an optimal solution based on BnB.", py::arg("instance"),
         py::arg("callback"), py::arg("initial_solution") = nullptr,
-        py::arg("timelimit") = 300,
-        py::arg("branching") = "ChFarthestCircleSimplifying",
+        py::arg("timelimit") = 300, py::arg("branching") = "FarthestCircle",
         py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull",
         py::arg("rules") = std::vector<std::string>{"GlobalConvexHullRule"},
-        py::arg("num_threads") = 8);
+        py::arg("num_threads") = 8, py::arg("simplify") = true, py::arg("feasibility_gap") = 0.001, py::arg("optimality_gap") = 0.01);
 
   // gurobi exception
   static py::exception<GRBException> exc(m, "GRBException");
