@@ -17,9 +17,37 @@ opt_solution = branch_and_bound(instance, cb , initial_solution, 60)
 ```
 """
 # flake8: noqa F401
-from ._cetsp_bindings import *
-
+from ._cetsp_bindings import Instance, Solution, Circle, Point
+import typing
 import matplotlib.pyplot as plt
+
+from ..heuristics import AdaptiveTspHeuristic
+
+__all__ = ["Instance", "Solution", "Circle", "Point", "optimize", "plot_solution"]
+
+
+def optimize(
+    instance: Instance,
+    timelimit: int = 60,
+    root_strategy: str = "ConvexHull",
+    branching_strategy: str = "FarthestCircle",
+    search_strategy: str = "DfsBfs",
+    num_threads: int = 8,
+    simplify: bool = True,
+    rules: typing.Iterable[str] = ("GlobalConvexHullRule",),
+    feasibility_gap: float = 0.001,
+    optimality_gap: float = 0.01,
+) -> Solution:
+    """
+    Solves the instance using the BnB-algorithm.
+    """
+    # compute initial solution
+    heuristic = AdaptiveTspHeuristic([c.center.x for c in instance], [c.center.y for c in instance], [c.radius for c in instance])
+    tour = heuristic.optimize(10)
+    solution = Solution(instance, tour)
+
+
+    return branch_and_bound(instance, timelimit=timelimit)
 
 
 def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):

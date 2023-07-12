@@ -72,10 +72,8 @@ branch_and_bound(Instance instance,
   std::unique_ptr<CircleBranching> branching_strategy;
   if (branching == "FarthestCircle") {
     branching_strategy = std::make_unique<FarthestCircle>(false, num_threads);
-  } else if (branching == "ChFarthestCircle") {
-    branching_strategy = std::make_unique<ChFarthestCircle>(false, num_threads);
-  } else if (branching == "ChFarthestCircleSimplifying") {
-    branching_strategy = std::make_unique<ChFarthestCircle>(true, num_threads);
+  } else if (branching == "FarthestCircleSimplifying") {
+    branching_strategy = std::make_unique<FarthestCircle>(true, num_threads);
   } else if (branching == "Random") {
     branching_strategy = std::make_unique<RandomCircle>(true, num_threads);
   } else {
@@ -228,6 +226,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   py::class_<PartialSequenceSolution>(m, "PartialSequenceSolution")
       .def("get_trajectory", &PartialSequenceSolution::get_trajectory);
   py::class_<Solution>(m, "Solution")
+      .def(py::init<Instance *, std::vector<int>, float>())
       .def("get_trajectory", &Solution::get_trajectory);
 
   // functions
