@@ -134,7 +134,6 @@ void GlobalConvexHullRule::compute_weights(const Instance *instance,
   }
 }
 
-ChFarthestCircle::ChFarthestCircle(bool simplify, size_t num_threads)
-    : FarthestCircle(simplify, num_threads) {}
+
 
 } // namespace cetsp

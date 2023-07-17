@@ -134,21 +134,6 @@ protected:
 };
 
 /**
- * This strategy will only create branches that satisfy the CCW order of the
- * convex hull. A dependency is that the root is also obeying this rule.
- * We can proof that any optimal solution has follow the order of circles
- * intersecting the convex hull on the circle centers.
- *
- * This does not allow lazy constraints! (or only those that do not change
- * the convex hull).
- */
-class ChFarthestCircle : public FarthestCircle {
-
-public:
-  explicit ChFarthestCircle(bool simplify = true, size_t num_threads = 1);
-};
-
-/**
  * Just a random branching  strategy as comparison. It will branch on a random
  * not yet covered circle.
  */
