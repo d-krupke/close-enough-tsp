@@ -56,8 +56,6 @@ You can test the installation (if you checked out the repository) via
 pytest -s tests
 ```
 
-> The tests have not yet been updated and may fail due to changes in the API.
-
 ### C++
 
 - Copy code into subfolder.

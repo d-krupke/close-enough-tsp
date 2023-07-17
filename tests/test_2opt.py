@@ -34,7 +34,7 @@ def test_bnb():
             context.current_node.prune()  # don't evaluate further
         # print("py", node.get_lower_bound(), solution_pool.get_upper_bound())
 
-    opt_solution = branch_and_bound(instance, cb, initial_solution, 60)
+    opt_solution = branch_and_bound(instance, cb, initial_solution, 60, root_strategy="LongestEdgePlusFarthestCircle")
 
 
 def test_bnb2():
@@ -48,6 +48,7 @@ def test_bnb2():
     initial_solution = compute_tour_by_2opt(instance)
 
     def cb(context):
+        return
         if context.current_node.is_feasible():
             ub = context.get_upper_bound()
             print(
@@ -55,4 +56,4 @@ def test_bnb2():
             )
 
     timelimit = 60
-    opt_solution = branch_and_bound(instance, cb, initial_solution, timelimit)
+    opt_solution = branch_and_bound(instance, cb, initial_solution, timelimit, root_strategy="LongestEdgePlusFarthestCircle")

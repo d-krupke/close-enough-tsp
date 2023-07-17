@@ -84,6 +84,9 @@ class AdaptiveTspHeuristic:
     _notified_about_failed_concorde_import = False
 
     def _recompute_tour(self) -> None:
+        if len(set((x, y) for x, y in zip(self.xs, self.ys))) <= 2:
+            # all circles are on a line, so the tour is trivial
+            return
         try:
             from concorde.tsp import TSPSolver
 

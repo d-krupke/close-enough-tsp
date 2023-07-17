@@ -1,17 +1,17 @@
 import pytest
 
-from cetsp_bnb2.core import Circle, Instance, branch_and_bound, Point
+from cetsp_bnb2.core import Circle, Instance, optimize, Point, branch_and_bound
 
 
 def test_empty_tour():
     with pytest.raises(ValueError):
         instance = Instance([])
-        solution = branch_and_bound(instance, lambda e: None)
+        solution = optimize(instance)
 
 
 def test_single_circle():
     instance = Instance([Circle(Point(0, 0), 1)])
-    solution = branch_and_bound(instance, lambda e: None)
+    solution = optimize(instance)
 
 
 def test_two_circles():
@@ -83,7 +83,7 @@ def test_4x4():
     )
     null_cb = lambda e: None
     ub, lb, stats = branch_and_bound(
-        instance, null_cb, branching="Random", search="Random"
+        instance, null_cb, branching_strategy="Random", search_strategy="Random"
     )
     assert ub.get_trajectory().length() == pytest.approx(16)
     assert lb <= 16
