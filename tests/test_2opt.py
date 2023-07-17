@@ -26,7 +26,8 @@ def test_bnb():
     initial_solution = compute_tour_by_2opt(instance)
 
     def cb(context):
-        context.add_solution(initial_solution)
+        return
+        #context.add_solution(initial_solution)
         lb = context.get_lower_bound()
         ub = context.get_upper_bound()
         if lb > 0.95 * ub:

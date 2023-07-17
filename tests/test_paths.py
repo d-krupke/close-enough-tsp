@@ -1,6 +1,6 @@
 import pytest
 
-from cetsp_bnb2 import Circle, Instance, branch_and_bound, Point
+from cetsp_bnb2.core import Circle, Instance, branch_and_bound, Point
 
 
 def test_empty():

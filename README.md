@@ -30,7 +30,7 @@ Primary differences are:
 
 ## Installation
 
-You need a properly installed Gurobi-license for this modul, as we use its SOCP-solver.
+You need a properly installed Gurobi-license for this package, as we need a highly optimized SOCP-solver.
 You can easily get a free license for academic purposes.
 The free non-academic license is probably not sufficient and will lead to errors.
 
@@ -44,11 +44,19 @@ You can just check out this repository and run
 pip install .
 ```
 
-Afterward, test the installation with
+or, without checking it out
+
+```shell
+pip install git+https://github.com/d-krupke/close-enough-tsp
+```
+
+You can test the installation (if you checked out the repository) via
 
 ```shell
 pytest -s tests
 ```
+
+> The tests have not yet been updated and may fail due to changes in the API.
 
 ### C++
 
@@ -67,40 +75,16 @@ TODO: Write a conan setup file to allow easy installation via conan.
 A simple usage could look like this
 
 ```python
-from cetsp_bnb2 import Circle, Instance, branch_and_bound, Point
+from cetsp_bnb2.core import Circle, Instance, optimize, Point, plot_solution
 
 # create some instance
 instance = Instance([Circle(Point(x, y), 0) for x in range(0, 4) for y in range(0, 5)])
 
 # solve instance
-tour, lb, stats = branch_and_bound(instance, lambda e: None)
+solution = optimize(instance)
 
 # access and plot solution
 import matplotlib.pyplot as plt
-
-
-def plot_circle(ax: plt.Axes, circle: Circle, **kwargs):
-    patch = plt.Circle(
-        (circle.center.x, circle.center.y), radius=circle.radius, **kwargs
-    )
-    ax.add_patch(patch)
-
-
-def plot_solution(ax: plt.Axes, instance, solution, highlight=None):
-    trajectory = solution.get_trajectory()
-    for i, c in enumerate(instance.circles()):
-        if highlight and i in highlight:
-            plot_circle(ax, c, facecolor="white", zorder=1, ec="green", fill=False)
-        elif trajectory and trajectory.distance(c) <= 0.01 * c.radius:
-            plot_circle(ax, c, facecolor="white", zorder=1, ec="black", fill=False)
-        else:
-            plot_circle(ax, c, facecolor="white", zorder=1, ec="red", fill=False)
-
-    tour = [trajectory[i] for i in range(len(trajectory))]
-    plt.plot([p.x for p in tour], [p.y for p in tour], "o-")
-    ax.set_aspect("equal", "box")
-
-
 plt.figure()
 plot_solution(plt.gca(), instance, tour)
 ```
@@ -215,18 +199,6 @@ TBD
    branching factor, but can also make it more difficult to find feasible solutions.
 4. Allowing lazy constraints, which are important for the use as coverage path plannning routine.
 
-## Open Ideas
-
-1. Using intersections as argument for higher lower bounds: We know that any optimal solution will have no intersections
-   so the intersections of partial solutions have to be resolved be routinng the tour around one of the components,
-   which often is expensive. **This idea is not trivial to implement**
-2. Using implicit coverages as argument for lower bounds: If a circle is covered implicitly, it should not have a
-   spanning point in the optimal solution. Maybe one can also use this to improve the lower bound, as in order to become
-   an optimal solution, the circle either cannot be implicitly covered or its hitting point has to become non-spanning.
-   **again complicated geometry that has to be argued for correctness.**
-3. Interleaving the search process with heuristics as done in commercial BnB-solvers.
-4. Adapting the ideas for optimizing close-enough paths, which may be an even more important subroutine and not as much
-   analyzed by others.
 
 ## Python Interface
 
@@ -235,7 +207,7 @@ python interface.
 
 ```python
 # import the stuff
-from cetsp_bnb2 import (
+from cetsp_bnb2.core import (
     Circle,
     Instance,
     compute_tour_by_2opt,
