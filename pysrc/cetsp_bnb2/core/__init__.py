@@ -17,7 +17,7 @@ opt_solution = branch_and_bound(instance, cb , initial_solution, 60)
 ```
 """
 # flake8: noqa F401
-from ._cetsp_bindings import Instance, Solution, Circle, Point
+from ._cetsp_bindings import Instance, Solution, Circle, Point, branch_and_bound
 import typing
 import matplotlib.pyplot as plt
 
@@ -35,7 +35,7 @@ def optimize(
     num_threads: int = 8,
     simplify: bool = True,
     rules: typing.Iterable[str] = ("GlobalConvexHullRule",),
-    feasibility_gap: float = 0.001,
+    feasibility_tol: float = 0.001,
     optimality_gap: float = 0.01,
 ) -> Solution:
     """
@@ -48,7 +48,7 @@ def optimize(
         [c.radius for c in instance],
     )
     tour = heuristic.optimize(10)
-    initial_solution = Solution(instance, tour)
+    initial_solution = Solution(instance, tour, feasibility_tol)
 
     # run BnB
     def cb(context):
@@ -58,15 +58,17 @@ def optimize(
         instance=instance,
         callback=cb,
         initial_solution=initial_solution,
-        root_strategy=root_strategy,
+        timelimit=timelimit,
+        
         branching_strategy=branching_strategy,
+        root_strategy=root_strategy,
         search_strategy=search_strategy,
         num_threads=num_threads,
         simplify=simplify,
         rules=rules,
-        feasibility_gap=feasibility_gap,
+        feasibility_tol=feasibility_tol,
         optimality_gap=optimality_gap,
-        timelimit=timelimit,
+        
     )
 
 

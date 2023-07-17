@@ -59,10 +59,10 @@ branch_and_bound(Instance instance,
                  std::string branching, std::string search, std::string root,
                  std::vector<std::string> rules, size_t num_threads,
                  bool simplify,
-                 double feasibility_gap,
+                 double feasibility_tol,
                  double optimality_gap
                  ) {
-  instance.eps = feasibility_gap;
+  instance.eps = feasibility_tol;
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
     rns = std::make_unique<ConvexHullRoot>();
@@ -223,11 +223,14 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
            "Return the relaxed solution of the current node.")
       .def("get_best_solution", &EventContext::get_best_solution,
            "Return the best known feasible solution.");
+
   py::class_<TripleMap>(m, "TripleMap", "bla")
       .def(py::init<Instance *>())
       .def("get_cost", &TripleMap::get_cost);
+
   py::class_<PartialSequenceSolution>(m, "PartialSequenceSolution")
       .def("get_trajectory", &PartialSequenceSolution::get_trajectory);
+      
   py::class_<Solution>(m, "Solution")
       .def(py::init<Instance *, std::vector<int>, float>())
       .def("get_trajectory", &Solution::get_trajectory);
@@ -242,10 +245,10 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   m.def("branch_and_bound", &branch_and_bound,
         "Computes an optimal solution based on BnB.", py::arg("instance"),
         py::arg("callback"), py::arg("initial_solution") = nullptr,
-        py::arg("timelimit") = 300, py::arg("branching") = "FarthestCircle",
-        py::arg("search") = "DfsBfs", py::arg("root") = "ConvexHull",
+        py::arg("timelimit") = 300, py::arg("branching_strategy") = "FarthestCircle",
+        py::arg("search_strategy") = "DfsBfs", py::arg("root_strategy") = "ConvexHull",
         py::arg("rules") = std::vector<std::string>{"GlobalConvexHullRule"},
-        py::arg("num_threads") = 8, py::arg("simplify") = true, py::arg("feasibility_gap") = 0.001, py::arg("optimality_gap") = 0.01);
+        py::arg("num_threads") = 8, py::arg("simplify") = true, py::arg("feasibility_tol") = 0.001, py::arg("optimality_gap") = 0.01);
 
   // gurobi exception
   static py::exception<GRBException> exc(m, "GRBException");
