@@ -1,9 +1,12 @@
 import typing
-from concorde.tsp import TSPSolver
+
 import gurobipy as gp  # requires gurobi to be installed via conda.
 from gurobipy import GRB
 import random
 import math
+import logging
+
+_logger = logging.getLogger("CETSP_BnB2")
 
 class AdaptiveTspHeuristic:
     """
@@ -75,15 +78,26 @@ class AdaptiveTspHeuristic:
         self.tour.append(self.n - 1)
         return len(self.xs) - 1
 
+    _notified_about_failed_concorde_import = False
     def _recompute_tour(self) -> None:
-        solver = TSPSolver.from_data(
-            # Concorde expects integer coordinates, so we multiply by 1000
-            [1000 * x for x in self.hitting_points_x],
-            [1000 * y for y in self.hitting_points_y],
-            norm="EUC_2D",
-        )
-        solution = solver.solve(verbose=False)
-        self.tour = [int(i) for i in solution.tour]
+        try:
+            from concorde.tsp import TSPSolver
+            solver = TSPSolver.from_data(
+                # Concorde expects integer coordinates, so we multiply by 1000
+                [1000 * x for x in self.hitting_points_x],
+                [1000 * y for y in self.hitting_points_y],
+                norm="EUC_2D",
+            )
+            solution = solver.solve(verbose=False)
+            self.tour = [int(i) for i in solution.tour]
+        except ImportError as e:
+            if not self._notified_about_failed_concorde_import:
+                self._notified_about_failed_concorde_import = True
+                _logger.error("Failed to import Concorde (%s). Please try to install "
+                              "it via `pip install git+https://github.com/jvkersch/pyconcorde`."
+                              " Unfortunately, this does not work on all platforms.", str(e))
+                raise RuntimeError("No Concorde available.")
+
 
     def _recompute_hitting_points(self) -> float:
         model = gp.Model()
