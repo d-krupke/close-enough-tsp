@@ -1,5 +1,5 @@
 # flake8: noqa F401
-from ._cetsp_bindings import (
+from cetsp_bnb2.core import (
     Point,
     Circle,
     compute_tour_by_2opt,
