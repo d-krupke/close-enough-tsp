@@ -15,7 +15,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/operators.h> // to define operator overloading
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>       // automatic conversion of vectors
+#include <pybind11/stl.h> // automatic conversion of vectors
 namespace py = pybind11;
 using namespace cetsp;
 using namespace cetsp::details;
@@ -58,10 +58,7 @@ branch_and_bound(Instance instance,
                  Solution *initial_solution, int timelimit,
                  std::string branching, std::string search, std::string root,
                  std::vector<std::string> rules, size_t num_threads,
-                 bool simplify,
-                 double feasibility_tol,
-                 double optimality_gap
-                 ) {
+                 bool simplify, double feasibility_tol, double optimality_gap) {
   instance.eps = feasibility_tol;
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
@@ -118,7 +115,7 @@ branch_and_bound(Instance instance,
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
   }
-  baba.optimize(timelimit, /*gap=*/ optimality_gap);
+  baba.optimize(timelimit, /*gap=*/optimality_gap);
   return {baba.get_solution(), baba.get_lower_bound(), baba.get_statistics()};
 }
 
@@ -230,7 +227,7 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
 
   py::class_<PartialSequenceSolution>(m, "PartialSequenceSolution")
       .def("get_trajectory", &PartialSequenceSolution::get_trajectory);
-      
+
   py::class_<Solution>(m, "Solution")
       .def(py::init<Instance *, std::vector<int>, float>())
       .def("get_trajectory", &Solution::get_trajectory);
@@ -245,10 +242,13 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
   m.def("branch_and_bound", &branch_and_bound,
         "Computes an optimal solution based on BnB.", py::arg("instance"),
         py::arg("callback"), py::arg("initial_solution") = nullptr,
-        py::arg("timelimit") = 300, py::arg("branching_strategy") = "FarthestCircle",
-        py::arg("search_strategy") = "DfsBfs", py::arg("root_strategy") = "ConvexHull",
+        py::arg("timelimit") = 300,
+        py::arg("branching_strategy") = "FarthestCircle",
+        py::arg("search_strategy") = "DfsBfs",
+        py::arg("root_strategy") = "ConvexHull",
         py::arg("rules") = std::vector<std::string>{"GlobalConvexHullRule"},
-        py::arg("num_threads") = 8, py::arg("simplify") = true, py::arg("feasibility_tol") = 0.001, py::arg("optimality_gap") = 0.01);
+        py::arg("num_threads") = 8, py::arg("simplify") = true,
+        py::arg("feasibility_tol") = 0.001, py::arg("optimality_gap") = 0.01);
 
   // gurobi exception
   static py::exception<GRBException> exc(m, "GRBException");

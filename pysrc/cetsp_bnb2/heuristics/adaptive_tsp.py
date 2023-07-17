@@ -8,6 +8,7 @@ import logging
 
 _logger = logging.getLogger("CETSP_BnB2")
 
+
 class AdaptiveTspHeuristic:
     """
     Heuristic for the Close Enough Traveling Salesman Problem (CE-TSP).
@@ -40,9 +41,11 @@ class AdaptiveTspHeuristic:
         self.hitting_points_x = list(xs)
         self.hitting_points_y = list(ys)
         self.tour = list(range(len(xs)))
-        self.length = float('inf')
+        self.length = float("inf")
 
-    def _get_random_point_in_circle(self, x: float, y: float, r: float) -> typing.Tuple[float, float]:
+    def _get_random_point_in_circle(
+        self, x: float, y: float, r: float
+    ) -> typing.Tuple[float, float]:
         """Returns a random point in the circle with center
         (x,y) and radius r.
         """
@@ -50,7 +53,6 @@ class AdaptiveTspHeuristic:
         x_ = x + random.random() * r * math.cos(angle)
         y_ = y + random.random() * r * math.sin(angle)
         return x_, y_
-
 
     def randomize_hitting_points(self, ratio=1.0) -> None:
         """
@@ -60,9 +62,10 @@ class AdaptiveTspHeuristic:
         """
         for i in range(self.n):
             if random.random() < ratio:
-                self.hitting_points_x[i], self.hitting_points_y[i] = self._get_random_point_in_circle(
-                    self.xs[i], self.ys[i], self.rs[i]
-                )
+                (
+                    self.hitting_points_x[i],
+                    self.hitting_points_y[i],
+                ) = self._get_random_point_in_circle(self.xs[i], self.ys[i], self.rs[i])
 
     def add_circle(self, x: float, y: float, r: float) -> int:
         """
@@ -79,9 +82,11 @@ class AdaptiveTspHeuristic:
         return len(self.xs) - 1
 
     _notified_about_failed_concorde_import = False
+
     def _recompute_tour(self) -> None:
         try:
             from concorde.tsp import TSPSolver
+
             solver = TSPSolver.from_data(
                 # Concorde expects integer coordinates, so we multiply by 1000
                 [1000 * x for x in self.hitting_points_x],
@@ -93,11 +98,13 @@ class AdaptiveTspHeuristic:
         except ImportError as e:
             if not self._notified_about_failed_concorde_import:
                 self._notified_about_failed_concorde_import = True
-                _logger.error("Failed to import Concorde (%s). Please try to install "
-                              "it via `pip install git+https://github.com/jvkersch/pyconcorde`."
-                              " Unfortunately, this does not work on all platforms.", str(e))
+                _logger.error(
+                    "Failed to import Concorde (%s). Please try to install "
+                    "it via `pip install git+https://github.com/jvkersch/pyconcorde`."
+                    " Unfortunately, this does not work on all platforms.",
+                    str(e),
+                )
                 raise RuntimeError("No Concorde available.")
-
 
     def _recompute_hitting_points(self) -> float:
         model = gp.Model()
@@ -155,7 +162,7 @@ class AdaptiveTspHeuristic:
         return model.objVal
 
     def optimize(self, iterations=10) -> typing.List[int]:
-        """"
+        """ "
         Optimizes the tour.
         :param iterations: number of iterations to run the heuristic
         :return: the tour
@@ -163,7 +170,7 @@ class AdaptiveTspHeuristic:
         for i in range(iterations):
             self._recompute_tour()
             obj = self._recompute_hitting_points()
-            if abs(obj-self.length) < 1e-6:
+            if abs(obj - self.length) < 1e-6:
                 break  # no improvement
             self.length = obj
         return list(self.tour)

@@ -134,6 +134,4 @@ void GlobalConvexHullRule::compute_weights(const Instance *instance,
   }
 }
 
-
-
 } // namespace cetsp
