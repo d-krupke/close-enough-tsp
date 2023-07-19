@@ -1,0 +1,14 @@
+[
+{
+  "timelimit":  900,
+  "root_strategy": "ConvexHull",
+  "branching_strategy": "FarthestCircle",
+  "search_strategy":  "DfsBfs",
+  "num_threads": 8,
+  "simplify": true,
+  "rules": ["GlobalConvexHullRule"],
+  "feasibility_tol":  0.001,
+  "optimality_gap":  0.01,
+  "fallback_if_no_concorde":  false,
+}
+]
