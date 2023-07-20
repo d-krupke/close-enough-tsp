@@ -39,7 +39,7 @@ _logger = logging.getLogger("CETSP_BnB2")
 
 from ..heuristics import AdaptiveTspHeuristic
 from .optimize import optimize
-from .plotting import plot_solution, plot_circle
+from .plotting import plot_solution, plot_circle, plot_instance
 
 __all__ = [
     "Instance",
@@ -49,4 +49,6 @@ __all__ = [
     "Point",
     "optimize",
     "plot_solution",
+    "plot_circle",
+    "plot_instance",
 ]
