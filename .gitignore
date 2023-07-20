@@ -203,3 +203,4 @@ _deps
 .conan/
 CMakeUserPresets.json
 CMakePresets.json
+.DS_Store
