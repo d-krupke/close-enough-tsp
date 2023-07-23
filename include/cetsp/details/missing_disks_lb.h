@@ -226,6 +226,8 @@ protected:
         return InsertionCostCalculator::compute_cost(u, v, w);
       }
 
+      assert(minimum >= InsertionCostCalculator::compute_cost(u, v, w));
+
       return minimum;
     } catch (std::exception &e) {
       std::cout << "nlopt failed: " << e.what() << std::endl;

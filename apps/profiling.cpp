@@ -27,4 +27,5 @@ int main() {
   baba.add_node_callback(std::make_unique<LowerBoundImprovingCallback<ExactInsertionCostCalculator>>(instance));
   baba.add_upper_bound(initial_solution);
   baba.optimize(timelimit);
+  std::cout << "Solution value " << baba.get_solution()->obj() << std::endl;
 }
