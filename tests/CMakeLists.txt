@@ -32,7 +32,7 @@ add_executable(
   lazy_callback_tests.h)
 target_include_directories(doctests PRIVATE ../include)
 target_link_libraries(doctests PRIVATE doctest::doctest)
-target_link_libraries(doctests PRIVATE cgal::cgal)
+target_link_libraries(doctests PRIVATE ${cgal_LIBRARIES})
 target_link_libraries(doctests PRIVATE gurobi::gurobi)
 target_compile_options(
   doctests PRIVATE "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>")

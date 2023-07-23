@@ -4,19 +4,19 @@
 #include "cetsp/bnb.h"
 #include "cetsp/common.h"
 #include "cetsp/details/cross_lower_bound.h"
+#include "cetsp/details/missing_disks_lb.h"
 #include "cetsp/details/triple_map.h"
 #include "cetsp/heuristics.h"
 #include "cetsp/node.h"
 #include "cetsp/strategies/rules/global_convex_hull_rule.h"
 #include "cetsp/strategies/rules/layered_convex_hull_rule.h"
-#include "cetsp/details/missing_disks_lb.h"
 #include <fmt/core.h>
 #include <gurobi_c++.h>
 #include <iostream>
 #include <pybind11/functional.h>
 #include <pybind11/operators.h> // to define operator overloading
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h> // automatic conversion of vectors
+#include <pybind11/stl.h>       // automatic conversion of vectors
 namespace py = pybind11;
 using namespace cetsp;
 using namespace cetsp::details;
@@ -54,11 +54,11 @@ private:
  */
 std::tuple<std::unique_ptr<Solution>, double,
            std::unordered_map<std::string, std::string>>
-branch_and_bound(Instance instance,
-                 Solution *initial_solution, int timelimit,
+branch_and_bound(Instance instance, Solution *initial_solution, int timelimit,
                  std::string branching, std::string search, std::string root,
                  std::vector<std::string> rules, size_t num_threads,
-                 bool simplify, double feasibility_tol, double optimality_gap, bool use_stronger_lb) {
+                 bool simplify, double feasibility_tol, double optimality_gap,
+                 bool use_stronger_lb) {
   instance.eps = feasibility_tol;
   std::unique_ptr<RootNodeStrategy> rns;
   if (root == "ConvexHull") {
@@ -107,13 +107,15 @@ branch_and_bound(Instance instance,
                                *branching_strategy, *search_strategy);
   /* TODO add CrossLowerBoundCallback according to some config */
   // baba.add_node_callback(std::make_unique<CrossLowerBoundCallback>());
-  //if (py_callback) {
+  // if (py_callback) {
   //  std::cout << "py_callback " << py_callback << std::endl;
   //  baba.add_node_callback(std::make_unique<PythonCallback>(py_callback));
   //}
   if (use_stronger_lb) {
-    baba.add_node_callback(std::make_unique<LowerBoundImprovingCallback>(instance));
-    }
+    baba.add_node_callback(
+        std::make_unique<LowerBoundImprovingCallback<InsertionCostCalculator>>(
+            instance));
+  }
 
   if (initial_solution != nullptr) {
     baba.add_upper_bound(*initial_solution);
@@ -244,14 +246,14 @@ PYBIND11_MODULE(_cetsp_bindings, m) {
 
   m.def("branch_and_bound", &branch_and_bound,
         "Computes an optimal solution based on BnB.", py::arg("instance"),
-        py::arg("initial_solution") = nullptr,
-        py::arg("timelimit") = 300,
+        py::arg("initial_solution") = nullptr, py::arg("timelimit") = 300,
         py::arg("branching_strategy") = "FarthestCircle",
         py::arg("search_strategy") = "DfsBfs",
         py::arg("root_strategy") = "ConvexHull",
         py::arg("rules") = std::vector<std::string>{"GlobalConvexHullRule"},
         py::arg("num_threads") = 8, py::arg("simplify") = true,
-        py::arg("feasibility_tol") = 0.001, py::arg("optimality_gap") = 0.01, py::arg("use_stronger_lb") = false);
+        py::arg("feasibility_tol") = 0.001, py::arg("optimality_gap") = 0.01,
+        py::arg("use_stronger_lb") = false);
 
   // gurobi exception
   static py::exception<GRBException> exc(m, "GRBException");

@@ -21,8 +21,12 @@
 #include "cetsp/callbacks.h"
 #include "cetsp/common.h"
 #include "doctest/doctest.h"
+#include <cmath>
 #include <gurobi_c++.h>
+#include <nlopt.hpp>
+#include <type_traits>
 #include <unordered_map>
+
 namespace cetsp {
 
 namespace {
@@ -77,6 +81,36 @@ struct TripleHash {
   }
 };
 
+// Some C++ magic to convert lambdas into functions for nlopt
+
+template <class L, class R, class... Args> static auto impl_impl(L l) {
+  static_assert(!std::is_same<L, std::function<R(Args...)>>::value,
+                "Only lambdas are supported, it is unsafe to use "
+                "std::function or other non-lambda callables");
+
+  static L lambda_s = std::move(l);
+  return +[](Args... args) -> R { return lambda_s(args...); };
+}
+
+template <class L>
+struct to_f_impl : public to_f_impl<decltype(&L::operator())> {};
+
+template <class ClassType, class R, class... Args>
+struct to_f_impl<R (ClassType::*)(Args...) const> {
+  template <class L> static auto impl(L l) {
+    return impl_impl<L, R, Args...>(std::move(l));
+  }
+};
+
+template <class ClassType, class R, class... Args>
+struct to_f_impl<R (ClassType::*)(Args...)> {
+  template <class L> static auto impl(L l) {
+    return impl_impl<L, R, Args...>(std::move(l));
+  }
+};
+
+template <class L> auto to_f(L l) { return to_f_impl<L>::impl(std::move(l)); }
+
 class InsertionCostCalculator {
   /**
    * @brief This class is used to calculate the cost of inserting a disk
@@ -114,20 +148,89 @@ public:
     return l;
   }
 
-private:
-  double compute_cost(Circle u, Circle v, Circle w) {
+protected:
+  virtual double compute_cost(Circle u, Circle v, Circle w) {
     /**
      * @brief Compute the cost of inserting the disk v between disks u and w.
      * This cost should be symmetric, i.e., the order of u and w should not
      * matter.
      */
-    auto t = compute_tour({u, v, w}, true);
-    return (t.points[0].dist(t.points[1])+t.points[1].dist(t.points[2]))-t.points[0].dist(t.points[2]);
-    
-    /*
+    /*auto t = compute_tour({u, v, w}, true);
+    return (t.points[0].dist(t.points[1]) + t.points[1].dist(t.points[2])) -
+           t.points[0].dist(t.points[2]);*/
+
     auto l = compute_tour({u, v, w}, true).length();
     l -= u.center.dist(w.center) + u.radius + w.radius;
-    return std::max(0.0, l);*/
+    return std::max(0.0, l);
+  }
+
+  Instance *instance;
+  std::unordered_map<Triple, double, TripleHash> map;
+};
+
+class ExactInsertionCostCalculator : public InsertionCostCalculator {
+  /**
+   * @brief This class is used to calculate the exact inserting cost
+   * of a disk between two others.
+   */
+public:
+  [[maybe_unused]] explicit ExactInsertionCostCalculator(Instance *instance)
+      : InsertionCostCalculator(instance) {}
+
+protected:
+  double compute_cost(Circle u, Circle v, Circle w) override {
+    /**
+     * @brief Compute the minimum cost of inserting the disk v between disks u
+     * and w. This cost should be symmetric, i.e., the order of u and w should
+     * not matter.
+     */
+
+    auto objFunction = [&u, &v, &w](unsigned n, const double *x, double *grad,
+                                    void *my_func_data) {
+      if (grad) {
+        // We use derivative-free optimization algorithms.
+        throw std::runtime_error(
+            "We only use derivative-free optimization algorithms!");
+      }
+
+      double angle0 = x[0];
+      double angle1 = x[1];
+      double angle2 = x[2];
+
+      auto a = Point(u.center.x + std::cos(angle0) * u.radius,
+                     u.center.y + std::sin(angle0) * u.radius);
+      auto b = Point(v.center.x + std::cos(angle1) * v.radius,
+                     v.center.y + std::sin(angle1) * v.radius);
+      auto c = Point(w.center.x + std::cos(angle2) * w.radius,
+                     w.center.y + std::sin(angle2) * w.radius);
+
+      return a.dist(b) + b.dist(c) - a.dist(c);
+    };
+
+    try {
+      nlopt::opt opt(nlopt::GN_ISRES, 3);
+      opt.set_lower_bounds({0, 0, 0});
+      opt.set_upper_bounds({2 * M_PI, 2 * M_PI, 2 * M_PI});
+      opt.set_xtol_rel(1e-6);
+      opt.set_ftol_rel(1e-6);
+
+      opt.set_min_objective(to_f(objFunction), nullptr);
+      opt.set_maxtime(0.01); // 10 ms
+
+      std::vector<double> x{0, 0, 0};
+      double minimum;
+
+      auto result = opt.optimize(x, minimum);
+
+      if (result == NLOPT_MAXTIME_REACHED) {
+        return InsertionCostCalculator::compute_cost(u, v, w);
+      }
+
+      return minimum;
+    } catch (std::exception &e) {
+      std::cout << "nlopt failed: " << e.what() << std::endl;
+      throw std::runtime_error(e.what());
+    }
   }
 
   Instance *instance;
@@ -142,14 +245,13 @@ struct TupleHash {
   }
 };
 
-class SegmentIntegrationVars {
+template <class CostCalculator> class SegmentIntegrationVars {
   /**
    * @brief This is the LP-part for a single segment.
    *
    */
 public:
-  SegmentIntegrationVars(GRBModel &model,
-                         InsertionCostCalculator &cost_calculator,
+  SegmentIntegrationVars(GRBModel &model, CostCalculator &cost_calculator,
                          std::pair<int, int> segment,
                          std::vector<int> &missing_disks)
       : model{model}, cost_calculator{cost_calculator}, segment{segment},
@@ -247,7 +349,7 @@ private:
   }
 
   GRBModel &model;
-  InsertionCostCalculator &cost_calculator;
+  CostCalculator &cost_calculator;
   std::pair<int, int> segment;
   std::vector<int> &missing_disks;
   std::unordered_map<Tuple, GRBVar, TupleHash> x;
@@ -255,12 +357,12 @@ private:
 
 // TODO: Combined model.
 
-class CircleIntegrationCostModel {
+template <class CostCalculator> class CircleIntegrationCostModel {
 public:
   CircleIntegrationCostModel(GRBEnv &env, Instance &instance,
                              std::vector<int> &fixed_tour,
                              std::vector<int> &missing_disks,
-                             InsertionCostCalculator &cost_calculator)
+                             CostCalculator &cost_calculator)
       : model{&env}, instance{instance}, fixed_tour{fixed_tour},
         missing_disks{missing_disks}, cost_calculator{cost_calculator} {
     GRBLinExpr obj = 0;
@@ -291,41 +393,43 @@ public:
 
 private:
   GRBModel model;
-  std::vector<SegmentIntegrationVars> submodels;
+  std::vector<SegmentIntegrationVars<CostCalculator>> submodels;
   Instance &instance;
   std::vector<int> &fixed_tour;
   std::vector<int> &missing_disks;
-  InsertionCostCalculator &cost_calculator;
+  CostCalculator &cost_calculator;
 };
 
 } // namespace
 
+template <class CostCalculator>
 class LowerBoundImprovingCallback : public B2BNodeCallback {
 public:
   LowerBoundImprovingCallback(Instance &instance)
       : instance{instance}, cost_calculator{&instance} {
-        std::cout << "Created LB callback" << std::endl;
-      }
+    std::cout << "Created LB callback" << std::endl;
+  }
 
   void on_entering_node(EventContext &context) override {
-    if(context.current_node->get_lower_bound() > 1.01*context.get_relaxed_solution().obj()){
+    if (context.current_node->get_lower_bound() >
+        1.01 * context.get_relaxed_solution().obj()) {
       return; // We already have a good lb
     }
 
-    double gap = 1-context.get_lower_bound()/context.get_upper_bound();
-    if(false && context.current_node->depth() != 1 && gap > 0.1) {
+    double gap = 1 - context.get_lower_bound() / context.get_upper_bound();
+    if (false && context.current_node->depth() != 1 && gap > 0.1) {
       return;
     }
-   /* if (context.get_lower_bound() <= 0.99*context.current_node->get_lower_bound()) {
-      return;
-    }*/
+    /* if (context.get_lower_bound() <=
+     0.99*context.current_node->get_lower_bound()) { return;
+     }*/
     if (context.is_feasible()) {
       return;
     }
     auto fixed_tour = context.current_node->get_fixed_sequence();
     auto missing_disks =
         compute_dispersed_set_of_missing_disks(instance, fixed_tour, 50);
-    if(missing_disks.empty()){
+    if (missing_disks.empty()) {
       std::cout << "No missing disks" << std::endl;
       return;
     }
@@ -340,13 +444,14 @@ public:
     auto obj = context.current_node->get_relaxed_solution().obj();
     std::cout << "old lb: " << obj << std::endl;
     std::cout << "new lb " << obj + lb << std::endl;
-    context.current_node->add_lower_bound(obj+ lb);
-    std::cout <<"Check lb " << context.current_node->get_lower_bound() << std::endl;
+    context.current_node->add_lower_bound(obj + lb);
+    std::cout << "Check lb " << context.current_node->get_lower_bound()
+              << std::endl;
   }
 
 private:
   Instance &instance;
-  InsertionCostCalculator cost_calculator;
+  CostCalculator cost_calculator;
 };
 
 // TODO: Implement a callback that adds the lb to the node
@@ -398,8 +503,8 @@ TEST_CASE("LB Callback") {
   BranchAndBoundAlgorithm bnb(&instance,
                               root_node_strategy.get_root_node(instance),
                               branching_strategy, search_strategy);
-  auto callback =
-      std::make_unique<cetsp::LowerBoundImprovingCallback>(instance);
+  auto callback = std::make_unique<
+      cetsp::LowerBoundImprovingCallback<InsertionCostCalculator>>(instance);
   bnb.add_node_callback(std::move(callback));
   bnb.optimize(30);
   CHECK(bnb.get_solution());

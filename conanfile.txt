@@ -2,6 +2,7 @@
 nlohmann_json/[>=3.11]
 gurobi/[>=10.0.0]
 cgal/[>=5.5.1]
+nlopt/2.7.1
 
 [generators]
 CMakeDeps
