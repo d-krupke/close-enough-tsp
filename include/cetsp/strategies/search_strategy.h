@@ -57,7 +57,7 @@ class DfsBfs : public SearchStrategy {
 public:
   void init(std::shared_ptr<Node> &root) override {
     std::cout << "Using DfsBfs search" << std::endl;
-    queue.emplace_back(root, root->get_lower_bound(),
+    queue.emplace_back(root, root->obj(),
                        root->get_relaxed_solution().obj());
   }
 
@@ -65,16 +65,16 @@ public:
     auto children = node.get_children();
     std::sort(children.begin(), children.end(),
               [](std::shared_ptr<Node> &a, std::shared_ptr<Node> &b) {
-                const auto lb_a = a->get_lower_bound();
-                const auto lb_b = b->get_lower_bound();
+                const auto lb_a = a->obj();
+                const auto lb_b = b->obj();
                 if (std::abs(lb_a - lb_b) < 0.001) { // approx equal
                   return a->get_relaxed_solution().obj() >
                          b->get_relaxed_solution().obj();
                 }
-                return a->get_lower_bound() > b->get_lower_bound();
+                return a->obj() > b->obj();
               });
     for (auto &child : children) {
-      queue.emplace_back(child, child->get_lower_bound(),
+      queue.emplace_back(child, child->obj(),
                          child->get_relaxed_solution().obj());
     }
   }

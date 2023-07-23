@@ -25,7 +25,9 @@ add_library(
   branching_strategies/global_convex_hull.cpp
   branching_strategies/layered_convex_hull_rule.cpp
   ../include/cetsp/strategies/rule.h
-  ../include/cetsp/strategies/rules/global_convex_hull_rule.h)
+  ../include/cetsp/strategies/rules/global_convex_hull_rule.h
+  ../include/cetsp/details/missing_disks_lb.h
+  )
 target_sources(
   cetsp
   PUBLIC ../include/cetsp/common.h ../include/cetsp/details/cgal_kernel.h

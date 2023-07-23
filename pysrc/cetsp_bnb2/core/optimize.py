@@ -32,12 +32,14 @@ def optimize(
     feasibility_tol: float = 0.001,
     optimality_gap: float = 0.01,
     fallback_if_no_concorde: bool = True,
+    use_stronger_lb: bool = False,
 ) -> Solution:
     """
     Solves the instance using the BnB-algorithm.
     """
     # compute initial solution
     try:
+        raise RuntimeError("Concorde deactivated")
         heuristic = AdaptiveTspHeuristic(
             [c.center.x for c in instance],
             [c.center.y for c in instance],
@@ -57,13 +59,10 @@ def optimize(
         else:
             raise
 
-    # run BnB
-    def cb(context):
-        pass  # Nothing to do here, but we have to provide a callback
 
+    print("Start optimizion")
     return branch_and_bound(
         instance=instance,
-        callback=cb,
         initial_solution=initial_solution,
         timelimit=timelimit,
         branching_strategy=branching_strategy,
@@ -74,4 +73,5 @@ def optimize(
         rules=rules,
         feasibility_tol=feasibility_tol,
         optimality_gap=optimality_gap,
+        use_stronger_lb=use_stronger_lb,
     )

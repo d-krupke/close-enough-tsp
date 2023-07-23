@@ -96,8 +96,10 @@ class AdaptiveTspHeuristic:
                 [1000 * y for y in self.hitting_points_y],
                 norm="EUC_2D",
             )
-            solution = solver.solve(verbose=False)
-            self.tour = [int(i) for i in solution.tour]
+            solution = solver.solve(verbose=False, time_bound=5)
+            if solution.found_tour:
+                _logger.warning("Concorde did not find a tour.")
+                self.tour = [int(i) for i in solution.tour]
         except ImportError as e:
             if not self._notified_about_failed_concorde_import:
                 self._notified_about_failed_concorde_import = True
@@ -111,7 +113,7 @@ class AdaptiveTspHeuristic:
 
     def _recompute_hitting_points(self) -> float:
         model = gp.Model()
-
+        print("tour", self.tour)
         # tour points
         x = model.addVars(
             self.tour, lb=-GRB.INFINITY, ub=GRB.INFINITY, vtype=GRB.CONTINUOUS

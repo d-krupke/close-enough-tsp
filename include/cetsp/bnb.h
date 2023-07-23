@@ -119,7 +119,7 @@ private:
   void print_start_stats(bool verbose) {
     if (verbose) {
       std::cout << "Starting with root node of size "
-                << root->get_fixed_sequence().size() << std::endl;
+                << root->get_fixed_sequence().size() << " and objective "<<root->get_relaxed_solution().obj()<< std::endl;
       std::cout << "i\tLB\t|\tUB\t|\tTime" << std::endl;
     }
   }

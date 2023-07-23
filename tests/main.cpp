@@ -12,4 +12,6 @@
 #include "cetsp/strategies/rules/global_convex_hull_rule.h"
 #include "cetsp/strategies/search_strategy.h"
 #include "cetsp/utils/geometry.h"
+#include "cetsp/details/missing_disks_lb.h"
 #include "doctest/doctest.h"
+

@@ -49,6 +49,8 @@ public:
 
   bool is_feasible();
 
+  double obj() { return _relaxed_solution.obj(); }
+
   void branch(std::vector<std::shared_ptr<Node>> &children_);
 
   [[nodiscard]] const std::vector<std::shared_ptr<Node>> &get_children() const {

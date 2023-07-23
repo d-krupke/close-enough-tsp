@@ -28,6 +28,7 @@ add_executable(
   ../src/branching_strategies/layered_convex_hull_rule.cpp
   ../include/cetsp/strategies/rule.h
   ../include/cetsp/strategies/rules/global_convex_hull_rule.h
+  ../include/cetsp/details/missing_disks_lb.h
   lazy_callback_tests.h)
 target_include_directories(doctests PRIVATE ../include)
 target_link_libraries(doctests PRIVATE doctest::doctest)
