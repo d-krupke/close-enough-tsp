@@ -2,11 +2,8 @@
 
 _Developed by [Dominik Krupke](https://www.ibr.cs.tu-bs.de/users/krupke/) and Barak Ugav at Tel Aviv University. Further development at TU Braunschweig with Michael Perk._
 
-> :warning: **This is work in progress.** The code is not yet ready for production use. We are currently working on
-> improving the performance and adding further features. Please open an issue if you encounter any problems or have
-> suggestions for improvements. There are elements that are not yet fully tested and may not work as expected.
-> Please also note that the API may change in the future. For preliminary usage in research projects, please contact
-> [Dominik Krupke](https://www.ibr.cs.tu-bs.de/users/krupke/) to verify that no purely experimental features are used.
+> :warning: **This is work in progress.** The code is not yet ready for production use and can lead to wrong results with some parameters.
+>  We are planning to continue our work on this solver, soon. Please contact [Dominik Krupke](https://www.ibr.cs.tu-bs.de/users/krupke/) for more information.
 
 The _Close-Enough Traveling Salesman Problem_ asks for the shortest tour that visits a given set of circles.
 It is related to the classical [Traveling Salesman Problem](https://en.wikipedia.org/wiki/Travelling_salesman_problem)
