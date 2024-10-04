@@ -8,7 +8,7 @@ if(CXX)
   enable_language(CXX)
 endif()
 project(cetsp CXX) # Feel free to add more project information
-set(CMAKE_CXX_STANDARD 17) # Using C++-17 (most features with good support at
+set(CMAKE_CXX_STANDARD 20) # Using C++-17 (most features with good support at
                            # 2022)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON) # The code needs to be compiled as PIC
                                         # to build the shared lib for python.
@@ -28,16 +28,23 @@ include(./cmake/CCache.cmake) # Magic to speed up compiling by caching.
 include(./cmake/CPM.cmake) # Package manager for simple requirements.
 
 cpmaddpackage("gh:fmtlib/fmt#9.1.0") # fmt for nice strings
-cpmaddpackage("gh:doctest/doctest@2.4.9")
+CPMAddPackage(
+  NAME googletest
+  GITHUB_REPOSITORY google/googletest
+  GIT_TAG v1.14.0
+  VERSION 1.14.0
+  OPTIONS
+      "gtest_force_shared_crt ON"
+)
 # further CPM-dependencies are defined in the subdirectories
 
 # ~~~
 # Conan dependencies ~~~~~~~~~~~~~~~~~~~~~
-find_package(nlohmann_json REQUIRED)
-find_package(CGAL REQUIRED)
-find_package(gurobi REQUIRED)
-find_package(NLopt REQUIRED)
-include_directories(${GUROBI_INCLUDE_DIRS})
+#find_package(nlohmann_json REQUIRED)
+#find_package(CGAL REQUIRED)
+find_package(gurobi CONFIG REQUIRED)
+#find_package(NLopt REQUIRED)
+#include_directories(${GUROBI_INCLUDE_DIRS})
 # find_package(Boost REQUIRED COMPONENTS thread system)
 
 # ~~~
@@ -50,26 +57,4 @@ include_directories(${GUROBI_INCLUDE_DIRS})
 # C++-Library ~~~~~~~~~~~~~~~~~~~~~~~~~
 # This part defines the actual C++-library that may be used as a simple
 # C++-library. The Python-interface to this library is defined separately.
-add_subdirectory(src)
-
-# ~~~
-# TESTS OF THE PUBLIC INTERFACE ~~~~~~~~~~~~~~
-# A good programmer will add at least some unit tests.
-# The tests-folder can also be used for Python-tests, without interference.
-if(NOT SKBUILD)
-  # only import if exists. The production code may be shipped without.
-  add_subdirectory(tests) # defined in a separate CMakeLists.txt
-endif()
-
-# ~~~
-# Python Interface ~~~~~~~~~~~~~~~~~~~~
-# The Python-bindings are compiled as separate target to allow the independent
-# usage of the C++-library.
-add_subdirectory(pysrc) # defined in a separate CMakeLists.txt
-
-# ~~~
-# Apps ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-if(NOT SKBUILD) # only make available if not using SKBUILD.
-  # define your apps here
-  add_subdirectory(apps)
-endif()
+add_subdirectory(cetsp_solver)

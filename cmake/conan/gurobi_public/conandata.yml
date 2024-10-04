@@ -1,91 +1,67 @@
 ---
-name: gurobi
-current_version: 10.0.0
-version_info:
-  10.0.0:
-    Linux:
-      x86_64:
-        download_url: https://packages.gurobi.com/10.0/gurobi10.0.0_linux64.tar.gz
-        download_type: tar.gz
-        cpp_build_cmakelists: unix10/CMakeLists.txt
+current_version: "11.0.2"
+versions:
+  "11.0.2":
+    "Linux":
+      "x86_64":
+        download_url: "https://packages.gurobi.com/11.0/gurobi11.0.2_linux64.tar.gz"
+        download_type: "tar.gz"
+        sha256: "f43ac8a3edb987b9a0a61452acd9d8dbe9eb37368c6da7ce36e5247cb2a1a368"
         cpp_source_dirs:
-          - path: gurobi1000/linux64/include
-            extract_to: include
-          - path: gurobi1000/linux64/src/cpp
-            extract_to: src
-          - path: gurobi1000/linux64/bin
-            extract_to: bin
+          - {"path": "gurobi1102/linux64/include", "extract_to": "include"}
+          - {"path": "gurobi1102/linux64/src/cpp", "extract_to": "src"}
+          - {"path": "gurobi1102/linux64/bin", "extract_to": "bin"}
         binary_paths:
-          - gurobi1000/linux64/lib/libgurobi100.so
+          - "gurobi1102/linux64/lib/libgurobi110.so"
         library_names:
-          - gurobi_c++
-          - gurobi100
-    Macos:
-      x86_64:
-        download_url: https://packages.gurobi.com/10.0/gurobi10.0.0_macos_universal2.pkg
-        download_type: pkg
-        cpp_build_cmakelists: unix10/CMakeLists.txt
+          - "gurobi_c++"
+          - "gurobi110"
+        fix_binary_commands: []
+    "Macos":
+      "x86_64":
+        download_url: "https://packages.gurobi.com/11.0/gurobi11.0.2_macos_universal2.pkg"
+        download_type: "pkg"
+        sha256: "e5709586ce2c1179bba16656a0855e43a5a3becaf1fbe85e0ab123371448f072"
         cpp_source_dirs:
-          - path: Library/gurobi1000/macos_universal2/include
-            extract_to: include
-          - path: Library/gurobi1000/macos_universal2/src/cpp
-            extract_to: src
-          - path: Library/gurobi1000/macos_universal2/bin
-            extract_to: bin
-        binary_paths:
-          - Library/gurobi1000/macos_universal2/lib/libgurobi100.dylib
+          - {"path": "Library/gurobi1102/macos_universal2/include", "extract_to": "include"}
+          - {"path": "Library/gurobi1102/macos_universal2/src/cpp", "extract_to": "src"}
+          - {"path": "Library/gurobi1102/macos_universal2/bin", "extract_to": "bin"}
+        binary_paths: ["Library/gurobi1102/macos_universal2/lib/libgurobi110.dylib"]
         fix_binary_commands:
-          - - install_name_tool
-            - "-id"
-            - "@rpath/libgurobi100.dylib"
-          - - codesign
-            - "--remove-signature"
-          - - codesign
-            - "-s"
-            - "-"
+          - ["install_name_tool", "-id", "@rpath/libgurobi110.dylib"]
+          - ["codesign", "--remove-signature"]
+          - ["codesign", "-s", "-"]
         library_names:
-          - gurobi_c++
-          - gurobi100
-      armv8:
-        download_url: https://packages.gurobi.com/10.0/gurobi10.0.0_macos_universal2.pkg
-        download_type: pkg
-        cpp_build_cmakelists: unix10/CMakeLists.txt
+          - "gurobi_c++"
+          - "gurobi110"
+      "armv8":
+        download_url: "https://packages.gurobi.com/11.0/gurobi11.0.2_macos_universal2.pkg"
+        download_type: "pkg"
+        sha256: "e5709586ce2c1179bba16656a0855e43a5a3becaf1fbe85e0ab123371448f072"
         cpp_source_dirs:
-          - path: Library/gurobi1000/macos_universal2/include
-            extract_to: include
-          - path: Library/gurobi1000/macos_universal2/src/cpp
-            extract_to: src
-          - path: Library/gurobi1000/macos_universal2/bin
-            extract_to: bin
-        binary_paths:
-          - Library/gurobi1000/macos_universal2/lib/libgurobi100.dylib
+          - {"path": "Library/gurobi1102/macos_universal2/include", "extract_to": "include"}
+          - {"path": "Library/gurobi1102/macos_universal2/src/cpp", "extract_to": "src"}
+          - {"path": "Library/gurobi1102/macos_universal2/bin", "extract_to": "bin"}
+        binary_paths: ["Library/gurobi1102/macos_universal2/lib/libgurobi110.dylib"]
         fix_binary_commands:
-          - - install_name_tool
-            - "-id"
-            - "@rpath/libgurobi100.dylib"
-          - - codesign
-            - "--remove-signature"
-          - - codesign
-            - "-s"
-            - "-"
+          - ["install_name_tool", "-id", "@rpath/libgurobi110.dylib"]
+          - ["codesign", "--remove-signature"]
+          - ["codesign", "-s", "-"]
         library_names:
-          - gurobi_c++
-          - gurobi100
-    Windows:
-      x86_64:
-        download_url: https://packages.gurobi.com/10.0/Gurobi-10.0.0-win64.msi
-        download_type: msi
-        cpp_build_cmakelists: win10/CMakeLists.txt
+          - "gurobi_c++"
+          - "gurobi110"
+    "Windows":
+      "x86_64":
+        download_url: "https://packages.gurobi.com/11.0/Gurobi-11.0.2-win64.msi"
+        download_type: "msi"
+        sha256: "560300b5dd6fd1577c240a0fdad90f8a2f390af32489d11554ec753fcf72e077"
         cpp_source_dirs:
-          - path: gurobi1000\win64\src\cpp
-            extract_to: src
-          - path: gurobi1000\win64\include
-            extract_to: include
-          - path: gurobi1000\win64\bin
-            extract_to: bin
+          - {"path": "gurobi1102\\win64\\src\\cpp", "extract_to": "src"}
+          - {"path": "gurobi1102\\win64\\include", "extract_to": "include"}
+          - {"path": "gurobi1102\\win64\\bin", "extract_to": "bin"}
         binary_paths:
-          - gurobi1000\win64\bin\gurobi100.dll
-          - gurobi1000\win64\lib\gurobi100.lib
-        library_names:
-          - gurobi_c++
-          - gurobi100
+          - "gurobi1102\\win64\\bin\\gurobi110.dll"
+          - "gurobi1102\\win64\\lib\\gurobi110.lib"
+        library_names: ["gurobi_c++", "gurobi110"]
+        fix_binary_commands: []
+...
