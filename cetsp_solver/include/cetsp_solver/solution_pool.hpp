@@ -1,9 +1,11 @@
 #pragma once
 #include "data.hpp"
+#include <cmath>
+#include <functional>
 #include <mutex>
 #include <optional>
 #include <vector>
-#include <cmath>
+
 
 namespace cetsp_solver {
 class SolutionPool {
@@ -13,6 +15,8 @@ class SolutionPool {
    * found by the workers.
    */
 public:
+  using Callback = std::function<void(const Solution &)>;
+
   void add_solution(const Solution &solution) {
     /**
      * @brief Adds a solution to the pool. If the solution is better than the
@@ -21,11 +25,19 @@ public:
      * @param solution The solution to be added.
      * @param cost The cost of the solution.
      */
-    std::lock_guard<std::mutex> lock(mutex);
-    if (!best_solution.has_value() || solution.cost < best_solution->cost) {
-      best_solution = solution;
+    {
+      std::lock_guard<std::mutex> lock(mutex_incumbent);
+      if (!best_solution.has_value() || solution.cost < best_solution->cost) {
+        best_solution = solution;
+      }
+      solutions.push_back(solution);
     }
-    solutions.push_back(solution);
+    {
+      std::lock_guard<std::mutex> lock(mutex_callback);
+      if (incumbent_update_callback) {
+        incumbent_update_callback(solution);
+      }
+    }
   }
 
   std::optional<Solution> get_best_solution() {
@@ -34,7 +46,7 @@ public:
      *
      * @return Trajectory The best solution found so far.
      */
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex_incumbent);
     return best_solution;
   }
 
@@ -44,7 +56,7 @@ public:
      *
      * @return double The cost of the best solution found so far.
      */
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex_incumbent);
     if (best_solution.has_value()) {
       return best_solution->cost;
     }
@@ -57,7 +69,7 @@ public:
      *
      * @return std::vector<Trajectory> All the solutions found so far.
      */
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex_incumbent);
     return solutions;
   }
 
@@ -66,14 +78,27 @@ public:
      * @brief Clears the pool. This means that all the solutions will be
      * deleted.
      */
-    std::lock_guard<std::mutex> lock(mutex);
+    std::lock_guard<std::mutex> lock(mutex_incumbent);
     solutions.clear();
-    best_solution = std::nullopt;
+    best_solution.reset();
+  }
+
+  void set_incumbent_update_callback(Callback callback) {
+    /**
+     * @brief Sets the callback function to be called whenever the incumbent
+     * solution is updated.
+     *
+     * @param callback The callback function.
+     */
+    std::lock_guard<std::mutex> lock(mutex_incumbent);
+    incumbent_update_callback = callback;
   }
 
 private:
-  std::vector<Solution> solutions; // contains all the solutions found so far
-  std::optional<Solution> best_solution; // the best solution found so far
-  std::mutex mutex;
+  std::mutex mutex_incumbent;
+  std::mutex mutex_callback;
+  std::optional<Solution> best_solution;
+  std::vector<Solution> solutions;
+  Callback incumbent_update_callback;
 };
 } // namespace cetsp_solver

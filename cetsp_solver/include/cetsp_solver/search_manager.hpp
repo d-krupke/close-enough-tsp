@@ -20,17 +20,49 @@ inline bool deepest_min_lb(const Node &a, const Node &b) {
   return a.depth > b.depth;
 }
 
-struct AnnotatedNode {
+struct NodeInfo {
+  /**
+   * @brief This struct stores basic information about a node. It is used by the
+   * search stats to store information about the last node processed. This is primarily
+   * used for logging purposes.
+   */
+  NodeId id;
+  double lb;
+  int depth;
+  NodeStatus status;
+};
+
+inline NodeInfo get_info(Node* node) {
+  /**
+   * @brief Returns the basic information about a node.
+   * 
+   * @param node The node for which the information should be returned.
+   * @return NodeInfo The information about the node.
+   */
+  return NodeInfo{node->id, node->lb, node->depth, node->status};
+}
+
+struct NodeHandle {
   /**
    * @brief This class stores a node and additional data used by the search
    * manager.
    */
 
-  AnnotatedNode(std::unique_ptr<Node> &&node_) : node(std::move(node_)), id(node->id) {}
+  NodeHandle(std::unique_ptr<Node> &&node_) : node(std::move(node_)), id(node->id) {}
 
   std::unique_ptr<Node> node;
   NodeId id;  // local data with the id of the node. Will never change.
-  bool in_process = false;
+  bool in_process = false;  // used to indicate if the node is currently processed by a worker
+};
+
+struct SearchStats {
+  /**
+   * @brief This struct stores statistics about the search process for logging purposes.
+   * 
+   */
+  size_t num_nodes = 0;
+  size_t num_frontier = 0;
+  std::optional<NodeInfo> last_node = std::nullopt;
 };
 
 class SearchManager {
@@ -42,6 +74,7 @@ class SearchManager {
    *
    */
 public:
+  using Callback = std::function<void(const SearchStats &)>;
   SearchManager() {}
 
   Node* get_next_node(std::function<bool(const Node&, const Node&)> comp) {
@@ -51,7 +84,7 @@ public:
       }
 
       // Find the minimum element among the nodes that are not in process
-      auto min_element = std::min_element(frontier_nodes.begin(), frontier_nodes.end(), [&](const AnnotatedNode& a, const AnnotatedNode& b) {
+      auto min_element = std::min_element(frontier_nodes.begin(), frontier_nodes.end(), [&](const NodeHandle& a, const NodeHandle& b) {
           if (a.in_process) return false;
           if (b.in_process) return true;
           return comp(*a.node, *b.node);
@@ -65,12 +98,18 @@ public:
       return min_element->node.get();
   }
 
-  void add_node(std::unique_ptr<Node> &&node) {
+  void enqueue_node(std::unique_ptr<Node> &&node) {
+    /**
+     * @brief Adds a node to the search manager. The node will be processed by
+     * the workers.
+     * 
+     */
     std::lock_guard<std::mutex> lock(mutex);
-    frontier_nodes.push_back(AnnotatedNode{std::move(node)});
+    stats.num_nodes++;
+    frontier_nodes.push_back(NodeHandle{std::move(node)});
   }
 
-  void return_node(Node *node) {
+  void requeue_node(Node *node) {
     /**
      * @brief Returns a node to the search manager. This means that the node has
      * been partially processed, and it is not finished yet. The worker may only
@@ -81,17 +120,19 @@ public:
       return;
     }
     std::lock_guard<std::mutex> lock(mutex);
-    std::find_if(frontier_nodes.begin(), frontier_nodes.end(),
-                 [node](auto &n) { return n.node.get() == node; })
-        ->in_process = false;
+    auto it = std::find_if(frontier_nodes.begin(), frontier_nodes.end(),
+                 [node](auto &n) { return n.node.get() == node; });
+    it->in_process = false;
+    stats.last_node = get_info(node);
   }
 
-  void remove_node(Node *node, bool keep_lower_bound = false) {
+  void close_node(Node *node, bool keep_lower_bound = false) {
     /**
      * @brief Finishes a node. This means that the node has been completely
      * processed, and it is not going to be processed again. The node will be
      * deleted after this method is called.
      */
+    {
     std::lock_guard<std::mutex> lock(mutex);
     auto node_id = node->id;
     if (keep_lower_bound) {
@@ -106,6 +147,11 @@ public:
                          return n.id == node_id;
                        }),
         frontier_nodes.end());
+
+    // Update the last node processed
+    stats.last_node = get_info(node);
+    }
+    notify_callback();
   }
 
   double get_lower_bound() {
@@ -126,11 +172,40 @@ public:
     return frontier_nodes.size();
   }
 
+  SearchStats get_stats() {
+    std::lock_guard<std::mutex> lock(mutex);
+    stats.num_frontier = frontier_nodes.size();
+    return stats;
+  }
+
+  void set_callback(Callback callback_, int interval = 1) {
+    callback = callback_;
+    callback_interval = interval;
+    next_callback = interval-1;
+  }
+
+  void set_callback_interval(int interval) { callback_interval = interval; next_callback = interval-1; }
+protected:
+  void notify_callback() {
+    std::lock_guard<std::mutex> lock(mutex_callback);
+    if (callback && next_callback <= 0) {
+      callback(get_stats());
+      next_callback = callback_interval;
+    } else {
+      next_callback--;
+    }
+  }
+
 private:
   // contains all unfinished nodes. The smallest lower bound within
   // is the best lower bound found so far.
-  std::vector<AnnotatedNode> frontier_nodes;
+  std::vector<NodeHandle> frontier_nodes;
   std::mutex mutex;          // mutex for a thread-safe search management
+  SearchStats stats;         // statistics about the search process
+  Callback callback;         // callback function to be called when the search stats are updated
+  std::mutex mutex_callback; // mutex for the callback function
+  int callback_interval = 1; // the interval in which the callback function is called
+  int next_callback = 0;     // the next iteration in which the callback function is called
   double separate_lb = INFINITY; // the worst lower bound of excluded nodes. Will only decrease.
 };
 } // namespace cetsp_solver

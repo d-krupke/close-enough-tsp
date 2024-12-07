@@ -1,8 +1,17 @@
+// This file defines a search worker that will process nodes from the
+// branch-and-bound tree in parallel. The process can be divided into several
+// stages, as processing a node can be expensive and we might want to switch to
+// a more promising node in between based on changes in the bounds.
+
 #pragma once
 
+#include "branching_strategy.hpp"
 #include "node.hpp"
 #include "relaxation.hpp"
 #include "relaxation_solver.hpp"
+#include <atomic>
+#include <chrono>
+#include <thread>
 
 namespace cetsp_solver {
 
@@ -11,17 +20,27 @@ public:
   SearchWorker(Instance &instance, NodeFactory &node_factory,
                SearchManager &search_manager, SolutionPool &solution_pool)
       : instance{instance}, node_factory(node_factory),
-        relaxation_solver(&instance), search_manager(search_manager),
-        solution_pool(solution_pool) {}
+        relaxation_solver(&instance),
+        branch_strategy(node_factory, search_manager),
+        search_manager(search_manager), solution_pool(solution_pool),
+        stop_flag(false) {}
 
   void run() {
-    while (true) {
+    while (!stop_flag.load()) {
       auto node = search_manager.get_next_node(min_lb);
       if (node == nullptr) {
-        break;
+        if (search_manager.is_empty()) {
+          break; // terminate
+        }
+        // sleep for 20ms to avoid busy waiting
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        continue;
       }
       if (!process_node(*node)) {
-        search_manager.return_node(node);
+        // return the unfinished node to the search manager
+        // We may get it back in the next iteration, but we may also get
+        // a different node that now is more promising.
+        search_manager.requeue_node(node);
       }
     }
   }
@@ -30,12 +49,12 @@ public:
     // Return true if the node is completely processed, false otherwise
 
     // Check if the trivial lower bound is already worse than the best known
-    auto current_ub = solution_pool.get_best_cost();
+    const auto current_ub = solution_pool.get_best_cost();
     if (check_bound_and_prune(node, current_ub)) {
       return true;
     }
     switch (node.status) {
-    case NodeStatus::UNKOWN:
+    case NodeStatus::UNKNOWN:
       return preprocess_node(node) || check_bound_and_prune(node, current_ub);
     case NodeStatus::PREPROCESSED:
       return relax_node(node) || check_bound_and_prune(node, current_ub);
@@ -48,6 +67,8 @@ public:
       throw std::runtime_error("Unexpected node status");
     }
   }
+
+  void stop() { stop_flag.store(true); }
 
 protected:
   bool preprocess_node(Node &node) {
@@ -74,7 +95,7 @@ protected:
       Solution solution(node.trajectory->first, node.trajectory->second);
       solution_pool.add_solution(solution);
       node.status = NodeStatus::FEASIBLE;
-      search_manager.remove_node(&node, true);
+      search_manager.close_node(&node, true);
     } else {
       node.status = NodeStatus::INCOMPLETE;
       return false;
@@ -89,24 +110,14 @@ protected:
       // provides the optimal solution and all solutions in the search tree
       // are pruned.
       node.status = NodeStatus::PRUNED;
-      search_manager.remove_node(&node, /*keep_lower_bound=*/true);
+      search_manager.close_node(&node, /*keep_lower_bound=*/true);
       return true;
     }
     return false;
   }
 
   bool branch_node(Node &node) {
-    auto [idx, dist] = node.annotated_trajectory->get_max_distance();
-    // place the circle with the index at every possible position in the
-    // sequence
-    for (uint64_t i = 1; i <= node.sequence.size(); i++) {
-      auto new_sequence = node.sequence;
-      new_sequence.insert(new_sequence.begin() + i, idx);
-      auto new_node = node_factory.create_child_node(node, new_sequence);
-      search_manager.add_node(std::move(new_node));
-    }
-    node.status = NodeStatus::BRANCHED;
-    search_manager.remove_node(&node, /*keep_lower_bound=*/false);
+    branch_strategy.branch_node(node);
     return true;
   }
 
@@ -114,7 +125,9 @@ private:
   Instance &instance;
   NodeFactory &node_factory;
   SocpRelaxationSolver relaxation_solver;
+  BranchingStrategy branch_strategy;
   SearchManager &search_manager;
   SolutionPool &solution_pool;
+  std::atomic<bool> stop_flag;
 };
 } // namespace cetsp_solver

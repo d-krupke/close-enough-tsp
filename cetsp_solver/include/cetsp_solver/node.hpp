@@ -42,7 +42,7 @@ public:
   std::vector<int> sequence;
   std::optional<RelaxedSolution> trajectory;
   std::optional<AnnotatedRelaxedSolution> annotated_trajectory;
-  NodeStatus status = NodeStatus::UNKOWN;
+  NodeStatus status = NodeStatus::UNKNOWN;
 
   bool add_lower_bound(double new_lb) {
     if (new_lb > lb) {

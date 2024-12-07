@@ -11,11 +11,21 @@ class Solver
 {
 public:
     Solver(Instance instance_): instance(instance_), solution_pool{}, node_factory{}, search_manager{} 
-     {}
+     {
+        solution_pool.set_incumbent_update_callback([this](const Solution &solution) {
+            std::cout << "New incumbent solution found with cost " << solution.cost 
+                  << ". Lower bound: " << this->get_lower_bound() 
+                  << ", Upper bound: " << this->get_upper_bound() << std::endl;
+        });
+        search_manager.set_callback([this](const SearchStats &stats) {
+            std::cout << "Nodes in frontier: " << stats.num_frontier << std::endl;
+        });
+     }
 
     void solve() {
+        std::cout << "Starting solver" << std::endl;
         auto root_node = node_factory.create_root_node({0,1,2});
-        search_manager.add_node(std::move(root_node));
+        search_manager.enqueue_node(std::move(root_node));
         std::vector<std::thread> workers;
         for (int i = 0; i < 4; i++) {
             workers.push_back(std::thread([this] {
