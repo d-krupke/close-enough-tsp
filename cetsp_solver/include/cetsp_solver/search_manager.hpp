@@ -8,10 +8,7 @@
 
 namespace cetsp_solver {
 
-
-inline bool min_lb(const Node &a, const Node &b) {
-  return a.lb < b.lb;
-}
+inline bool min_lb(const Node &a, const Node &b) { return a.lb < b.lb; }
 
 inline bool deepest_min_lb(const Node &a, const Node &b) {
   if (a.depth == b.depth) {
@@ -23,8 +20,8 @@ inline bool deepest_min_lb(const Node &a, const Node &b) {
 struct NodeInfo {
   /**
    * @brief This struct stores basic information about a node. It is used by the
-   * search stats to store information about the last node processed. This is primarily
-   * used for logging purposes.
+   * search stats to store information about the last node processed. This is
+   * primarily used for logging purposes.
    */
   NodeId id;
   double lb;
@@ -32,10 +29,10 @@ struct NodeInfo {
   NodeStatus status;
 };
 
-inline NodeInfo get_info(Node* node) {
+inline NodeInfo get_info(Node *node) {
   /**
    * @brief Returns the basic information about a node.
-   * 
+   *
    * @param node The node for which the information should be returned.
    * @return NodeInfo The information about the node.
    */
@@ -48,17 +45,20 @@ struct NodeHandle {
    * manager.
    */
 
-  NodeHandle(std::unique_ptr<Node> &&node_) : node(std::move(node_)), id(node->id) {}
+  NodeHandle(std::unique_ptr<Node> &&node_)
+      : node(std::move(node_)), id(node->id) {}
 
   std::unique_ptr<Node> node;
-  NodeId id;  // local data with the id of the node. Will never change.
-  bool in_process = false;  // used to indicate if the node is currently processed by a worker
+  NodeId id; // local data with the id of the node. Will never change.
+  bool in_process =
+      false; // used to indicate if the node is currently processed by a worker
 };
 
 struct SearchStats {
   /**
-   * @brief This struct stores statistics about the search process for logging purposes.
-   * 
+   * @brief This struct stores statistics about the search process for logging
+   * purposes.
+   *
    */
   size_t num_nodes = 0;
   size_t num_frontier = 0;
@@ -77,32 +77,36 @@ public:
   using Callback = std::function<void(const SearchStats &)>;
   SearchManager() {}
 
-  Node* get_next_node(std::function<bool(const Node&, const Node&)> comp) {
-      std::lock_guard<std::mutex> lock(mutex);
-      if (frontier_nodes.empty()) {
-          return nullptr;
-      }
+  Node *get_next_node(std::function<bool(const Node &, const Node &)> comp) {
+    std::lock_guard<std::mutex> lock(mutex);
+    if (frontier_nodes.empty()) {
+      return nullptr;
+    }
 
-      // Find the minimum element among the nodes that are not in process
-      auto min_element = std::min_element(frontier_nodes.begin(), frontier_nodes.end(), [&](const NodeHandle& a, const NodeHandle& b) {
-          if (a.in_process) return false;
-          if (b.in_process) return true;
-          return comp(*a.node, *b.node);
-      });
+    // Find the minimum element among the nodes that are not in process
+    auto min_element =
+        std::min_element(frontier_nodes.begin(), frontier_nodes.end(),
+                         [&](const NodeHandle &a, const NodeHandle &b) {
+                           if (a.in_process)
+                             return false;
+                           if (b.in_process)
+                             return true;
+                           return comp(*a.node, *b.node);
+                         });
 
-      if (min_element == frontier_nodes.end() || min_element->in_process) {
-          return nullptr;
-      }
+    if (min_element == frontier_nodes.end() || min_element->in_process) {
+      return nullptr;
+    }
 
-      min_element->in_process = true;
-      return min_element->node.get();
+    min_element->in_process = true;
+    return min_element->node.get();
   }
 
   void enqueue_node(std::unique_ptr<Node> &&node) {
     /**
      * @brief Adds a node to the search manager. The node will be processed by
      * the workers.
-     * 
+     *
      */
     std::lock_guard<std::mutex> lock(mutex);
     stats.num_nodes++;
@@ -121,7 +125,7 @@ public:
     }
     std::lock_guard<std::mutex> lock(mutex);
     auto it = std::find_if(frontier_nodes.begin(), frontier_nodes.end(),
-                 [node](auto &n) { return n.node.get() == node; });
+                           [node](auto &n) { return n.node.get() == node; });
     it->in_process = false;
     stats.last_node = get_info(node);
   }
@@ -133,23 +137,21 @@ public:
      * deleted after this method is called.
      */
     {
-    std::lock_guard<std::mutex> lock(mutex);
-    auto node_id = node->id;
-    if (keep_lower_bound) {
-      if (node->lb < separate_lb) {
-        separate_lb = node->lb;
+      std::lock_guard<std::mutex> lock(mutex);
+      auto node_id = node->id;
+      if (keep_lower_bound) {
+        if (node->lb < separate_lb) {
+          separate_lb = node->lb;
+        }
       }
-    }
 
-    frontier_nodes.erase(
-        std::remove_if(frontier_nodes.begin(), frontier_nodes.end(),
-                       [node_id](const auto &n) {
-                         return n.id == node_id;
-                       }),
-        frontier_nodes.end());
+      frontier_nodes.erase(
+          std::remove_if(frontier_nodes.begin(), frontier_nodes.end(),
+                         [node_id](const auto &n) { return n.id == node_id; }),
+          frontier_nodes.end());
 
-    // Update the last node processed
-    stats.last_node = get_info(node);
+      // Update the last node processed
+      stats.last_node = get_info(node);
     }
     notify_callback();
   }
@@ -178,13 +180,17 @@ public:
     return stats;
   }
 
-  void set_callback(Callback callback_, int interval = 1) {
-    callback = callback_;
+  void set_callback(Callback callback, int interval = 1) {
+    this->callback = callback;
     callback_interval = interval;
-    next_callback = interval-1;
+    next_callback = interval - 1;
   }
 
-  void set_callback_interval(int interval) { callback_interval = interval; next_callback = interval-1; }
+  void set_callback_interval(int interval) {
+    callback_interval = interval;
+    next_callback = interval - 1;
+  }
+
 protected:
   void notify_callback() {
     std::lock_guard<std::mutex> lock(mutex_callback);
@@ -200,12 +206,16 @@ private:
   // contains all unfinished nodes. The smallest lower bound within
   // is the best lower bound found so far.
   std::vector<NodeHandle> frontier_nodes;
-  std::mutex mutex;          // mutex for a thread-safe search management
-  SearchStats stats;         // statistics about the search process
-  Callback callback;         // callback function to be called when the search stats are updated
+  std::mutex mutex;  // mutex for a thread-safe search management
+  SearchStats stats; // statistics about the search process
+  Callback callback; // callback function to be called when the search stats are
+                     // updated
   std::mutex mutex_callback; // mutex for the callback function
-  int callback_interval = 1; // the interval in which the callback function is called
-  int next_callback = 0;     // the next iteration in which the callback function is called
-  double separate_lb = INFINITY; // the worst lower bound of excluded nodes. Will only decrease.
+  int callback_interval =
+      1; // the interval in which the callback function is called
+  int next_callback =
+      0; // the next iteration in which the callback function is called
+  double separate_lb =
+      INFINITY; // the worst lower bound of excluded nodes. Will only decrease.
 };
 } // namespace cetsp_solver

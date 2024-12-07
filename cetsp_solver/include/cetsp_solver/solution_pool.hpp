@@ -83,7 +83,7 @@ public:
     best_solution.reset();
   }
 
-  void set_incumbent_update_callback(Callback callback) {
+  void set_callback(Callback callback) {
     /**
      * @brief Sets the callback function to be called whenever the incumbent
      * solution is updated.
