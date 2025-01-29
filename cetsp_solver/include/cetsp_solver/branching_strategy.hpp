@@ -28,6 +28,10 @@ public:
   }
 
 private:
+  std::vector<int> get_sequence(const Node &node) {
+    return node.sequence;
+  }
+
   void create_child(Node &node, std::vector<int> new_sequence) {
     auto new_node = node_factory.create_child_node(node, new_sequence);
     search_manager.enqueue_node(std::move(new_node));

@@ -1,3 +1,9 @@
+// This file defines a search manager that will manage the search process. It
+// is responsible for providing the next node to be processed by the workers,
+// and to keep track of the nodes that are currently in the frontier.
+// It is essentially a more dynamic version of a priority queue, which can
+// be used to build a search tree in a branch-and-bound algorithm.
+
 #pragma once
 #include "node.hpp"
 #include <algorithm>

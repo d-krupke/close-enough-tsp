@@ -38,8 +38,16 @@ public:
                        [eps](double d) { return d <= eps; });
   }
 
-  double get_distance(int idx) const { return distances[idx]; }
+  /**
+   * @brief Get the distance to the circle with index idx.
+   * 
+   * @param idx 
+   * @return double 
+   */
+  double get_distance(int idx) const { return distances.at(idx); }
 
+// Get the index and the corresponding distance of the circle with the maximum distance
+// to the trajectory
   std::pair<int, double> get_max_distance() const {
     auto max_it = std::max_element(distances.begin(), distances.end());
     return {std::distance(distances.begin(), max_it), *max_it};
