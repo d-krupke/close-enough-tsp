@@ -11,6 +11,7 @@ add_library(cetsp_solver STATIC
 )
 target_include_directories(cetsp_solver PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include/")
 target_link_libraries(cetsp_solver PUBLIC gurobi::gurobi)
+target_include_directories(cetsp_solver PUBLIC ${GUROBI_INCLUDE_DIRS})
 
 #==============================================================================
 # Testing with Google Test

@@ -18,22 +18,22 @@ public:
     auto [idx, dist] = node.annotated_trajectory->get_max_distance();
     // place the circle with the index at every possible position in the
     // sequence
-    for (uint64_t i = 1; i <= node.sequence.size(); i++) {
-      auto new_sequence = node.sequence;
-      new_sequence.insert(new_sequence.begin() + i, idx);
-      create_child(node, new_sequence);
+    for (uint64_t i = 1; i <= node.branching_decisions.sequence.size(); i++) {
+      auto new_branching_decisions = node.branching_decisions;
+      new_branching_decisions.sequence.insert(new_branching_decisions.sequence.begin() + i, idx);
+      create_child(node, new_branching_decisions);
     }
     finalize_parent(node);
     return true;
   }
 
 private:
-  std::vector<int> get_sequence(const Node &node) {
-    return node.sequence;
+BranchingDecisions get_sequence(const Node &node) {
+    return node.branching_decisions;
   }
 
-  void create_child(Node &node, std::vector<int> new_sequence) {
-    auto new_node = node_factory.create_child_node(node, new_sequence);
+  void create_child(Node &node, BranchingDecisions new_branching_decisions) {
+    auto new_node = node_factory.create_child_node(node, new_branching_decisions);
     search_manager.enqueue_node(std::move(new_node));
   }
 

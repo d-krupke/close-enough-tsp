@@ -22,6 +22,16 @@ enum class NodeStatus {
   BRANCHED,            // The node has been branched/expanded
   FEASIBLE,            // The node has been proven to be feasible
 };
+
+struct BranchingDecisions {
+  /**
+   * @brief This struct stores the branching decisions made by the worker.
+   * It is used to store the branching decisions made by the worker, and to
+   * store the branching decisions that are made by the worker.
+   */
+  std::vector<int> sequence;
+};
+
 using NodeId = int;
 class Node {
   /**
@@ -32,14 +42,14 @@ class Node {
    */
 public:
   Node(int id = -1, NodeId parent_id = -1, int depth = 0, double initial_lb = 0.0,
-       std::vector<int> sequence = {})
+    BranchingDecisions branching_decisions = {})
       : id(id), parent_id(parent_id), depth(depth), lb(initial_lb),
-        sequence(sequence) {}
+      branching_decisions(branching_decisions) {}
   NodeId id;
   NodeId parent_id;
   int depth;
   double lb;
-  std::vector<int> sequence;
+  BranchingDecisions branching_decisions;
   std::optional<RelaxedSolution> trajectory;
   std::optional<AnnotatedRelaxedSolution> annotated_trajectory;
   NodeStatus status = NodeStatus::UNKNOWN;
@@ -60,15 +70,15 @@ class NodeFactory {
    * automatically assign some values based on the parent node.
    */
 public:
-  std::unique_ptr<Node> create_root_node(std::vector<int> sequence) {
+  std::unique_ptr<Node> create_root_node(BranchingDecisions branching_decisions) {
     std::lock_guard<std::mutex> lock(mutex);
-    return std::make_unique<Node>(next_id++, -1, 0, 0.0, sequence);
+    return std::make_unique<Node>(next_id++, -1, 0, 0.0, branching_decisions);
   }
   std::unique_ptr<Node> create_child_node(const Node &parent,
-                                          const std::vector<int> &sequence) {
+                                          const BranchingDecisions &branching_decisions) {
     std::lock_guard<std::mutex> lock(mutex);
     return std::make_unique<Node>(next_id++, parent.id, parent.depth + 1,
-                                  parent.lb, sequence);
+                                  parent.lb, branching_decisions);
   }
 
 private:

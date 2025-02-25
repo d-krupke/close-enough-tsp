@@ -68,7 +68,46 @@ struct SearchStats {
    */
   size_t num_nodes = 0;
   size_t num_frontier = 0;
+  size_t num_closed_nodes = 0;
+  size_t num_nodes_requeued = 0;
+  size_t num_nodes_requested = 0;
   std::optional<NodeInfo> last_node = std::nullopt;
+};
+
+struct SearchManagerCallbacks {
+  using NextNodeCallback = std::function<void(Node *, const SearchStats &)>;
+  using CloseNodeCallback = std::function<void(Node&, bool, const SearchStats &)>;
+  using RequeueNodeCallback = std::function<void(Node&, const SearchStats &)>;
+  using EnqueueNodeCallback = std::function<void(Node&,const SearchStats &)>;
+
+  NextNodeCallback next_node = nullptr;
+  CloseNodeCallback close_node = nullptr;
+  RequeueNodeCallback requeue_node = nullptr;
+  EnqueueNodeCallback enqueue_node = nullptr;
+
+  void call_cb_next_node(Node *node, const SearchStats &stats) {
+    if (next_node) {
+      next_node(node, stats);
+    }
+  }
+
+  void call_cb_close_node(Node &node, bool keep_lb, const SearchStats &stats) {
+    if (close_node) {
+      close_node(node, keep_lb, stats);
+    }
+  }
+
+  void call_cb_requeue_node(Node &node, const SearchStats &stats) {
+    if (requeue_node) {
+      requeue_node(node, stats);
+    }
+  }
+
+  void call_cb_enqueue_node(Node &node, const SearchStats &stats) {
+    if (enqueue_node) {
+      enqueue_node(node, stats);
+    }
+  }
 };
 
 class SearchManager {
@@ -80,12 +119,20 @@ class SearchManager {
    *
    */
 public:
-  using Callback = std::function<void(const SearchStats &)>;
   SearchManager() {}
 
   Node *get_next_node(std::function<bool(const Node &, const Node &)> comp) {
+    /**
+     * @brief Returns the next node to be processed by the workers. The node is
+     * selected based on the comparison function comp. The function should
+     * return true if the first argument is better than the second argument.
+     *
+     * @param comp The comparison function used to select the next node.
+     * @return Node* The next node to be processed.
+     */
     std::lock_guard<std::mutex> lock(mutex);
     if (frontier_nodes.empty()) {
+      callbacks.call_cb_next_node(nullptr, stats);
       return nullptr;
     }
 
@@ -101,11 +148,14 @@ public:
                          });
 
     if (min_element == frontier_nodes.end() || min_element->in_process) {
+      callbacks.call_cb_next_node(nullptr, stats);
       return nullptr;
     }
-
+    stats.num_nodes_requested++;
     min_element->in_process = true;
-    return min_element->node.get();
+    auto* node = min_element->node.get();
+    callbacks.call_cb_next_node(node, stats);
+    return node;
   }
 
   void enqueue_node(std::unique_ptr<Node> &&node) {
@@ -115,6 +165,7 @@ public:
      *
      */
     std::lock_guard<std::mutex> lock(mutex);
+    callbacks.call_cb_enqueue_node(*node, stats);
     stats.num_nodes++;
     frontier_nodes.push_back(NodeHandle{std::move(node)});
   }
@@ -133,7 +184,9 @@ public:
     auto it = std::find_if(frontier_nodes.begin(), frontier_nodes.end(),
                            [node](auto &n) { return n.node.get() == node; });
     it->in_process = false;
+    callbacks.call_cb_requeue_node(*node, stats);
     stats.last_node = get_info(node);
+    stats.num_nodes_requeued++;
   }
 
   void close_node(Node *node, bool keep_lower_bound = false) {
@@ -142,6 +195,7 @@ public:
      * processed, and it is not going to be processed again. The node will be
      * deleted after this method is called.
      */
+    callbacks.call_cb_close_node(*node, keep_lower_bound, stats);
     {
       std::lock_guard<std::mutex> lock(mutex);
       auto node_id = node->id;
@@ -150,7 +204,7 @@ public:
           separate_lb = node->lb;
         }
       }
-
+  
       frontier_nodes.erase(
           std::remove_if(frontier_nodes.begin(), frontier_nodes.end(),
                          [node_id](const auto &n) { return n.id == node_id; }),
@@ -158,8 +212,8 @@ public:
 
       // Update the last node processed
       stats.last_node = get_info(node);
+      stats.num_closed_nodes++;
     }
-    notify_callback();
   }
 
   double get_lower_bound() {
@@ -186,27 +240,9 @@ public:
     return stats;
   }
 
-  void set_callback(Callback callback, int interval = 1) {
-    this->callback = callback;
-    callback_interval = interval;
-    next_callback = interval - 1;
-  }
 
-  void set_callback_interval(int interval) {
-    callback_interval = interval;
-    next_callback = interval - 1;
-  }
 
-protected:
-  void notify_callback() {
-    std::lock_guard<std::mutex> lock(mutex_callback);
-    if (callback && next_callback <= 0) {
-      callback(get_stats());
-      next_callback = callback_interval;
-    } else {
-      next_callback--;
-    }
-  }
+SearchManagerCallbacks callbacks;
 
 private:
   // contains all unfinished nodes. The smallest lower bound within
@@ -214,13 +250,7 @@ private:
   std::vector<NodeHandle> frontier_nodes;
   std::mutex mutex;  // mutex for a thread-safe search management
   SearchStats stats; // statistics about the search process
-  Callback callback; // callback function to be called when the search stats are
-                     // updated
-  std::mutex mutex_callback; // mutex for the callback function
-  int callback_interval =
-      1; // the interval in which the callback function is called
-  int next_callback =
-      0; // the next iteration in which the callback function is called
+
   double separate_lb =
       INFINITY; // the worst lower bound of excluded nodes. Will only decrease.
 };

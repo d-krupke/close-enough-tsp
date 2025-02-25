@@ -6,7 +6,7 @@ TEST(RelaxationTest, SimpleTest) {
     Instance instance = {Circle(Point(0, 0), 1), Circle(Point(10, 0), 1)};
     std::vector<int> sequence = {0, 1};
     NodeFactory nf;
-    auto node = nf.create_root_node(sequence);
+    auto node = nf.create_root_node({sequence});
     EXPECT_EQ(bool(node->trajectory), false);
     SocpRelaxationSolver solver(&instance);
     solver.process_node(*node);

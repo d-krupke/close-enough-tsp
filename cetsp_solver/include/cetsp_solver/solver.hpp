@@ -23,16 +23,12 @@ public:
                 << ". Lower bound: " << this->get_lower_bound()
                 << ", Upper bound: " << this->get_upper_bound() << std::endl;
     });
-    search_manager.set_callback(
-        [this](const SearchStats &stats) {
-          std::cout << "Nodes in frontier: " << stats.num_frontier << std::endl;
-        },
-        100);
+
   }
 
   void solve(double time_limit = 3600) {
     std::cout << "Starting solver" << std::endl;
-    auto root_node = node_factory.create_root_node({0, 1, 2});
+    auto root_node = node_factory.create_root_node({{0, 1, 2}});
     search_manager.enqueue_node(std::move(root_node));
     std::vector<std::thread> threads;
     std::vector<std::unique_ptr<SearchWorker>> workers;
